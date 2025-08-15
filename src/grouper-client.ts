@@ -71,8 +71,15 @@ export class GrouperClient {
 
   async findGroups(query: string): Promise<GrouperGroup[]> {
     try {
-      const response = await this.makeRequest(`/groups?q=${encodeURIComponent(query)}`);
-      return response.WsGroupsQueryResults?.groups || [];
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestFindGroupsRequest: {
+          wsQueryFilter: {
+            queryFilterType: 'FIND_BY_GROUP_NAME_APPROXIMATE',
+            groupName: query
+          }
+        }
+      });
+      return response.WsFindGroupsResults?.groupResults?.map((result: any) => result.wsGroup) || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'findGroups');
@@ -82,8 +89,16 @@ export class GrouperClient {
 
   async getGroup(groupName: string): Promise<GrouperGroup | null> {
     try {
-      const response = await this.makeRequest(`/groups/${encodeURIComponent(groupName)}`);
-      return response.WsGetGroupResult?.group || null;
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestFindGroupsRequest: {
+          wsQueryFilter: {
+            queryFilterType: 'FIND_BY_GROUP_NAME_EXACT',
+            groupName: groupName
+          }
+        }
+      });
+      const results = response.WsFindGroupsResults?.groupResults || [];
+      return results.length > 0 ? results[0].wsGroup : null;
     } catch (error) {
       return null;
     }
@@ -145,8 +160,12 @@ export class GrouperClient {
   }
 
   async getMembers(groupName: string): Promise<GrouperSubject[]> {
-    const response = await this.makeRequest(`/groups/${encodeURIComponent(groupName)}/members`);
-    return response.WsGetMembersResults?.results || [];
+    const response = await this.makeRequest('/groups', 'POST', {
+      WsRestGetMembersRequest: {
+        wsGroupLookups: [{ groupName }]
+      }
+    });
+    return response.WsGetMembersResults?.results?.[0]?.wsSubjects || [];
   }
 
   async assignAttribute(groupName: string, attribute: GrouperAttribute): Promise<boolean> {
