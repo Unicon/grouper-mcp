@@ -19,6 +19,11 @@ export interface GrouperGroup {
   uuid?: string;
   displayName?: string;
   description?: string;
+  extension?: string;
+  displayExtension?: string;
+  typeOfGroup?: string;
+  idIndex?: string;
+  enabled?: string;
 }
 
 export interface GrouperMember {

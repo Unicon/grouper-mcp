@@ -255,6 +255,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       const { groupName } = request.params.arguments as { groupName: string };
       try {
         const group = await client.getGroup(groupName);
+        logger.debug('Group retrieved', { groupName, group });
         if (!group) {
           return {
             content: [
@@ -269,11 +270,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           content: [
             {
               type: 'text',
-              text: `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}`,
+              text: `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`,
             },
           ],
         };
       } catch (error) {
+        logger.error('Error in grouper_get_group tool', { groupName, error });
         return {
           content: [
             {
