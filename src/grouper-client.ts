@@ -79,7 +79,7 @@ export class GrouperClient {
           }
         }
       });
-      return response.WsFindGroupsResults?.groupResults?.map((result: any) => result.wsGroup) || [];
+      return response.WsFindGroupsResults?.groupResults || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'findGroups');
@@ -98,7 +98,7 @@ export class GrouperClient {
         }
       });
       const results = response.WsFindGroupsResults?.groupResults || [];
-      return results.length > 0 ? results[0].wsGroup : null;
+      return results.length > 0 ? results[0] : null;
     } catch (error) {
       return null;
     }
