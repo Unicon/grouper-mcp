@@ -107,7 +107,10 @@ export class GrouperClient {
   async createGroup(group: GrouperGroup): Promise<GrouperGroup> {
     const response = await this.makeRequest('/groups', 'POST', {
       WsRestGroupSaveRequest: {
-        wsGroupToSaves: [group]
+        wsGroupToSaves: [{
+          wsGroupLookup: { groupName: group.name },
+          wsGroup: group
+        }]
       }
     });
     return response.WsGroupSaveResults?.results[0]?.wsGroup;
@@ -116,7 +119,10 @@ export class GrouperClient {
   async updateGroup(groupName: string, updates: Partial<GrouperGroup>): Promise<GrouperGroup> {
     const response = await this.makeRequest('/groups', 'POST', {
       WsRestGroupSaveRequest: {
-        wsGroupToSaves: [{ name: groupName, ...updates }]
+        wsGroupToSaves: [{
+          wsGroupLookup: { groupName },
+          wsGroup: { name: groupName, ...updates }
+        }]
       }
     });
     return response.WsGroupSaveResults?.results[0]?.wsGroup;
