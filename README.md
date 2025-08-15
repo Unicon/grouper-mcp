@@ -29,10 +29,20 @@ Configure the server using environment variables:
 # Required: Base URL for Grouper web services
 export GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000"
 
+# Required: Basic authentication credentials
+export GROUPER_USERNAME="your_username"
+export GROUPER_PASSWORD="your_password"
+
 # Optional: Act as different subject (for administrative operations)
 export GROUPER_ACT_AS_SUBJECT_ID="your_admin_subject_id"
 export GROUPER_ACT_AS_SUBJECT_SOURCE_ID="your_subject_source"
 export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
+```
+
+Copy `.env.example` to `.env` and fill in your actual values:
+```bash
+cp .env.example .env
+# Edit .env with your credentials
 ```
 
 ## Installation
@@ -74,11 +84,18 @@ Add to your Claude Desktop MCP configuration:
       "command": "node",
       "args": ["/path/to/grouper-mcp/dist/index.js"],
       "env": {
-        "GROUPER_BASE_URL": "https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000"
+        "GROUPER_BASE_URL": "https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
+        "GROUPER_USERNAME": "your_username",
+        "GROUPER_PASSWORD": "your_password"
       }
     }
   }
 }
+```
+
+For self-signed certificates, add:
+```json
+"NODE_TLS_REJECT_UNAUTHORIZED": "0"
 ```
 
 ## Examples
