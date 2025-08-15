@@ -86,22 +86,18 @@ Add to your Claude Desktop MCP configuration:
       "env": {
         "GROUPER_BASE_URL": "https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
         "GROUPER_USERNAME": "your_username",
-        "GROUPER_PASSWORD": "your_password"
+        "GROUPER_PASSWORD": "your_password",
+        "GROUPER_DEBUG": "true",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     }
   }
 }
 ```
 
-For self-signed certificates, add:
-```json
-"NODE_TLS_REJECT_UNAUTHORIZED": "0"
-```
-
-For debugging, enable detailed logging:
-```json
-"GROUPER_DEBUG": "true"
-```
+**Environment Variables:**
+- `GROUPER_DEBUG`: Set to `"true"` to enable detailed logging for troubleshooting
+- `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `"0"` if using self-signed certificates
 
 ## Examples
 
