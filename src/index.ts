@@ -27,6 +27,8 @@ function initializeGrouperClient(): GrouperClient {
   if (!grouperClient) {
     const config: GrouperConfig = {
       baseUrl: process.env.GROUPER_BASE_URL || 'https://grouperdemo.internet2.edu/grouper-ws/servicesRest/json/v4_0_000',
+      username: process.env.GROUPER_USERNAME,
+      password: process.env.GROUPER_PASSWORD,
       actAsSubjectId: process.env.GROUPER_ACT_AS_SUBJECT_ID,
       actAsSubjectSourceId: process.env.GROUPER_ACT_AS_SUBJECT_SOURCE_ID,
       actAsSubjectIdentifier: process.env.GROUPER_ACT_AS_SUBJECT_IDENTIFIER,

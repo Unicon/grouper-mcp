@@ -1,5 +1,7 @@
 export interface GrouperConfig {
   baseUrl: string;
+  username?: string;
+  password?: string;
   actAsSubjectId?: string;
   actAsSubjectSourceId?: string;
   actAsSubjectIdentifier?: string;

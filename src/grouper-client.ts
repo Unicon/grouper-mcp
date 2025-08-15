@@ -14,6 +14,12 @@ export class GrouperClient {
       'Content-Type': 'application/json',
     };
 
+    // Add basic authentication if credentials are provided
+    if (this.config.username && this.config.password) {
+      const credentials = Buffer.from(`${this.config.username}:${this.config.password}`).toString('base64');
+      headers['Authorization'] = `Basic ${credentials}`;
+    }
+
     if (this.config.actAsSubjectId) {
       headers['X-Grouper-actAsSubjectId'] = this.config.actAsSubjectId;
     }
