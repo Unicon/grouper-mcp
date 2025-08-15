@@ -114,7 +114,7 @@ export class GrouperClient {
   }
 
   async updateGroup(groupName: string, updates: Partial<GrouperGroup>): Promise<GrouperGroup> {
-    const response = await this.makeRequest(`/groups/${encodeURIComponent(groupName)}`, 'PUT', {
+    const response = await this.makeRequest('/groups', 'POST', {
       WsRestGroupSaveRequest: {
         wsGroupToSaves: [{ name: groupName, ...updates }]
       }
@@ -124,7 +124,11 @@ export class GrouperClient {
 
   async deleteGroup(groupName: string): Promise<boolean> {
     try {
-      await this.makeRequest(`/groups/${encodeURIComponent(groupName)}`, 'DELETE');
+      await this.makeRequest('/groups', 'POST', {
+        WsRestGroupDeleteRequest: {
+          wsGroupLookups: [{ groupName }]
+        }
+      });
       return true;
     } catch (error) {
       return false;
