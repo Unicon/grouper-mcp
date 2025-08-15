@@ -30,21 +30,18 @@ export class Logger {
   info(message: string, context?: any): void {
     const formatted = this.formatMessage('INFO', message, context);
     appendFileSync(this.logFile, formatted);
-    console.log(message, context || '');
   }
 
   error(message: string, context?: any): void {
     const formatted = this.formatMessage('ERROR', message, context);
     appendFileSync(this.errorFile, formatted);
     appendFileSync(this.logFile, formatted);
-    console.error(message, context || '');
   }
 
   debug(message: string, context?: any): void {
     if (process.env.GROUPER_DEBUG === 'true') {
       const formatted = this.formatMessage('DEBUG', message, context);
       appendFileSync(this.logFile, formatted);
-      console.log(`[DEBUG] ${message}`, context || '');
     }
   }
 

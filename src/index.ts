@@ -552,7 +552,6 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   logger.info('Grouper MCP server connected and running on stdio');
-  console.error('Grouper MCP server running on stdio');
 }
 
 main().catch((error) => {
