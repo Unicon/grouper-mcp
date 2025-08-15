@@ -8,6 +8,7 @@ import {
 } from '@modelcontextprotocol/sdk/types.js';
 import { GrouperClient } from './grouper-client.js';
 import { GrouperConfig, GrouperGroup } from './types.js';
+import { logger } from './logger.js';
 
 const server = new Server(
   {
@@ -545,8 +546,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 });
 
 async function main() {
+  logger.info('Starting Grouper MCP server');
   const transport = new StdioServerTransport();
   await server.connect(transport);
+  logger.info('Grouper MCP server connected and running on stdio');
   console.error('Grouper MCP server running on stdio');
 }
 

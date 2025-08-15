@@ -98,6 +98,11 @@ For self-signed certificates, add:
 "NODE_TLS_REJECT_UNAUTHORIZED": "0"
 ```
 
+For debugging, enable detailed logging:
+```json
+"GROUPER_DEBUG": "true"
+```
+
 ## Examples
 
 ### Create a new group
@@ -124,9 +129,36 @@ Assign attribute "classification" with value "academic" to group "edu:department
 
 The server supports Grouper's "act as" functionality for administrative operations. Configure the acting subject using the environment variables listed above.
 
+## Logging
+
+The server automatically logs all activity to help with debugging:
+
+### Log Files
+- **Location**: `~/.grouper-mcp/logs/` (default) or custom via `GROUPER_LOG_DIR`
+- **Files**:
+  - `grouper-mcp.log` - All log messages (info, debug, errors)
+  - `grouper-mcp-errors.log` - Error messages only
+
+### What Gets Logged
+- Server startup and connection events
+- All HTTP requests to Grouper (with credentials redacted)
+- All HTTP responses (including error details)
+- Detailed error information with context
+
+### Debug Mode
+Set `GROUPER_DEBUG=true` to enable verbose debug logging showing:
+- Request/response details
+- API call parameters
+- Detailed error traces
+
+### Example Log Entry
+```
+[2024-01-15T10:30:45.123Z] [ERROR] HTTP Response: 400 Bad Request {"url":"https://grouper.edu/grouper-ws/servicesRest/json/v4_0_000/groups","status":400,"body":{"error":"Invalid group name format"}}
+```
+
 ## Error Handling
 
-The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude.
+The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude. Check the log files for detailed error information when troubleshooting.
 
 ## API Compatibility
 

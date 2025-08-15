@@ -1,5 +1,6 @@
 import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
+import { logger } from './logger.js';
 
 export class GrouperClient {
   private config: GrouperConfig;
@@ -30,26 +31,34 @@ export class GrouperClient {
       headers['X-Grouper-actAsSubjectIdentifier'] = this.config.actAsSubjectIdentifier;
     }
 
+    // Log the request
+    logger.logRequest(method, url, headers, body);
+
     const response = await fetch(url, {
       method,
       headers,
       body: body ? JSON.stringify(body) : undefined,
     });
 
+    // Get response body for logging
+    const responseText = await response.text();
+    let responseBody: any = null;
+    try {
+      responseBody = JSON.parse(responseText);
+    } catch {
+      responseBody = responseText;
+    }
+
+    // Log the response
+    logger.logResponse(url, response.status, response.statusText, responseBody);
+
     if (!response.ok) {
-      const errorText = await response.text();
       let errorMessage = `Grouper API error: ${response.status} ${response.statusText}`;
       
-      try {
-        const errorJson = JSON.parse(errorText);
-        if (errorJson.error || errorJson.message) {
-          errorMessage = errorJson.error || errorJson.message;
-        }
-      } catch {
-        // If not JSON, use the text as is
-        if (errorText) {
-          errorMessage = errorText;
-        }
+      if (typeof responseBody === 'object' && (responseBody.error || responseBody.message)) {
+        errorMessage = responseBody.error || responseBody.message;
+      } else if (typeof responseBody === 'string' && responseBody) {
+        errorMessage = responseBody;
       }
       
       const error = new GrouperError(errorMessage, response.status);
@@ -57,7 +66,7 @@ export class GrouperClient {
       throw error;
     }
 
-    return response.json();
+    return responseBody;
   }
 
   async findGroups(query: string): Promise<GrouperGroup[]> {
