@@ -4,22 +4,59 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides the following tools for Grouper integration:
+This MCP server provides **9 core tools** for essential Grouper operations. It focuses on the most commonly used group management functionality.
 
-### Group Management
+### Group Management (5 tools)
 - **grouper_find_groups**: Search for groups by name or description
 - **grouper_get_group**: Get detailed information about a specific group
 - **grouper_create_group**: Create a new group
 - **grouper_update_group**: Update group properties (display name, description)
 - **grouper_delete_group**: Delete a group
 
-### Member Management
+### Member Management (3 tools)
 - **grouper_add_member**: Add a member to a group
 - **grouper_remove_member**: Remove a member from a group
 - **grouper_get_members**: Get all members of a group
 
-### Attribute Management
+### Attribute Management (1 tool)
 - **grouper_assign_attribute**: Assign an attribute to a group
+
+## Available but Not Implemented
+
+The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
+
+### Stems/Folders Management
+- Create and manage organizational folders/stems
+- Stem privilege management
+- Hierarchical organization operations
+
+### Advanced Privilege Management
+- Group privilege assignment (admin, read, view, update, etc.)
+- Privilege inheritance and delegation
+- Access control queries
+
+### Subject Management
+- Find subjects across multiple sources
+- Subject source management
+- External subject registration
+
+### Attribute Definition Management
+- Create and manage attribute definitions
+- Attribute definition privileges
+- Complex attribute operations
+
+### Audit and History
+- Audit log queries
+- Change history tracking
+- Activity monitoring
+
+### Advanced Group Operations
+- Group copying and moving
+- Composite group creation
+- Group type assignment
+- Bulk operations
+
+**Note**: This implementation covers the **essential group lifecycle and membership management** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
 
 ## Configuration
 
