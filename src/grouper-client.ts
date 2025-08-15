@@ -133,7 +133,7 @@ export class GrouperClient {
 
   async addMember(groupName: string, member: GrouperMember): Promise<boolean> {
     try {
-      await this.makeRequest('/groups/addMember', 'POST', {
+      await this.makeRequest('/groups', 'POST', {
         WsRestAddMemberRequest: {
           wsGroupLookup: { groupName },
           subjectLookups: [member]
@@ -147,7 +147,7 @@ export class GrouperClient {
 
   async deleteMember(groupName: string, member: GrouperMember): Promise<boolean> {
     try {
-      await this.makeRequest('/groups/deleteMember', 'POST', {
+      await this.makeRequest('/groups', 'POST', {
         WsRestDeleteMemberRequest: {
           wsGroupLookup: { groupName },
           subjectLookups: [member]
