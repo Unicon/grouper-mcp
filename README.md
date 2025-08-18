@@ -18,11 +18,13 @@ This MCP server provides **13 core tools** for essential Grouper operations. It 
 - **grouper_remove_member**: Remove a member from a group
 - **grouper_get_members**: Get all members of a group
 
-### Subject Management (4 tools)
+### Subject Management (4 tools) - **BETA**
 - **grouper_find_subjects**: Search for subjects across all sources or a specific source
 - **grouper_get_subject**: Get detailed information about a specific subject by ID
 - **grouper_get_subject_by_identifier**: Get detailed information about a specific subject by identifier
 - **grouper_search_subjects_by_text**: Search for subjects by text matching their identifiers or names
+
+*Note: Subject management tools are currently in beta and work in progress. While functional, they may not perform exactly as expected and are subject to improvements.*
 
 ### Attribute Management (1 tool)
 - **grouper_assign_attribute**: Assign an attribute to a group
