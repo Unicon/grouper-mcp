@@ -216,6 +216,78 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
           required: ['groupName', 'attributeName', 'value'],
         },
       },
+      {
+        name: 'grouper_find_subjects',
+        description: 'Search for subjects across all sources or a specific source',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            searchQuery: {
+              type: 'string',
+              description: 'Search query for subject identifiers',
+            },
+            sourceId: {
+              type: 'string',
+              description: 'Optional source ID to limit search to specific source',
+            },
+          },
+          required: ['searchQuery'],
+        },
+      },
+      {
+        name: 'grouper_get_subject',
+        description: 'Get detailed information about a specific subject by ID',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            subjectId: {
+              type: 'string',
+              description: 'The subject ID to retrieve',
+            },
+            sourceId: {
+              type: 'string',
+              description: 'Optional source ID where the subject exists',
+            },
+          },
+          required: ['subjectId'],
+        },
+      },
+      {
+        name: 'grouper_get_subject_by_identifier',
+        description: 'Get detailed information about a specific subject by identifier',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            identifier: {
+              type: 'string',
+              description: 'The subject identifier to retrieve (e.g., username, email)',
+            },
+            sourceId: {
+              type: 'string',
+              description: 'Optional source ID where the subject exists',
+            },
+          },
+          required: ['identifier'],
+        },
+      },
+      {
+        name: 'grouper_search_subjects_by_text',
+        description: 'Search for subjects by text matching their identifiers or names',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            searchText: {
+              type: 'string',
+              description: 'Text to search for in subject identifiers and names',
+            },
+            sourceId: {
+              type: 'string',
+              description: 'Optional source ID to limit search to specific source',
+            },
+          },
+          required: ['searchText'],
+        },
+      },
     ],
   };
 });
@@ -535,6 +607,142 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             {
               type: 'text',
               text: `Error assigning attribute: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_find_subjects': {
+      const { searchQuery, sourceId } = request.params.arguments as {
+        searchQuery: string;
+        sourceId?: string;
+      };
+      try {
+        const subjects = await client.findSubjects(searchQuery, sourceId);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${subjects.length} subjects matching "${searchQuery}"${sourceId ? ` in source "${sourceId}"` : ''}:\n\n${subjects
+                .map(s => `• ${s.id || s.identifier}${s.name ? ` (${s.name})` : ''}${s.sourceId ? ` [${s.sourceId}]` : ''}${s.description ? `\n  ${s.description}` : ''}`)
+                .join('\n')}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching subjects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_subject': {
+      const { subjectId, sourceId } = request.params.arguments as {
+        subjectId: string;
+        sourceId?: string;
+      };
+      try {
+        const subject = await client.getSubjectById(subjectId, sourceId);
+        if (!subject) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Subject "${subjectId}" not found${sourceId ? ` in source "${sourceId}"` : ''}`,
+              },
+            ],
+          };
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Subject ID: ${subject.id || 'N/A'}\nIdentifier: ${subject.identifier || 'N/A'}\nName: ${subject.name || 'N/A'}\nSource: ${subject.sourceId || 'N/A'}\nDescription: ${subject.description || 'N/A'}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_subject_by_identifier': {
+      const { identifier, sourceId } = request.params.arguments as {
+        identifier: string;
+        sourceId?: string;
+      };
+      try {
+        const subject = await client.getSubjectByIdentifier(identifier, sourceId);
+        if (!subject) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Subject with identifier "${identifier}" not found${sourceId ? ` in source "${sourceId}"` : ''}`,
+              },
+            ],
+          };
+        }
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Subject ID: ${subject.id || 'N/A'}\nIdentifier: ${subject.identifier || 'N/A'}\nName: ${subject.name || 'N/A'}\nSource: ${subject.sourceId || 'N/A'}\nDescription: ${subject.description || 'N/A'}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_search_subjects_by_text': {
+      const { searchText, sourceId } = request.params.arguments as {
+        searchText: string;
+        sourceId?: string;
+      };
+      try {
+        const subjects = await client.searchSubjectsByText(searchText, sourceId);
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${subjects.length} subjects matching text "${searchText}"${sourceId ? ` in source "${sourceId}"` : ''}:\n\n${subjects
+                .map(s => `• ${s.id || s.identifier}${s.name ? ` (${s.name})` : ''}${s.sourceId ? ` [${s.sourceId}]` : ''}${s.description ? `\n  ${s.description}` : ''}`)
+                .join('\n')}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching subjects: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
           isError: true,

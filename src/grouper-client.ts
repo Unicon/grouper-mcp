@@ -1,4 +1,4 @@
-import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject } from './types.js';
+import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
 import { logger } from './logger.js';
 
@@ -190,6 +190,85 @@ export class GrouperClient {
       return true;
     } catch (error) {
       return false;
+    }
+  }
+
+  async findSubjects(searchQuery: string, sourceId?: string): Promise<GrouperSubject[]> {
+    try {
+      const requestBody: any = {
+        WsRestFindSubjectsRequest: {
+          wsSubjectLookups: [{
+            subjectIdentifier: searchQuery
+          }]
+        }
+      };
+
+      if (sourceId) {
+        requestBody.WsRestFindSubjectsRequest.wsSubjectLookups[0].subjectSourceId = sourceId;
+      }
+
+      const response = await this.makeRequest('/subjects', 'POST', requestBody);
+      return response.WsFindSubjectsResults?.wsSubjects || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'findSubjects');
+      throw grouperError;
+    }
+  }
+
+  async getSubject(subjectLookup: GrouperSubjectLookup): Promise<GrouperSubject | null> {
+    try {
+      const response = await this.makeRequest('/subjects', 'POST', {
+        WsRestGetSubjectsRequest: {
+          wsSubjectLookups: [subjectLookup]
+        }
+      });
+      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
+      return subjects.length > 0 ? subjects[0] : null;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getSubject');
+      return null;
+    }
+  }
+
+  async getSubjectById(subjectId: string, sourceId?: string): Promise<GrouperSubject | null> {
+    const lookup: GrouperSubjectLookup = { subjectId };
+    if (sourceId) {
+      lookup.subjectSourceId = sourceId;
+    }
+    return this.getSubject(lookup);
+  }
+
+  async getSubjectByIdentifier(identifier: string, sourceId?: string): Promise<GrouperSubject | null> {
+    const lookup: GrouperSubjectLookup = { subjectIdentifier: identifier };
+    if (sourceId) {
+      lookup.subjectSourceId = sourceId;
+    }
+    return this.getSubject(lookup);
+  }
+
+  async searchSubjectsByText(searchText: string, sourceId?: string): Promise<GrouperSubject[]> {
+    try {
+      const requestBody: any = {
+        WsRestFindSubjectsRequest: {
+          wsQueryFilter: {
+            queryFilterType: 'FIND_BY_SUBJECT_IDENTIFIER_APPROXIMATE',
+            subjectIdentifier: searchText
+          }
+        }
+      };
+
+      if (sourceId) {
+        requestBody.WsRestFindSubjectsRequest.wsSubjectLookups = [{ subjectSourceId: sourceId }];
+      }
+
+      const response = await this.makeRequest('/subjects', 'POST', requestBody);
+      return response.WsFindSubjectsResults?.wsSubjects || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'searchSubjectsByText');
+      throw grouperError;
     }
   }
 }

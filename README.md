@@ -4,7 +4,7 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **9 core tools** for essential Grouper operations. It focuses on the most commonly used group management functionality.
+This MCP server provides **13 core tools** for essential Grouper operations. It focuses on the most commonly used group management and subject lookup functionality.
 
 ### Group Management (5 tools)
 - **grouper_find_groups**: Search for groups by name or description
@@ -17,6 +17,12 @@ This MCP server provides **9 core tools** for essential Grouper operations. It f
 - **grouper_add_member**: Add a member to a group
 - **grouper_remove_member**: Remove a member from a group
 - **grouper_get_members**: Get all members of a group
+
+### Subject Management (4 tools)
+- **grouper_find_subjects**: Search for subjects across all sources or a specific source
+- **grouper_get_subject**: Get detailed information about a specific subject by ID
+- **grouper_get_subject_by_identifier**: Get detailed information about a specific subject by identifier
+- **grouper_search_subjects_by_text**: Search for subjects by text matching their identifiers or names
 
 ### Attribute Management (1 tool)
 - **grouper_assign_attribute**: Assign an attribute to a group
@@ -35,10 +41,10 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Privilege inheritance and delegation
 - Access control queries
 
-### Subject Management
-- Find subjects across multiple sources
-- Subject source management
-- External subject registration
+### Advanced Subject Management
+- Subject source management and configuration
+- External subject registration and management
+- Subject attribute modification
 
 ### Attribute Definition Management
 - Create and manage attribute definitions
@@ -56,7 +62,7 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Group type assignment
 - Bulk operations
 
-**Note**: This implementation covers the **essential group lifecycle and membership management** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
+**Note**: This implementation covers the **essential group lifecycle, membership management, and subject lookup** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
 
 ## Configuration
 
@@ -156,6 +162,21 @@ Find all groups containing "engineering" in their name
 ### Assign attributes
 ```
 Assign attribute "classification" with value "academic" to group "edu:department:engineering:students"
+```
+
+### Find subjects
+```
+Find subjects with identifier containing "john.doe"
+```
+
+### Get subject details
+```
+Get detailed information for subject with ID "jdoe123"
+```
+
+### Search subjects by text
+```
+Search for subjects containing "engineering" in their name or identifier
 ```
 
 ## Authentication

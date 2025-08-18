@@ -12,6 +12,25 @@ export interface GrouperSubject {
   sourceId?: string;
   identifier?: string;
   name?: string;
+  description?: string;
+  attributeValues?: Record<string, string>;
+  success?: string;
+  resultCode?: string;
+}
+
+export interface GrouperSubjectLookup {
+  subjectId?: string;
+  subjectSourceId?: string;
+  subjectIdentifier?: string;
+}
+
+export interface GrouperSubjectSearchResult {
+  wsSubjects?: GrouperSubject[];
+  resultMetadata?: {
+    resultCode?: string;
+    resultMessage?: string;
+    success?: string;
+  };
 }
 
 export interface GrouperGroup {
