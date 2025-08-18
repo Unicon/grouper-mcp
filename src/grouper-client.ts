@@ -196,7 +196,7 @@ export class GrouperClient {
   async findSubjects(searchQuery: string, sourceId?: string): Promise<GrouperSubject[]> {
     try {
       const requestBody: any = {
-        WsRestFindSubjectsRequest: {
+        WsRestGetSubjectsRequest: {
           wsSubjectLookups: [{
             subjectIdentifier: searchQuery
           }]
@@ -204,11 +204,11 @@ export class GrouperClient {
       };
 
       if (sourceId) {
-        requestBody.WsRestFindSubjectsRequest.wsSubjectLookups[0].subjectSourceId = sourceId;
+        requestBody.WsRestGetSubjectsRequest.wsSubjectLookups[0].subjectSourceId = sourceId;
       }
 
       const response = await this.makeRequest('/subjects', 'POST', requestBody);
-      return response.WsFindSubjectsResults?.wsSubjects || [];
+      return response.WsGetSubjectsResults?.wsSubjects || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'findSubjects');
@@ -250,21 +250,32 @@ export class GrouperClient {
 
   async searchSubjectsByText(searchText: string, sourceId?: string): Promise<GrouperSubject[]> {
     try {
-      const requestBody: any = {
-        WsRestFindSubjectsRequest: {
-          wsQueryFilter: {
-            queryFilterType: 'FIND_BY_SUBJECT_IDENTIFIER_APPROXIMATE',
-            subjectIdentifier: searchText
-          }
+      // Use multiple specific lookups to simulate text search
+      const lookups = [
+        { subjectIdentifier: searchText },
+        { subjectId: searchText }
+      ];
+
+      if (sourceId) {
+        lookups.forEach(lookup => (lookup as any).subjectSourceId = sourceId);
+      }
+
+      const requestBody = {
+        WsRestGetSubjectsRequest: {
+          wsSubjectLookups: lookups
         }
       };
 
-      if (sourceId) {
-        requestBody.WsRestFindSubjectsRequest.wsSubjectLookups = [{ subjectSourceId: sourceId }];
-      }
-
       const response = await this.makeRequest('/subjects', 'POST', requestBody);
-      return response.WsFindSubjectsResults?.wsSubjects || [];
+      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
+      
+      // Filter out null results and duplicates
+      const validSubjects = subjects.filter((s: GrouperSubject) => s && (s.id || s.identifier));
+      const uniqueSubjects = validSubjects.filter((subject: GrouperSubject, index: number, self: GrouperSubject[]) => 
+        index === self.findIndex(s => (s.id === subject.id || s.identifier === subject.identifier))
+      );
+      
+      return uniqueSubjects;
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'searchSubjectsByText');
