@@ -13,7 +13,7 @@ import { logger } from './logger.js';
 const server = new Server(
   {
     name: 'grouper-mcp',
-    version: '1.0.0',
+    version: '0.1.0',
   },
   {
     capabilities: {
