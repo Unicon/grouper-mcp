@@ -84,11 +84,6 @@ export GROUPER_ACT_AS_SUBJECT_SOURCE_ID="your_subject_source"
 export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
 ```
 
-Copy `.env.example` to `.env` and fill in your actual values:
-```bash
-cp .env.example .env
-# Edit .env with your credentials
-```
 
 ## Installation
 
