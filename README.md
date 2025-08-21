@@ -188,13 +188,9 @@ Set `GROUPER_DEBUG=true` to enable verbose debug logging showing:
 
 The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude. Check the log files for detailed error information when troubleshooting.
 
-## Planned Features (TODOS)
+## Planned Features
 
-### Read-Only Mode
-- Add configuration option to enable read-only mode
-- When enabled, all write operations (create, update, delete, add/remove members) would be disabled
-- Useful for testing, demonstrations, or restricted access scenarios
-- Only search and read operations would be available
+Planned features and improvements are tracked in [TODO.md](TODO.md).
 
 ## API Compatibility
 
