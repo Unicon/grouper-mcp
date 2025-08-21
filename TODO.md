@@ -59,6 +59,11 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Group type assignment
 - Bulk operations
 
+### GSH Script Execution
+- Execute Grouper Shell (GSH) scripts remotely
+- Run batch operations and complex administrative tasks
+- Custom scripting for advanced workflows
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
