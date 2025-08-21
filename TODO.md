@@ -24,6 +24,41 @@ Additionally, error handling should be standardized across all tools. Error stat
 
 This improvement would enhance the overall user experience by making tool interactions more predictable and reliable for AI models.
 
+## Implement Remaining Web Service End Points
+
+The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
+
+### Stems/Folders Management
+- Create and manage organizational folders/stems
+- Stem privilege management
+- Hierarchical organization operations
+
+### Advanced Privilege Management
+- Group privilege assignment (admin, read, view, update, etc.)
+- Privilege inheritance and delegation
+- Access control queries
+
+### Subject Management
+- Find subjects across multiple sources
+- Subject source management
+- External subject registration
+
+### Attribute Definition Management
+- Create and manage attribute definitions
+- Attribute definition privileges
+- Complex attribute operations
+
+### Audit and History
+- Audit log queries
+- Change history tracking
+- Activity monitoring
+
+### Advanced Group Operations
+- Group copying and moving
+- Composite group creation
+- Group type assignment
+- Bulk operations
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
