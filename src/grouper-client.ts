@@ -90,13 +90,13 @@ export class GrouperClient {
   }
 
 
-  async getGroupByExactName(groupName: string): Promise<GrouperGroup | null> {
+  async findGroupByFilter(filter: { groupName?: string; groupUuid?: string }, queryFilterType: string): Promise<GrouperGroup | null> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestFindGroupsRequest: {
           wsQueryFilter: {
-            queryFilterType: 'FIND_BY_GROUP_NAME_EXACT',
-            groupName: groupName
+            queryFilterType,
+            ...filter
           },
           includeGroupDetail: "T"
         }

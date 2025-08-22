@@ -4,11 +4,12 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **9 core tools** for essential Grouper operations. It focuses on the most commonly used group management functionality.
+This MCP server provides **10 core tools** for essential Grouper operations. It focuses on the most commonly used group management functionality.
 
-### Group Management (5 tools)
-- **grouper_find_groups**: Search for groups by name or description
-- **grouper_get_group**: Get detailed information about a specific group
+### Group Management (6 tools)
+- **grouper_find_groups_by_name_approximate**: Search for groups by approximate name match
+- **grouper_get_group_by_exact_name**: Get detailed information about a specific group by exact name
+- **grouper_get_group_by_uuid**: Get detailed information about a specific group by UUID
 - **grouper_create_group**: Create a new group
 - **grouper_update_group**: Update group properties (display name, description)
 - **grouper_delete_group**: Delete a group
@@ -146,6 +147,11 @@ Add user "jdoe" to the group "edu:department:engineering:students"
 ### Search for groups
 ```
 Find all groups containing "engineering" in their name
+```
+
+### Get group by UUID
+```
+Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 ```
 
 ### Assign attributes
