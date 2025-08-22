@@ -104,32 +104,46 @@ export class GrouperClient {
       const results = response.WsFindGroupsResults?.groupResults || [];
       return results.length > 0 ? results[0] : null;
     } catch (error) {
-      return null;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'findGroupByFilter', { filter, queryFilterType });
+      throw grouperError;
     }
   }
 
   async createGroup(group: GrouperGroup): Promise<GrouperGroup> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGroupSaveRequest: {
-        wsGroupToSaves: [{
-          wsGroupLookup: { groupName: group.name },
-          wsGroup: group
-        }]
-      }
-    });
-    return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    try {
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGroupSaveRequest: {
+          wsGroupToSaves: [{
+            wsGroupLookup: { groupName: group.name },
+            wsGroup: group
+          }]
+        }
+      });
+      return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'createGroup', { groupName: group.name, displayName: group.displayName });
+      throw grouperError;
+    }
   }
 
   async updateGroup(groupName: string, updates: Partial<GrouperGroup>): Promise<GrouperGroup> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGroupSaveRequest: {
-        wsGroupToSaves: [{
-          wsGroupLookup: { groupName },
-          wsGroup: { name: groupName, ...updates }
-        }]
-      }
-    });
-    return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    try {
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGroupSaveRequest: {
+          wsGroupToSaves: [{
+            wsGroupLookup: { groupName },
+            wsGroup: { name: groupName, ...updates }
+          }]
+        }
+      });
+      return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'updateGroup', { groupName, updates });
+      throw grouperError;
+    }
   }
 
   async deleteGroup(groupName: string): Promise<boolean> {
@@ -141,6 +155,8 @@ export class GrouperClient {
       });
       return true;
     } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'deleteGroup', { groupName });
       return false;
     }
   }
@@ -155,6 +171,8 @@ export class GrouperClient {
       });
       return true;
     } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'addMember', { groupName, member });
       return false;
     }
   }
@@ -169,17 +187,25 @@ export class GrouperClient {
       });
       return true;
     } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'deleteMember', { groupName, member });
       return false;
     }
   }
 
   async getMembers(groupName: string): Promise<GrouperSubject[]> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGetMembersRequest: {
-        wsGroupLookups: [{ groupName }]
-      }
-    });
-    return response.WsGetMembersResults?.results?.[0]?.wsSubjects || [];
+    try {
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGetMembersRequest: {
+          wsGroupLookups: [{ groupName }]
+        }
+      });
+      return response.WsGetMembersResults?.results?.[0]?.wsSubjects || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getMembers', { groupName });
+      throw grouperError;
+    }
   }
 
   async assignAttribute(groupName: string, attribute: GrouperAttribute): Promise<boolean> {
@@ -193,6 +219,8 @@ export class GrouperClient {
       });
       return true;
     } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'assignAttribute', { groupName, attributeName: attribute.nameOfAttributeDefName, value: attribute.value });
       return false;
     }
   }

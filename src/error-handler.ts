@@ -29,12 +29,13 @@ export function handleGrouperError(error: any): GrouperError {
   return new GrouperError('Unknown error occurred');
 }
 
-export function logError(error: GrouperError, context?: string): void {
+export function logError(error: GrouperError, context?: string, contextData?: any): void {
   const prefix = context ? `[${context}]` : '';
   console.error(`${prefix} GrouperError:`, {
     message: error.message,
     statusCode: error.statusCode,
     grouperCode: error.grouperCode,
-    stack: error.stack
+    stack: error.stack,
+    ...(contextData && { contextData })
   });
 }
