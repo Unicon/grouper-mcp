@@ -43,14 +43,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
   return {
     tools: [
       {
-        name: 'grouper_find_groups',
-        description: 'Search for groups in Grouper by name or description',
+        name: 'grouper_find_groups_by_name_approximate',
+        description: 'Search for groups in Grouper by approximate name match. Returns formatted text with comprehensive group information for each matching group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup). Returns count of found groups and formatted details for each match.',
         inputSchema: {
           type: 'object',
           properties: {
             query: {
               type: 'string',
-              description: 'Search query for group names or descriptions',
+              description: 'Search query for approximate group name matching',
             },
           },
           required: ['query'],
@@ -224,17 +224,51 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
   const client = initializeGrouperClient();
   
   switch (request.params.name) {
-    case 'grouper_find_groups': {
+
+    case 'grouper_find_groups_by_name_approximate': {
       const { query } = request.params.arguments as { query: string };
       try {
-        const groups = await client.findGroups(query);
+        const groups = await client.findGroupsByNameApproximate(query);
+        
+        if (groups.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No groups found matching "${query}"`,
+              },
+            ],
+          };
+        }
+        
+        const formatGroupDetails = (group: any) => {
+          let detailText = `• ${group.name}${group.displayName ? ` (${group.displayName})` : ''}`;
+          if (group.description) detailText += `\n  Description: ${group.description}`;
+          if (group.uuid) detailText += `\n  UUID: ${group.uuid}`;
+          if (group.extension) detailText += `\n  Extension: ${group.extension}`;
+          if (group.typeOfGroup) detailText += `\n  Type: ${group.typeOfGroup}`;
+          if (group.enabled) detailText += `\n  Enabled: ${group.enabled}`;
+          
+          if (group.detail) {
+            if (group.detail.createTime) detailText += `\n  Created: ${group.detail.createTime}`;
+            if (group.detail.createSubjectId) detailText += `\n  Created By: ${group.detail.createSubjectId}`;
+            if (group.detail.modifyTime) detailText += `\n  Modified: ${group.detail.modifyTime}`;
+            if (group.detail.hasComposite && group.detail.hasComposite === 'T') {
+              detailText += `\n  Composite: ${group.detail.compositeType || 'Yes'}`;
+              if (group.detail.leftGroup) detailText += ` (${group.detail.leftGroup}`;
+              if (group.detail.rightGroup) detailText += ` ${group.detail.compositeType?.toLowerCase() || 'with'} ${group.detail.rightGroup})`;
+            }
+          }
+          return detailText;
+        };
+        
+        const formattedGroups = groups.map(formatGroupDetails).join('\n\n');
+        
         return {
           content: [
             {
               type: 'text',
-              text: `Found ${groups.length} groups matching "${query}":\n\n${groups
-                .map(g => `• ${g.name}${g.displayName ? ` (${g.displayName})` : ''}${g.description ? `\n  ${g.description}` : ''}`)
-                .join('\n')}`,
+              text: `Found ${groups.length} groups matching "${query}":\n\n${formattedGroups}`,
             },
           ],
         };
@@ -250,7 +284,6 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         };
       }
     }
-
 
     case 'grouper_get_group_by_exact_name': {
       const { groupName } = request.params.arguments as { groupName: string };

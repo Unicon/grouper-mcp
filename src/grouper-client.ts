@@ -69,20 +69,22 @@ export class GrouperClient {
     return responseBody;
   }
 
-  async findGroups(query: string): Promise<GrouperGroup[]> {
+
+  async findGroupsByNameApproximate(query: string): Promise<GrouperGroup[]> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestFindGroupsRequest: {
           wsQueryFilter: {
             queryFilterType: 'FIND_BY_GROUP_NAME_APPROXIMATE',
             groupName: query
-          }
+          },
+          includeGroupDetail: "T"
         }
       });
       return response.WsFindGroupsResults?.groupResults || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'findGroups');
+      logError(grouperError, 'findGroupsByNameApproximate');
       throw grouperError;
     }
   }
