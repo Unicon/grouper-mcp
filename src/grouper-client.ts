@@ -87,14 +87,16 @@ export class GrouperClient {
     }
   }
 
-  async getGroup(groupName: string): Promise<GrouperGroup | null> {
+
+  async getGroupByExactName(groupName: string): Promise<GrouperGroup | null> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestFindGroupsRequest: {
           wsQueryFilter: {
             queryFilterType: 'FIND_BY_GROUP_NAME_EXACT',
             groupName: groupName
-          }
+          },
+          includeGroupDetail: "T"
         }
       });
       const results = response.WsFindGroupsResults?.groupResults || [];

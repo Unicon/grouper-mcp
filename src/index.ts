@@ -57,14 +57,14 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: 'grouper_get_group',
-        description: 'Get detailed information about a specific group',
+        name: 'grouper_get_group_by_exact_name',
+        description: 'Get detailed information about a specific group by exact name match. Returns formatted text with comprehensive group information including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup). Returns "Group not found" if the exact group name does not exist.',
         inputSchema: {
           type: 'object',
           properties: {
             groupName: {
               type: 'string',
-              description: 'The full name of the group to retrieve',
+              description: 'The exact full name of the group to retrieve',
             },
           },
           required: ['groupName'],
@@ -251,11 +251,12 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
 
-    case 'grouper_get_group': {
+
+    case 'grouper_get_group_by_exact_name': {
       const { groupName } = request.params.arguments as { groupName: string };
       try {
-        const group = await client.getGroup(groupName);
-        logger.debug('Group retrieved', { groupName, group });
+        const group = await client.getGroupByExactName(groupName);
+        logger.debug('Group retrieved by exact name', { groupName, group });
         if (!group) {
           return {
             content: [
@@ -266,16 +267,45 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             ],
           };
         }
+        
+        let detailText = `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nExtension: ${group.extension || 'N/A'}\nDisplay Extension: ${group.displayExtension || 'N/A'}\nType of Group: ${group.typeOfGroup || 'N/A'}\nID Index: ${group.idIndex || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`;
+        
+        if (group.enabledTime) detailText += `\nEnabled Time: ${group.enabledTime}`;
+        if (group.disabledTime) detailText += `\nDisabled Time: ${group.disabledTime}`;
+        if (group.alternateName) detailText += `\nAlternate Name: ${group.alternateName}`;
+        
+        if (group.detail) {
+          detailText += '\n\n--- Detailed Information ---';
+          if (group.detail.createTime) detailText += `\nCreated: ${group.detail.createTime}`;
+          if (group.detail.createSubjectId) detailText += `\nCreated By: ${group.detail.createSubjectId}`;
+          if (group.detail.modifyTime) detailText += `\nModified: ${group.detail.modifyTime}`;
+          if (group.detail.modifySubjectId) detailText += `\nModified By: ${group.detail.modifySubjectId}`;
+          if (group.detail.hasComposite) detailText += `\nHas Composite: ${group.detail.hasComposite}`;
+          if (group.detail.compositeType) detailText += `\nComposite Type: ${group.detail.compositeType}`;
+          if (group.detail.leftGroup) detailText += `\nLeft Group: ${group.detail.leftGroup}`;
+          if (group.detail.rightGroup) detailText += `\nRight Group: ${group.detail.rightGroup}`;
+          if (group.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${group.detail.isCompositeFactor}`;
+          if (group.detail.typeNames && group.detail.typeNames.length > 0) {
+            detailText += `\nType Names: ${group.detail.typeNames.join(', ')}`;
+          }
+          if (group.detail.attributeNames && group.detail.attributeNames.length > 0) {
+            detailText += `\nAttribute Names: ${group.detail.attributeNames.join(', ')}`;
+          }
+          if (group.detail.attributeValues && group.detail.attributeValues.length > 0) {
+            detailText += `\nAttribute Values: ${group.detail.attributeValues.join(', ')}`;
+          }
+        }
+        
         return {
           content: [
             {
               type: 'text',
-              text: `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`,
+              text: detailText,
             },
           ],
         };
       } catch (error) {
-        logger.error('Error in grouper_get_group tool', { groupName, error });
+        logger.error('Error in grouper_get_group_by_exact_name tool', { groupName, error });
         return {
           content: [
             {
