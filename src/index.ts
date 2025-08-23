@@ -86,7 +86,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'grouper_create_group',
-        description: 'Create a new group in Grouper',
+        description: 'Create a new group in Grouper and return detailed information about the created group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
         inputSchema: {
           type: 'object',
           properties: {

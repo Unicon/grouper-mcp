@@ -53,17 +53,19 @@ export class GrouperClient {
     logger.logResponse(url, response.status, response.statusText, responseBody);
 
     if (!response.ok) {
-      let errorMessage = `Grouper API error: ${response.status} ${response.statusText}`;
+      // Create error object with full context for handleGrouperError to parse
+      const errorContext = {
+        message: `Grouper API error: ${response.status} ${response.statusText}`,
+        statusCode: response.status,
+        status: response.status,
+        statusText: response.statusText,
+        body: responseBody,
+        url: url
+      };
       
-      if (typeof responseBody === 'object' && (responseBody.error || responseBody.message)) {
-        errorMessage = responseBody.error || responseBody.message;
-      } else if (typeof responseBody === 'string' && responseBody) {
-        errorMessage = responseBody;
-      }
-      
-      const error = new GrouperError(errorMessage, response.status);
-      logError(error, 'API Request');
-      throw error;
+      const grouperError = handleGrouperError(errorContext);
+      logError(grouperError, 'API Request');
+      throw grouperError;
     }
 
     return responseBody;
@@ -84,7 +86,7 @@ export class GrouperClient {
       return response.WsFindGroupsResults?.groupResults || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'findGroupsByNameApproximate');
+      logError(grouperError, 'findGroupsByNameApproximate', { query });
       throw grouperError;
     }
   }
@@ -117,7 +119,8 @@ export class GrouperClient {
           wsGroupToSaves: [{
             wsGroupLookup: { groupName: group.name },
             wsGroup: group
-          }]
+          }],
+          includeGroupDetail: "T"
         }
       });
       return response.WsGroupSaveResults?.results[0]?.wsGroup;
