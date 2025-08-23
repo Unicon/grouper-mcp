@@ -108,7 +108,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'grouper_update_group',
-        description: 'Update an existing group\'s properties',
+        description: 'Update an existing group\'s properties and return detailed information about the updated group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -471,12 +471,41 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
         if (displayName !== undefined) updates.displayName = displayName;
         if (description !== undefined) updates.description = description;
 
-        await client.updateGroup(groupName, updates);
+        const updatedGroup = await client.updateGroup(groupName, updates);
+        
+        let detailText = `Group: ${updatedGroup.name}\nDisplay Name: ${updatedGroup.displayName || 'N/A'}\nDescription: ${updatedGroup.description || 'N/A'}\nUUID: ${updatedGroup.uuid || 'N/A'}\nExtension: ${updatedGroup.extension || 'N/A'}\nDisplay Extension: ${updatedGroup.displayExtension || 'N/A'}\nType of Group: ${updatedGroup.typeOfGroup || 'N/A'}\nID Index: ${updatedGroup.idIndex || 'N/A'}\nEnabled: ${updatedGroup.enabled || 'N/A'}`;
+        
+        if (updatedGroup.enabledTime) detailText += `\nEnabled Time: ${updatedGroup.enabledTime}`;
+        if (updatedGroup.disabledTime) detailText += `\nDisabled Time: ${updatedGroup.disabledTime}`;
+        if (updatedGroup.alternateName) detailText += `\nAlternate Name: ${updatedGroup.alternateName}`;
+        
+        if (updatedGroup.detail) {
+          detailText += '\n\n--- Detailed Information ---';
+          if (updatedGroup.detail.createTime) detailText += `\nCreated: ${updatedGroup.detail.createTime}`;
+          if (updatedGroup.detail.createSubjectId) detailText += `\nCreated By: ${updatedGroup.detail.createSubjectId}`;
+          if (updatedGroup.detail.modifyTime) detailText += `\nModified: ${updatedGroup.detail.modifyTime}`;
+          if (updatedGroup.detail.modifySubjectId) detailText += `\nModified By: ${updatedGroup.detail.modifySubjectId}`;
+          if (updatedGroup.detail.hasComposite) detailText += `\nHas Composite: ${updatedGroup.detail.hasComposite}`;
+          if (updatedGroup.detail.compositeType) detailText += `\nComposite Type: ${updatedGroup.detail.compositeType}`;
+          if (updatedGroup.detail.leftGroup) detailText += `\nLeft Group: ${updatedGroup.detail.leftGroup}`;
+          if (updatedGroup.detail.rightGroup) detailText += `\nRight Group: ${updatedGroup.detail.rightGroup}`;
+          if (updatedGroup.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${updatedGroup.detail.isCompositeFactor}`;
+          if (updatedGroup.detail.typeNames && updatedGroup.detail.typeNames.length > 0) {
+            detailText += `\nType Names: ${updatedGroup.detail.typeNames.join(', ')}`;
+          }
+          if (updatedGroup.detail.attributeNames && updatedGroup.detail.attributeNames.length > 0) {
+            detailText += `\nAttribute Names: ${updatedGroup.detail.attributeNames.join(', ')}`;
+          }
+          if (updatedGroup.detail.attributeValues && updatedGroup.detail.attributeValues.length > 0) {
+            detailText += `\nAttribute Values: ${updatedGroup.detail.attributeValues.join(', ')}`;
+          }
+        }
+        
         return {
           content: [
             {
               type: 'text',
-              text: `Successfully updated group "${groupName}"`,
+              text: detailText,
             },
           ],
         };

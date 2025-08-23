@@ -138,7 +138,8 @@ export class GrouperClient {
           wsGroupToSaves: [{
             wsGroupLookup: { groupName },
             wsGroup: { name: groupName, ...updates }
-          }]
+          }],
+          includeGroupDetail: "T"
         }
       });
       return response.WsGroupSaveResults?.results[0]?.wsGroup;
