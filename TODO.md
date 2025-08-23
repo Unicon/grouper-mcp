@@ -71,6 +71,23 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Need to investigate if the displayName parameter is being correctly passed to the Grouper API
 - Verify that created groups have the expected displayName value
 
+## Testing Infrastructure
+
+### Automated Testing
+- Add unit tests for GrouperClient methods
+- Add integration tests for MCP tool handlers
+- Create test fixtures with mock Grouper API responses
+- Test error handling scenarios with various Grouper API error responses
+- Add tests for formatting functions (formatSingleGroupDetails, formatGroupCollectionDetails)
+- Set up continuous integration to run tests on code changes
+- Create test utilities for mocking Grouper API calls
+
+### Test Coverage Goals
+- Client method functionality (create, read, update, delete operations)
+- Error handling and parsing of Grouper API errors
+- Tool parameter validation and response formatting
+- Authentication and configuration handling
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._

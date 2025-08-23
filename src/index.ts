@@ -9,6 +9,8 @@ import {
 import { GrouperClient } from './grouper-client.js';
 import { GrouperConfig, GrouperGroup } from './types.js';
 import { logger } from './logger.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails } from './utils.js';
+
 
 const server = new Server(
   {
@@ -255,28 +257,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
         
-        const formatGroupDetails = (group: any) => {
-          let detailText = `• ${group.name}${group.displayName ? ` (${group.displayName})` : ''}`;
-          if (group.description) detailText += `\n  Description: ${group.description}`;
-          if (group.uuid) detailText += `\n  UUID: ${group.uuid}`;
-          if (group.extension) detailText += `\n  Extension: ${group.extension}`;
-          if (group.typeOfGroup) detailText += `\n  Type: ${group.typeOfGroup}`;
-          if (group.enabled) detailText += `\n  Enabled: ${group.enabled}`;
-          
-          if (group.detail) {
-            if (group.detail.createTime) detailText += `\n  Created: ${group.detail.createTime}`;
-            if (group.detail.createSubjectId) detailText += `\n  Created By: ${group.detail.createSubjectId}`;
-            if (group.detail.modifyTime) detailText += `\n  Modified: ${group.detail.modifyTime}`;
-            if (group.detail.hasComposite && group.detail.hasComposite === 'T') {
-              detailText += `\n  Composite: ${group.detail.compositeType || 'Yes'}`;
-              if (group.detail.leftGroup) detailText += ` (${group.detail.leftGroup}`;
-              if (group.detail.rightGroup) detailText += ` ${group.detail.compositeType?.toLowerCase() || 'with'} ${group.detail.rightGroup})`;
-            }
-          }
-          return detailText;
-        };
-        
-        const formattedGroups = groups.map(formatGroupDetails).join('\n\n');
+        const formattedGroups = groups.map(formatGroupCollectionDetails).join('\n\n');
         
         return {
           content: [
@@ -315,33 +296,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
         
-        let detailText = `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nExtension: ${group.extension || 'N/A'}\nDisplay Extension: ${group.displayExtension || 'N/A'}\nType of Group: ${group.typeOfGroup || 'N/A'}\nID Index: ${group.idIndex || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`;
-        
-        if (group.enabledTime) detailText += `\nEnabled Time: ${group.enabledTime}`;
-        if (group.disabledTime) detailText += `\nDisabled Time: ${group.disabledTime}`;
-        if (group.alternateName) detailText += `\nAlternate Name: ${group.alternateName}`;
-        
-        if (group.detail) {
-          detailText += '\n\n--- Detailed Information ---';
-          if (group.detail.createTime) detailText += `\nCreated: ${group.detail.createTime}`;
-          if (group.detail.createSubjectId) detailText += `\nCreated By: ${group.detail.createSubjectId}`;
-          if (group.detail.modifyTime) detailText += `\nModified: ${group.detail.modifyTime}`;
-          if (group.detail.modifySubjectId) detailText += `\nModified By: ${group.detail.modifySubjectId}`;
-          if (group.detail.hasComposite) detailText += `\nHas Composite: ${group.detail.hasComposite}`;
-          if (group.detail.compositeType) detailText += `\nComposite Type: ${group.detail.compositeType}`;
-          if (group.detail.leftGroup) detailText += `\nLeft Group: ${group.detail.leftGroup}`;
-          if (group.detail.rightGroup) detailText += `\nRight Group: ${group.detail.rightGroup}`;
-          if (group.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${group.detail.isCompositeFactor}`;
-          if (group.detail.typeNames && group.detail.typeNames.length > 0) {
-            detailText += `\nType Names: ${group.detail.typeNames.join(', ')}`;
-          }
-          if (group.detail.attributeNames && group.detail.attributeNames.length > 0) {
-            detailText += `\nAttribute Names: ${group.detail.attributeNames.join(', ')}`;
-          }
-          if (group.detail.attributeValues && group.detail.attributeValues.length > 0) {
-            detailText += `\nAttribute Values: ${group.detail.attributeValues.join(', ')}`;
-          }
-        }
+        const detailText = formatSingleGroupDetails(group);
         
         return {
           content: [
@@ -381,33 +336,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
           };
         }
         
-        let detailText = `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nExtension: ${group.extension || 'N/A'}\nDisplay Extension: ${group.displayExtension || 'N/A'}\nType of Group: ${group.typeOfGroup || 'N/A'}\nID Index: ${group.idIndex || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`;
-        
-        if (group.enabledTime) detailText += `\nEnabled Time: ${group.enabledTime}`;
-        if (group.disabledTime) detailText += `\nDisabled Time: ${group.disabledTime}`;
-        if (group.alternateName) detailText += `\nAlternate Name: ${group.alternateName}`;
-        
-        if (group.detail) {
-          detailText += '\n\n--- Detailed Information ---';
-          if (group.detail.createTime) detailText += `\nCreated: ${group.detail.createTime}`;
-          if (group.detail.createSubjectId) detailText += `\nCreated By: ${group.detail.createSubjectId}`;
-          if (group.detail.modifyTime) detailText += `\nModified: ${group.detail.modifyTime}`;
-          if (group.detail.modifySubjectId) detailText += `\nModified By: ${group.detail.modifySubjectId}`;
-          if (group.detail.hasComposite) detailText += `\nHas Composite: ${group.detail.hasComposite}`;
-          if (group.detail.compositeType) detailText += `\nComposite Type: ${group.detail.compositeType}`;
-          if (group.detail.leftGroup) detailText += `\nLeft Group: ${group.detail.leftGroup}`;
-          if (group.detail.rightGroup) detailText += `\nRight Group: ${group.detail.rightGroup}`;
-          if (group.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${group.detail.isCompositeFactor}`;
-          if (group.detail.typeNames && group.detail.typeNames.length > 0) {
-            detailText += `\nType Names: ${group.detail.typeNames.join(', ')}`;
-          }
-          if (group.detail.attributeNames && group.detail.attributeNames.length > 0) {
-            detailText += `\nAttribute Names: ${group.detail.attributeNames.join(', ')}`;
-          }
-          if (group.detail.attributeValues && group.detail.attributeValues.length > 0) {
-            detailText += `\nAttribute Values: ${group.detail.attributeValues.join(', ')}`;
-          }
-        }
+        const detailText = formatSingleGroupDetails(group);
         
         return {
           content: [
@@ -473,33 +402,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
 
         const updatedGroup = await client.updateGroup(groupName, updates);
         
-        let detailText = `Group: ${updatedGroup.name}\nDisplay Name: ${updatedGroup.displayName || 'N/A'}\nDescription: ${updatedGroup.description || 'N/A'}\nUUID: ${updatedGroup.uuid || 'N/A'}\nExtension: ${updatedGroup.extension || 'N/A'}\nDisplay Extension: ${updatedGroup.displayExtension || 'N/A'}\nType of Group: ${updatedGroup.typeOfGroup || 'N/A'}\nID Index: ${updatedGroup.idIndex || 'N/A'}\nEnabled: ${updatedGroup.enabled || 'N/A'}`;
-        
-        if (updatedGroup.enabledTime) detailText += `\nEnabled Time: ${updatedGroup.enabledTime}`;
-        if (updatedGroup.disabledTime) detailText += `\nDisabled Time: ${updatedGroup.disabledTime}`;
-        if (updatedGroup.alternateName) detailText += `\nAlternate Name: ${updatedGroup.alternateName}`;
-        
-        if (updatedGroup.detail) {
-          detailText += '\n\n--- Detailed Information ---';
-          if (updatedGroup.detail.createTime) detailText += `\nCreated: ${updatedGroup.detail.createTime}`;
-          if (updatedGroup.detail.createSubjectId) detailText += `\nCreated By: ${updatedGroup.detail.createSubjectId}`;
-          if (updatedGroup.detail.modifyTime) detailText += `\nModified: ${updatedGroup.detail.modifyTime}`;
-          if (updatedGroup.detail.modifySubjectId) detailText += `\nModified By: ${updatedGroup.detail.modifySubjectId}`;
-          if (updatedGroup.detail.hasComposite) detailText += `\nHas Composite: ${updatedGroup.detail.hasComposite}`;
-          if (updatedGroup.detail.compositeType) detailText += `\nComposite Type: ${updatedGroup.detail.compositeType}`;
-          if (updatedGroup.detail.leftGroup) detailText += `\nLeft Group: ${updatedGroup.detail.leftGroup}`;
-          if (updatedGroup.detail.rightGroup) detailText += `\nRight Group: ${updatedGroup.detail.rightGroup}`;
-          if (updatedGroup.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${updatedGroup.detail.isCompositeFactor}`;
-          if (updatedGroup.detail.typeNames && updatedGroup.detail.typeNames.length > 0) {
-            detailText += `\nType Names: ${updatedGroup.detail.typeNames.join(', ')}`;
-          }
-          if (updatedGroup.detail.attributeNames && updatedGroup.detail.attributeNames.length > 0) {
-            detailText += `\nAttribute Names: ${updatedGroup.detail.attributeNames.join(', ')}`;
-          }
-          if (updatedGroup.detail.attributeValues && updatedGroup.detail.attributeValues.length > 0) {
-            detailText += `\nAttribute Values: ${updatedGroup.detail.attributeValues.join(', ')}`;
-          }
-        }
+        const detailText = formatSingleGroupDetails(updatedGroup);
         
         return {
           content: [
