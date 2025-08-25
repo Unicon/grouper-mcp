@@ -150,11 +150,11 @@ export class GrouperClient {
     }
   }
 
-  async deleteGroup(groupName: string): Promise<GrouperGroup | null> {
+  async deleteGroupByFilter(filter: { groupName?: string; uuid?: string; idIndex?: string }): Promise<GrouperGroup | null> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestGroupDeleteRequest: {
-          wsGroupLookups: [{ groupName }],
+          wsGroupLookups: [filter],
           includeGroupDetail: "T"
         }
       });
@@ -166,7 +166,8 @@ export class GrouperClient {
         
         // Check if group was not found
         if (resultCode === 'SUCCESS_GROUP_NOT_FOUND') {
-          throw new Error(`Group "${groupName}" not found`);
+          const filterDesc = filter.groupName || filter.uuid || filter.idIndex;
+          throw new Error(`Group "${filterDesc}" not found`);
         }
         
         // Check for other non-success result codes
@@ -181,7 +182,7 @@ export class GrouperClient {
       return null;
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'deleteGroup', { groupName });
+      logError(grouperError, 'deleteGroupByFilter', { filter });
       throw grouperError;
     }
   }

@@ -131,8 +131,8 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
         },
       },
       {
-        name: 'grouper_delete_group',
-        description: 'Delete a group from Grouper and return detailed information about the deleted group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
+        name: 'grouper_delete_group_by_name',
+        description: 'Delete a group from Grouper by name and return detailed information about the deleted group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -142,6 +142,34 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
             },
           },
           required: ['groupName'],
+        },
+      },
+      {
+        name: 'grouper_delete_group_by_uuid',
+        description: 'Delete a group from Grouper by UUID and return detailed information about the deleted group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            groupUuid: {
+              type: 'string',
+              description: 'The UUID of the group to delete',
+            },
+          },
+          required: ['groupUuid'],
+        },
+      },
+      {
+        name: 'grouper_delete_group_by_id_index',
+        description: 'Delete a group from Grouper by ID index and return detailed information about the deleted group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
+        inputSchema: {
+          type: 'object',
+          properties: {
+            idIndex: {
+              type: 'string',
+              description: 'The ID index of the group to delete',
+            },
+          },
+          required: ['idIndex'],
         },
       },
       {
@@ -425,10 +453,10 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
       }
     }
 
-    case 'grouper_delete_group': {
+    case 'grouper_delete_group_by_name': {
       const { groupName } = request.params.arguments as { groupName: string };
       try {
-        const deletedGroup = await client.deleteGroup(groupName);
+        const deletedGroup = await client.deleteGroupByFilter({ groupName });
         if (deletedGroup) {
           const detailText = formatSingleGroupDetails(deletedGroup);
           return {
@@ -445,6 +473,82 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
               {
                 type: 'text',
                 text: `Failed to delete group "${groupName}" - no group details returned`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error deleting group: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_delete_group_by_uuid': {
+      const { groupUuid } = request.params.arguments as { groupUuid: string };
+      try {
+        const deletedGroup = await client.deleteGroupByFilter({ uuid: groupUuid });
+        if (deletedGroup) {
+          const detailText = formatSingleGroupDetails(deletedGroup);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Successfully deleted group:\n\n${detailText}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Failed to delete group with UUID "${groupUuid}" - no group details returned`,
+              },
+            ],
+            isError: true,
+          };
+        }
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error deleting group: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_delete_group_by_id_index': {
+      const { idIndex } = request.params.arguments as { idIndex: string };
+      try {
+        const deletedGroup = await client.deleteGroupByFilter({ idIndex });
+        if (deletedGroup) {
+          const detailText = formatSingleGroupDetails(deletedGroup);
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Successfully deleted group:\n\n${detailText}`,
+              },
+            ],
+          };
+        } else {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Failed to delete group with ID index "${idIndex}" - no group details returned`,
               },
             ],
             isError: true,
