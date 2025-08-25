@@ -1,7 +1,7 @@
 import { GrouperClient } from './grouper-client.js';
 import { GrouperGroup } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults } from './utils.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
@@ -393,16 +393,29 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_get_members': {
-      const { groupName } = args as { groupName: string };
+      const { groupName, includeGroupDetail, includeSubjectDetail, subjectAttributeNames, memberFilter } = args as {
+        groupName: string;
+        includeGroupDetail?: boolean;
+        includeSubjectDetail?: boolean;
+        subjectAttributeNames?: string;
+        memberFilter?: string;
+      };
       try {
-        const members = await client.getMembers(groupName);
+        const options = {
+          includeGroupDetail,
+          includeSubjectDetail,
+          subjectAttributeNames,
+          memberFilter: memberFilter || 'All'
+        };
+        
+        const result = await client.getMembers(groupName, options);
+        const formattedText = formatMemberResults(result, includeGroupDetail, includeSubjectDetail);
+        
         return {
           content: [
             {
               type: 'text',
-              text: `Members of group "${groupName}" (${members.length} total):\n\n${members
-                .map(m => `• ${m.id || m.identifier}${m.name ? ` (${m.name})` : ''}${m.sourceId ? ` [${m.sourceId}]` : ''}`)
-                .join('\n')}`,
+              text: formattedText,
             },
           ],
         };

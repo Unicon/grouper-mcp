@@ -219,17 +219,50 @@ export class GrouperClient {
     }
   }
 
-  async getMembers(groupName: string): Promise<GrouperSubject[]> {
+  async getMembers(
+    groupName: string, 
+    options?: {
+      includeGroupDetail?: boolean;
+      includeSubjectDetail?: boolean;
+      subjectAttributeNames?: string;
+      memberFilter?: string;
+    }
+  ): Promise<any> {
     try {
-      const response = await this.makeRequest('/groups', 'POST', {
+      const request: any = {
         WsRestGetMembersRequest: {
           wsGroupLookups: [{ groupName }]
         }
-      });
-      return response.WsGetMembersResults?.results?.[0]?.wsSubjects || [];
+      };
+
+      // Add optional parameters
+      if (options?.includeGroupDetail) {
+        request.WsRestGetMembersRequest.includeGroupDetail = "T";
+      }
+      if (options?.includeSubjectDetail) {
+        request.WsRestGetMembersRequest.includeSubjectDetail = "T";
+      }
+      
+      // Always request these common subject attributes, plus any additional ones specified
+      let subjectAttributesList = ["display_name", "login_id", "email_address"];
+      if (options?.subjectAttributeNames) {
+        // Split the comma-separated string and add to our list
+        const additionalAttrs = options.subjectAttributeNames.split(',').map(attr => attr.trim());
+        subjectAttributesList = subjectAttributesList.concat(additionalAttrs);
+      }
+      request.WsRestGetMembersRequest.subjectAttributeNames = subjectAttributesList;
+      
+      if (options?.memberFilter) {
+        request.WsRestGetMembersRequest.memberFilter = options.memberFilter;
+      }
+
+      const response = await this.makeRequest('/groups', 'POST', request);
+      
+      // Return the full result to allow detailed formatting in the handler
+      return response.WsGetMembersResults?.results?.[0] || { wsSubjects: [] };
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'getMembers', { groupName });
+      logError(grouperError, 'getMembers', { groupName, options });
       throw grouperError;
     }
   }

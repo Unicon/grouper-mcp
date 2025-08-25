@@ -181,13 +181,29 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_get_members',
-    description: 'Get all members of a group',
+    description: 'Get all members of a group with detailed information about both the group and its members. Always includes member display name, login ID, and email address. Returns formatted text with member information including: Subject ID, Display Name, Login ID, Email, Source, Member ID, and when detailed information is requested: full group details and additional subject attributes.',
     inputSchema: {
       type: 'object',
       properties: {
         groupName: {
           type: 'string',
           description: 'The full name of the group',
+        },
+        includeGroupDetail: {
+          type: 'boolean',
+          description: 'Include detailed information about the group (default: false)',
+        },
+        includeSubjectDetail: {
+          type: 'boolean',
+          description: 'Include detailed information about each member/subject (default: false)',
+        },
+        subjectAttributeNames: {
+          type: 'string',
+          description: 'Comma-separated list of additional subject attribute names to include beyond the default display_name, login_id, email_address (e.g., "lastName,firstName,department")',
+        },
+        memberFilter: {
+          type: 'string',
+          description: 'Filter for membership type: "All", "Effective", "Immediate", "Composite", "NonImmediate" (default: "All")',
         },
       },
       required: ['groupName'],

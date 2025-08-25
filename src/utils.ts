@@ -52,3 +52,97 @@ export function formatGroupCollectionDetails(group: any): string {
   }
   return detailText;
 }
+
+export function formatMemberResults(result: any, includeGroupDetail?: boolean, includeSubjectDetail?: boolean): string {
+  const members = result.wsSubjects || [];
+  const group = result.wsGroup;
+  
+  let output = '';
+  
+  // Add group information - show basic info if available, detailed if requested
+  if (group) {
+    output += '=== GROUP INFORMATION ===\n';
+    if (includeGroupDetail) {
+      // Show full detailed information
+      output += formatSingleGroupDetails(group);
+    } else {
+      // Show basic group information that's always available
+      output += `Group: ${group.name || 'N/A'}\n`;
+      output += `Display Name: ${group.displayName || 'N/A'}\n`;
+      output += `Description: ${group.description || 'N/A'}\n`;
+      output += `UUID: ${group.uuid || 'N/A'}\n`;
+      output += `Type: ${group.typeOfGroup || 'N/A'}\n`;
+      output += `Enabled: ${group.enabled || 'N/A'}\n`;
+      if (group.idIndex) output += `ID Index: ${group.idIndex}\n`;
+    }
+    output += '\n';
+  }
+  
+  // Add members information
+  output += `=== MEMBERS (${members.length} total) ===\n`;
+  
+  if (members.length === 0) {
+    output += 'No members found.';
+    return output;
+  }
+  
+  members.forEach((member: any, index: number) => {
+    output += `\n${index + 1}. Subject ID: ${member.id || member.identifier || 'Unknown ID'}`;
+    
+    if (member.name) {
+      output += ` (${member.name})`;
+    }
+    
+    if (member.sourceId) {
+      output += `\n   Source: ${member.sourceId}`;
+    }
+    
+    if (member.memberId) {
+      output += `\n   Member ID: ${member.memberId}`;
+    }
+    
+    // Display subject attributes - we always request display_name, login_id, email_address
+    if (member.attributeValues && member.attributeValues.length > 0) {
+      // The attributeValues array corresponds to the requested subjectAttributeNames
+      // Since we always request "display_name, login_id, email_address" first, we can map them
+      const attrs = member.attributeValues;
+      if (attrs.length >= 3) {
+        if (attrs[0]) output += `\n   Display Name: ${attrs[0]}`;
+        if (attrs[1]) output += `\n   Login ID: ${attrs[1]}`;
+        if (attrs[2]) output += `\n   Email: ${attrs[2]}`;
+        
+        // Show any additional attributes if requested via includeSubjectDetail
+        if (includeSubjectDetail && attrs.length > 3) {
+          output += '\n   Additional Attributes:';
+          for (let i = 3; i < attrs.length; i++) {
+            if (attrs[i]) {
+              output += `\n     - ${attrs[i]}`;
+            }
+          }
+        }
+      } else {
+        // Fallback: show all attributes if we don't have the expected 3
+        if (includeSubjectDetail) {
+          output += '\n   Attributes:';
+          attrs.forEach((attr: string) => {
+            if (attr) {
+              output += `\n     - ${attr}`;
+            }
+          });
+        }
+      }
+    }
+    
+    // Always show result status if it's not SUCCESS or if there are issues
+    if (member.resultCode) {
+      if (member.resultCode !== 'SUCCESS' || member.success === 'F') {
+        output += `\n   Status: ${member.resultCode}`;
+        if (member.success === 'F') {
+          output += ' (Failed)';
+        }
+      }
+    }
+  });
+  
+  return output;
+}
