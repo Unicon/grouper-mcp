@@ -150,18 +150,39 @@ export class GrouperClient {
     }
   }
 
-  async deleteGroup(groupName: string): Promise<boolean> {
+  async deleteGroup(groupName: string): Promise<GrouperGroup | null> {
     try {
-      await this.makeRequest('/groups', 'POST', {
+      const response = await this.makeRequest('/groups', 'POST', {
         WsRestGroupDeleteRequest: {
-          wsGroupLookups: [{ groupName }]
+          wsGroupLookups: [{ groupName }],
+          includeGroupDetail: "T"
         }
       });
-      return true;
+      const results = response.WsGroupDeleteResults?.results || [];
+      
+      if (results.length > 0) {
+        const result = results[0];
+        const resultCode = result.resultMetadata?.resultCode;
+        
+        // Check if group was not found
+        if (resultCode === 'SUCCESS_GROUP_NOT_FOUND') {
+          throw new Error(`Group "${groupName}" not found`);
+        }
+        
+        // Check for other non-success result codes
+        if (result.resultMetadata?.success !== 'T') {
+          const message = result.resultMetadata?.resultMessage || 'Unknown error';
+          throw new Error(`Failed to delete group: ${message}`);
+        }
+        
+        return result.wsGroup || null;
+      }
+      
+      return null;
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'deleteGroup', { groupName });
-      return false;
+      throw grouperError;
     }
   }
 

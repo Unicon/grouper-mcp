@@ -132,7 +132,7 @@ server.setRequestHandler(ListToolsRequestSchema, async () => {
       },
       {
         name: 'grouper_delete_group',
-        description: 'Delete a group from Grouper',
+        description: 'Delete a group from Grouper and return detailed information about the deleted group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
         inputSchema: {
           type: 'object',
           properties: {
@@ -428,13 +428,14 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
     case 'grouper_delete_group': {
       const { groupName } = request.params.arguments as { groupName: string };
       try {
-        const success = await client.deleteGroup(groupName);
-        if (success) {
+        const deletedGroup = await client.deleteGroup(groupName);
+        if (deletedGroup) {
+          const detailText = formatSingleGroupDetails(deletedGroup);
           return {
             content: [
               {
                 type: 'text',
-                text: `Successfully deleted group "${groupName}"`,
+                text: `Successfully deleted group:\n\n${detailText}`,
               },
             ],
           };
@@ -443,7 +444,7 @@ server.setRequestHandler(CallToolRequestSchema, async (request) => {
             content: [
               {
                 type: 'text',
-                text: `Failed to delete group "${groupName}"`,
+                text: `Failed to delete group "${groupName}" - no group details returned`,
               },
             ],
             isError: true,
