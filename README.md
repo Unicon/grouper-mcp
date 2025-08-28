@@ -196,7 +196,7 @@ The server includes comprehensive error handling and logging. Errors are capture
 
 ## Planned Features
 
-Planned features and improvements are tracked in [TODO.md](TODO.md).
+Planned features and improvements are tracked in [TODO.md](docs/TODO.md).
 
 ## API Compatibility
 
