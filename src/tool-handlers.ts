@@ -445,23 +445,19 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_get_members': {
-      const { groupName, includeGroupDetail, includeSubjectDetail, subjectAttributeNames, memberFilter } = args as {
+      const { groupName, subjectAttributeNames, memberFilter } = args as {
         groupName: string;
-        includeGroupDetail?: boolean;
-        includeSubjectDetail?: boolean;
         subjectAttributeNames?: string;
         memberFilter?: string;
       };
       try {
         const options = {
-          includeGroupDetail,
-          includeSubjectDetail,
           subjectAttributeNames,
           memberFilter: memberFilter || 'All'
         };
         
         const result = await client.getMembers(groupName, options);
-        const formattedText = formatMemberResults(result, includeGroupDetail, includeSubjectDetail);
+        const formattedText = formatMemberResults(result, true, true);
         
         return {
           content: [

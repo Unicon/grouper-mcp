@@ -252,27 +252,11 @@ export class GrouperClient {
   async getMembers(
     groupName: string, 
     options?: {
-      includeGroupDetail?: boolean;
-      includeSubjectDetail?: boolean;
       subjectAttributeNames?: string;
       memberFilter?: string;
     }
   ): Promise<any> {
     try {
-      const request: any = {
-        WsRestGetMembersRequest: {
-          wsGroupLookups: [{ groupName }]
-        }
-      };
-
-      // Add optional parameters
-      if (options?.includeGroupDetail) {
-        request.WsRestGetMembersRequest.includeGroupDetail = "T";
-      }
-      if (options?.includeSubjectDetail) {
-        request.WsRestGetMembersRequest.includeSubjectDetail = "T";
-      }
-      
       // Always request these common subject attributes, plus any additional ones specified
       let subjectAttributesList = ["display_name", "login_id", "email_address"];
       if (options?.subjectAttributeNames) {
@@ -280,7 +264,15 @@ export class GrouperClient {
         const additionalAttrs = options.subjectAttributeNames.split(',').map(attr => attr.trim());
         subjectAttributesList = subjectAttributesList.concat(additionalAttrs);
       }
-      request.WsRestGetMembersRequest.subjectAttributeNames = subjectAttributesList;
+
+      const request: any = {
+        WsRestGetMembersRequest: {
+          wsGroupLookups: [{ groupName }],
+          includeGroupDetail: "T",
+          includeSubjectDetail: "T",
+          subjectAttributeNames: subjectAttributesList
+        }
+      };
       
       if (options?.memberFilter) {
         request.WsRestGetMembersRequest.memberFilter = options.memberFilter;
