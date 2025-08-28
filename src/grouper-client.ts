@@ -187,19 +187,34 @@ export class GrouperClient {
     }
   }
 
-  async addMember(groupName: string, member: GrouperMember): Promise<boolean> {
+  async addMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
     try {
-      await this.makeRequest('/groups', 'POST', {
+      const response = await this.makeRequest('/groups', 'POST', {
         WsRestAddMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member]
+          subjectLookups: [member],
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+          subjectAttributeNames: ['display_name', 'login_id', 'email_address']
         }
       });
-      return true;
+
+      const result = response?.WsAddMemberResults || response;
+      
+      const wsGroup = result?.wsGroupAssigned;
+      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
+      const subjectAttributeNames = result?.subjectAttributeNames || [];
+
+      return {
+        success: true,
+        group: wsGroup,
+        members: wsSubjects,
+        subjectAttributeNames
+      };
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'addMember', { groupName, member });
-      return false;
+      return { success: false };
     }
   }
 

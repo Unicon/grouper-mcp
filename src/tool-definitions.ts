@@ -129,7 +129,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_add_member',
-    description: 'Add a member to a group',
+    description: 'Add a member to a group and return detailed information about both the group and the added member. Returns formatted text with comprehensive group information including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata. Also includes detailed subject information for the added member including: Subject ID, Display Name, Login ID, Email, Source, Member ID, and additional subject attributes when available.',
     inputSchema: {
       type: 'object',
       properties: {
