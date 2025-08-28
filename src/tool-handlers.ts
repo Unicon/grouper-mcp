@@ -384,13 +384,39 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
       };
       try {
         const member = { subjectId, subjectSourceId, subjectIdentifier };
-        const success = await client.deleteMember(groupName, member);
-        if (success) {
+        const result: { success: boolean; group?: any; members?: any[]; subjectAttributeNames?: string[] } = await client.deleteMember(groupName, member);
+        
+        if (result.success) {
+          let responseText = `Successfully removed member "${subjectId}" from group "${groupName}"\n\n`;
+          
+          // Add group details if available
+          if (result.group) {
+            responseText += `Group Details:\n${formatSingleGroupDetails(result.group)}\n\n`;
+          }
+          
+          // Add member/subject details if available
+          if (result.members && result.members.length > 0) {
+            responseText += `Removed Member Details:\n`;
+            result.members.forEach((subject: any) => {
+              responseText += `- Subject ID: ${subject.id || 'N/A'}\n`;
+              responseText += `- Display Name: ${subject.name || 'N/A'}\n`;
+              responseText += `- Source: ${subject.sourceId || 'N/A'}\n`;
+              
+              // Map attribute values using the attribute names if available
+              if (subject.attributeValues && result.subjectAttributeNames) {
+                result.subjectAttributeNames.forEach((attrName: string, index: number) => {
+                  const value = subject.attributeValues[index] || 'N/A';
+                  responseText += `- ${attrName}: ${value}\n`;
+                });
+              }
+            });
+          }
+          
           return {
             content: [
               {
                 type: 'text',
-                text: `Successfully removed member "${subjectId}" from group "${groupName}"`,
+                text: responseText.trim(),
               },
             ],
           };

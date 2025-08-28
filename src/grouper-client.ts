@@ -218,19 +218,34 @@ export class GrouperClient {
     }
   }
 
-  async deleteMember(groupName: string, member: GrouperMember): Promise<boolean> {
+  async deleteMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
     try {
-      await this.makeRequest('/groups', 'POST', {
+      const response = await this.makeRequest('/groups', 'POST', {
         WsRestDeleteMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member]
+          subjectLookups: [member],
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+          subjectAttributeNames: ['display_name', 'login_id', 'email_address']
         }
       });
-      return true;
+
+      const result = response?.WsDeleteMemberResults || response;
+      
+      const wsGroup = result?.wsGroupAssigned;
+      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
+      const subjectAttributeNames = result?.subjectAttributeNames || [];
+
+      return {
+        success: true,
+        group: wsGroup,
+        members: wsSubjects,
+        subjectAttributeNames
+      };
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'deleteMember', { groupName, member });
-      return false;
+      return { success: false };
     }
   }
 
