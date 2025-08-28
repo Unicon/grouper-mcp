@@ -64,6 +64,23 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Run batch operations and complex administrative tasks
 - Custom scripting for advanced workflows
 
+## HTTP Protocol Support
+- Add option to run the MCP server using HTTP protocol instead of stdio
+- This would allow the server to run as an external service rather than locally
+- Benefits include:
+  - Better separation of concerns and deployment flexibility
+  - Ability to run the server on a different machine or container
+  - Support for multiple concurrent connections
+  - Enhanced monitoring and logging capabilities
+- Implementation would require:
+  - HTTP transport layer configuration
+  - Port and host binding options
+  - Request/response handling over HTTP
+  - Authentication mechanisms for HTTP connections
+  - Documentation updates for HTTP deployment scenarios
+
+**See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide and resources.**
+
 ## Possible Bugs
 
 ### Group Creation Display Name Issue
