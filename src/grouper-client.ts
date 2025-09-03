@@ -53,143 +53,265 @@ export class GrouperClient {
     logger.logResponse(url, response.status, response.statusText, responseBody);
 
     if (!response.ok) {
-      let errorMessage = `Grouper API error: ${response.status} ${response.statusText}`;
+      // Create error object with full context for handleGrouperError to parse
+      const errorContext = {
+        message: `Grouper API error: ${response.status} ${response.statusText}`,
+        statusCode: response.status,
+        status: response.status,
+        statusText: response.statusText,
+        body: responseBody,
+        url: url
+      };
       
-      if (typeof responseBody === 'object' && (responseBody.error || responseBody.message)) {
-        errorMessage = responseBody.error || responseBody.message;
-      } else if (typeof responseBody === 'string' && responseBody) {
-        errorMessage = responseBody;
-      }
-      
-      const error = new GrouperError(errorMessage, response.status);
-      logError(error, 'API Request');
-      throw error;
+      const grouperError = handleGrouperError(errorContext);
+      logError(grouperError, 'API Request');
+      throw grouperError;
     }
 
     return responseBody;
   }
 
-  async findGroups(query: string): Promise<GrouperGroup[]> {
+
+  async findGroupsByNameApproximate(query: string): Promise<GrouperGroup[]> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestFindGroupsRequest: {
           wsQueryFilter: {
             queryFilterType: 'FIND_BY_GROUP_NAME_APPROXIMATE',
             groupName: query
-          }
+          },
+          includeGroupDetail: "T"
         }
       });
       return response.WsFindGroupsResults?.groupResults || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'findGroups');
+      logError(grouperError, 'findGroupsByNameApproximate', { query });
       throw grouperError;
     }
   }
 
-  async getGroup(groupName: string): Promise<GrouperGroup | null> {
+
+  async findGroupByFilter(filter: { groupName?: string; groupUuid?: string }, queryFilterType: string): Promise<GrouperGroup | null> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestFindGroupsRequest: {
           wsQueryFilter: {
-            queryFilterType: 'FIND_BY_GROUP_NAME_EXACT',
-            groupName: groupName
-          }
+            queryFilterType,
+            ...filter
+          },
+          includeGroupDetail: "T"
         }
       });
       const results = response.WsFindGroupsResults?.groupResults || [];
       return results.length > 0 ? results[0] : null;
     } catch (error) {
-      return null;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'findGroupByFilter', { filter, queryFilterType });
+      throw grouperError;
     }
   }
 
   async createGroup(group: GrouperGroup): Promise<GrouperGroup> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGroupSaveRequest: {
-        wsGroupToSaves: [{
-          wsGroupLookup: { groupName: group.name },
-          wsGroup: group
-        }]
-      }
-    });
-    return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    try {
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGroupSaveRequest: {
+          wsGroupToSaves: [{
+            wsGroupLookup: { groupName: group.name },
+            wsGroup: group
+          }],
+          includeGroupDetail: "T"
+        }
+      });
+      return response.WsGroupSaveResults?.results[0]?.wsGroup;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'createGroup', { groupName: group.name, displayName: group.displayName });
+      throw grouperError;
+    }
   }
 
   async updateGroup(groupName: string, updates: Partial<GrouperGroup>): Promise<GrouperGroup> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGroupSaveRequest: {
-        wsGroupToSaves: [{
-          wsGroupLookup: { groupName },
-          wsGroup: { name: groupName, ...updates }
-        }]
-      }
-    });
-    return response.WsGroupSaveResults?.results[0]?.wsGroup;
-  }
-
-  async deleteGroup(groupName: string): Promise<boolean> {
     try {
-      await this.makeRequest('/groups', 'POST', {
-        WsRestGroupDeleteRequest: {
-          wsGroupLookups: [{ groupName }]
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGroupSaveRequest: {
+          wsGroupToSaves: [{
+            wsGroupLookup: { groupName },
+            wsGroup: { name: groupName, ...updates }
+          }],
+          includeGroupDetail: "T"
         }
       });
-      return true;
+      return response.WsGroupSaveResults?.results[0]?.wsGroup;
     } catch (error) {
-      return false;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'updateGroup', { groupName, updates });
+      throw grouperError;
     }
   }
 
-  async addMember(groupName: string, member: GrouperMember): Promise<boolean> {
+  async deleteGroupByFilter(filter: { groupName?: string; uuid?: string; idIndex?: string }): Promise<GrouperGroup | null> {
     try {
-      await this.makeRequest('/groups', 'POST', {
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestGroupDeleteRequest: {
+          wsGroupLookups: [filter],
+          includeGroupDetail: "T"
+        }
+      });
+      const results = response.WsGroupDeleteResults?.results || [];
+      
+      if (results.length > 0) {
+        const result = results[0];
+        const resultCode = result.resultMetadata?.resultCode;
+        
+        // Check if group was not found
+        if (resultCode === 'SUCCESS_GROUP_NOT_FOUND') {
+          const filterDesc = filter.groupName || filter.uuid || filter.idIndex;
+          throw new Error(`Group "${filterDesc}" not found`);
+        }
+        
+        // Check for other non-success result codes
+        if (result.resultMetadata?.success !== 'T') {
+          const message = result.resultMetadata?.resultMessage || 'Unknown error';
+          throw new Error(`Failed to delete group: ${message}`);
+        }
+        
+        return result.wsGroup || null;
+      }
+      
+      return null;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'deleteGroupByFilter', { filter });
+      throw grouperError;
+    }
+  }
+
+  async addMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
+    try {
+      const response = await this.makeRequest('/groups', 'POST', {
         WsRestAddMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member]
+          subjectLookups: [member],
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+          subjectAttributeNames: ['display_name', 'login_id', 'email_address']
         }
       });
-      return true;
+
+      const result = response?.WsAddMemberResults || response;
+      
+      const wsGroup = result?.wsGroupAssigned;
+      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
+      const subjectAttributeNames = result?.subjectAttributeNames || [];
+
+      return {
+        success: true,
+        group: wsGroup,
+        members: wsSubjects,
+        subjectAttributeNames
+      };
     } catch (error) {
-      return false;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'addMember', { groupName, member });
+      return { success: false };
     }
   }
 
-  async deleteMember(groupName: string, member: GrouperMember): Promise<boolean> {
+  async deleteMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
     try {
-      await this.makeRequest('/groups', 'POST', {
+      const response = await this.makeRequest('/groups', 'POST', {
         WsRestDeleteMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member]
+          subjectLookups: [member],
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+          subjectAttributeNames: ['display_name', 'login_id', 'email_address']
         }
       });
-      return true;
+
+      const result = response?.WsDeleteMemberResults || response;
+      
+      const wsGroup = result?.wsGroupAssigned;
+      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
+      const subjectAttributeNames = result?.subjectAttributeNames || [];
+
+      return {
+        success: true,
+        group: wsGroup,
+        members: wsSubjects,
+        subjectAttributeNames
+      };
     } catch (error) {
-      return false;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'deleteMember', { groupName, member });
+      return { success: false };
     }
   }
 
-  async getMembers(groupName: string): Promise<GrouperSubject[]> {
-    const response = await this.makeRequest('/groups', 'POST', {
-      WsRestGetMembersRequest: {
-        wsGroupLookups: [{ groupName }]
+  async getMembers(
+    groupName: string, 
+    options?: {
+      subjectAttributeNames?: string;
+      memberFilter?: string;
+    }
+  ): Promise<any> {
+    try {
+      // Always request these common subject attributes, plus any additional ones specified
+      let subjectAttributesList = ["display_name", "login_id", "email_address"];
+      if (options?.subjectAttributeNames) {
+        // Split the comma-separated string and add to our list
+        const additionalAttrs = options.subjectAttributeNames.split(',').map(attr => attr.trim());
+        subjectAttributesList = subjectAttributesList.concat(additionalAttrs);
       }
-    });
-    return response.WsGetMembersResults?.results?.[0]?.wsSubjects || [];
+
+      const request: any = {
+        WsRestGetMembersRequest: {
+          wsGroupLookups: [{ groupName }],
+          includeGroupDetail: "T",
+          includeSubjectDetail: "T",
+          subjectAttributeNames: subjectAttributesList
+        }
+      };
+      
+      if (options?.memberFilter) {
+        request.WsRestGetMembersRequest.memberFilter = options.memberFilter;
+      }
+
+      const response = await this.makeRequest('/groups', 'POST', request);
+      
+      // Return the full result to allow detailed formatting in the handler
+      return response.WsGetMembersResults?.results?.[0] || { wsSubjects: [] };
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getMembers', { groupName, options });
+      throw grouperError;
+    }
   }
 
   async assignAttribute(groupName: string, attribute: GrouperAttribute): Promise<boolean> {
     try {
-      await this.makeRequest('/attributeAssignments/assignAttributes', 'POST', {
+      const request: any = {
         WsRestAssignAttributesRequest: {
-          wsOwnerGroupLookup: { groupName },
+          attributeAssignType: 'group',
           wsAttributeDefNameLookups: [{ name: attribute.nameOfAttributeDefName }],
-          values: [attribute.value]
+          wsOwnerGroupLookups: [{ groupName: groupName }],
+          attributeAssignOperation: 'assign_attr'
         }
-      });
+      };
+
+      // Only include values if a value is provided
+      if (attribute.value) {
+        request.WsRestAssignAttributesRequest.values = [{ valueSystem: attribute.value }];
+        request.WsRestAssignAttributesRequest.attributeAssignValueOperation = 'assign_value';
+      }
+
+      await this.makeRequest('/attributeAssignments', 'POST', request);
       return true;
     } catch (error) {
-      return false;
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'assignAttribute', { groupName, attributeName: attribute.nameOfAttributeDefName, value: attribute.value });
+      throw grouperError;
     }
   }
 }
