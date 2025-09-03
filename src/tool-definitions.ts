@@ -213,14 +213,14 @@ export const toolDefinitions = [
         },
         attributeName: {
           type: 'string',
-          description: 'The name of the attribute definition to assign',
+          description: 'The full path of the attribute definition to assign (e.g., "etc:attribute:attestation:attestation")',
         },
         value: {
           type: 'string',
-          description: 'The value to assign to the attribute',
+          description: 'Optional value to assign to the attribute. Leave empty for marker attributes (boolean-like flags that are just assigned/unassigned). If you get an error about marker attributes not accepting values, omit this parameter.',
         },
       },
-      required: ['groupName', 'attributeName', 'value'],
+      required: ['groupName', 'attributeName'],
     },
   },
 ];

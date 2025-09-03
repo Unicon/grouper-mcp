@@ -56,7 +56,7 @@ export interface GrouperMember {
 
 export interface GrouperAttribute {
   nameOfAttributeDefName: string;
-  value: string;
+  value?: string;
 }
 
 export interface GrouperPermission {

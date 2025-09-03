@@ -484,31 +484,20 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
       const { groupName, attributeName, value } = args as {
         groupName: string;
         attributeName: string;
-        value: string;
+        value?: string;
       };
       try {
         const attribute = { nameOfAttributeDefName: attributeName, value };
-        const success = await client.assignAttribute(groupName, attribute);
-        if (success) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Successfully assigned attribute "${attributeName}" with value "${value}" to group "${groupName}"`,
-              },
-            ],
-          };
-        } else {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Failed to assign attribute "${attributeName}" to group "${groupName}"`,
-              },
-            ],
-            isError: true,
-          };
-        }
+        await client.assignAttribute(groupName, attribute);
+        const valueText = value ? ` with value "${value}"` : '';
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Successfully assigned attribute "${attributeName}"${valueText} to group "${groupName}"`,
+            },
+          ],
+        };
       } catch (error) {
         return {
           content: [

@@ -291,18 +291,27 @@ export class GrouperClient {
 
   async assignAttribute(groupName: string, attribute: GrouperAttribute): Promise<boolean> {
     try {
-      await this.makeRequest('/attributeAssignments/assignAttributes', 'POST', {
+      const request: any = {
         WsRestAssignAttributesRequest: {
-          wsOwnerGroupLookup: { groupName },
+          attributeAssignType: 'group',
           wsAttributeDefNameLookups: [{ name: attribute.nameOfAttributeDefName }],
-          values: [attribute.value]
+          wsOwnerGroupLookups: [{ groupName: groupName }],
+          attributeAssignOperation: 'assign_attr'
         }
-      });
+      };
+
+      // Only include values if a value is provided
+      if (attribute.value) {
+        request.WsRestAssignAttributesRequest.values = [{ valueSystem: attribute.value }];
+        request.WsRestAssignAttributesRequest.attributeAssignValueOperation = 'assign_value';
+      }
+
+      await this.makeRequest('/attributeAssignments', 'POST', request);
       return true;
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'assignAttribute', { groupName, attributeName: attribute.nameOfAttributeDefName, value: attribute.value });
-      return false;
+      throw grouperError;
     }
   }
 }
