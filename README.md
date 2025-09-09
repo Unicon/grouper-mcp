@@ -6,9 +6,10 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 This MCP server provides **13 core tools** for essential Grouper operations. It focuses on the most commonly used group management and subject lookup functionality.
 
-### Group Management (5 tools)
-- **grouper_find_groups**: Search for groups by name or description
-- **grouper_get_group**: Get detailed information about a specific group
+### Group Management (6 tools)
+- **grouper_find_groups_by_name_approximate**: Search for groups by approximate name match
+- **grouper_get_group_by_exact_name**: Get detailed information about a specific group by exact name
+- **grouper_get_group_by_uuid**: Get detailed information about a specific group by UUID
 - **grouper_create_group**: Create a new group
 - **grouper_update_group**: Update group properties (display name, description)
 - **grouper_delete_group**: Delete a group
@@ -156,6 +157,11 @@ Add user "jdoe" to the group "edu:department:engineering:students"
 Find all groups containing "engineering" in their name
 ```
 
+### Get group by UUID
+```
+Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
+```
+
 ### Assign attributes
 ```
 Assign attribute "classification" with value "academic" to group "edu:department:engineering:students"
@@ -211,13 +217,9 @@ Set `GROUPER_DEBUG=true` to enable verbose debug logging showing:
 
 The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude. Check the log files for detailed error information when troubleshooting.
 
-## Planned Features (TODOS)
+## Planned Features
 
-### Read-Only Mode
-- Add configuration option to enable read-only mode
-- When enabled, all write operations (create, update, delete, add/remove members) would be disabled
-- Useful for testing, demonstrations, or restricted access scenarios
-- Only search and read operations would be available
+Planned features and improvements are tracked in [TODO.md](docs/TODO.md).
 
 ## API Compatibility
 

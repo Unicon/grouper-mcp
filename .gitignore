@@ -8,6 +8,9 @@ node_modules/
 .env
 .env.local
 
+# Claude context file
+CLAUDE.md
+
 # Logs
 *.log
 npm-debug.log*

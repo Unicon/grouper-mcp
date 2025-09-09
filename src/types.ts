@@ -43,6 +43,28 @@ export interface GrouperGroup {
   typeOfGroup?: string;
   idIndex?: string;
   enabled?: string;
+  alternateName?: string;
+  enabledTime?: string;
+  disabledTime?: string;
+  detail?: {
+    hasComposite?: string;
+    leftGroup?: string;
+    rightGroup?: string;
+    typeNames?: string[];
+    attributeNames?: string[];
+    attributeValues?: string[];
+    compositeType?: string;
+    params?: Array<{
+      paramName: string;
+      paramValue: string;
+    }>;
+    createSubjectId?: string;
+    createTime?: string;
+    isCompositeFactor?: string;
+    modifySource?: string;
+    modifySubjectId?: string;
+    modifyTime?: string;
+  };
 }
 
 export interface GrouperMember {
@@ -53,7 +75,7 @@ export interface GrouperMember {
 
 export interface GrouperAttribute {
   nameOfAttributeDefName: string;
-  value: string;
+  value?: string;
 }
 
 export interface GrouperPermission {
