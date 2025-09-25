@@ -1,6 +1,6 @@
 # Grouper MCP Server
 
-A Model Context Protocol (MCP) server that provides tools for interacting with Internet2's Grouper identity management system via web services.
+A containerized Model Context Protocol (MCP) server that provides tools for interacting with Internet2's Grouper identity management system via web services. Supports both HTTP and HTTPS transports with OAuth 2.1 Bearer authentication.
 
 ## Features
 
@@ -59,78 +59,119 @@ The Grouper web services API offers many additional endpoints that are **not cur
 
 **Note**: This implementation covers the **essential group lifecycle and membership management** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
 
+## Architecture
+
+The server is built using:
+- **Express.js** HTTP server with Server-Sent Events (SSE) transport
+- **Docker** containerization for easy deployment
+- **TypeScript** for type safety and development experience
+- **OAuth 2.1** Bearer token authentication following MCP specification
+- **Multi-stage builds** for optimized container size
+- **Self-signed certificates** for local HTTPS development
+
+### Container Architecture
+```
+┌─────────────────────────────────────────┐
+│ Docker Container (grouper-mcp)          │
+│ ┌─────────────────────────────────────┐ │
+│ │ Express HTTP/HTTPS Server           │ │
+│ │ ├── SSE Transport (/sse)            │ │
+│ │ ├── Health Check (/health)          │ │
+│ │ └── OAuth Metadata (/.well-known)   │ │
+│ └─────────────────────────────────────┘ │
+│                  │                      │
+│                  ▼                      │
+│ ┌─────────────────────────────────────┐ │
+│ │ Grouper Client                      │ │
+│ │ ├── HTTP Basic Auth                 │ │
+│ │ ├── Web Services API v4.0           │ │
+│ │ └── Error Handling & Logging       │ │
+│ └─────────────────────────────────────┘ │
+└─────────────────────────────────────────┘
+                   │
+                   ▼
+     ┌─────────────────────────────┐
+     │ Grouper Instance            │
+     │ Web Services API            │
+     └─────────────────────────────┘
+```
+
+## Quick Start
+
+### Prerequisites
+- Docker installed on your system
+- Access to a Grouper instance
+
+### 1. Generate HTTPS Certificates
+```bash
+./bin/generate-certs.sh
+```
+
+### 2. Build the Container
+```bash
+./bin/build.sh
+```
+
+### 3. Run the Server
+```bash
+# HTTPS (recommended for MCP clients requiring secure connections)
+./bin/run.sh --https -u https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000
+
+# HTTP (for local development)
+./bin/run.sh -u https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000
+```
+
+The server will start in detached mode. Use `--foreground` to run in the foreground.
+
+### 4. Verify the Server
+```bash
+# Test health endpoint
+curl -k https://localhost:3443/health
+
+# View OAuth metadata
+curl -k https://localhost:3443/.well-known/oauth-protected-resource
+```
+
 ## Configuration
 
-Configure the server using environment variables:
+The container is configured through environment variables:
 
+### Instance Configuration (Container Level)
 ```bash
-# Required: Base URL for Grouper web services
-export GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000"
-
-# Required: Basic authentication credentials
-export GROUPER_USERNAME="your_username"
-export GROUPER_PASSWORD="your_password"
-
-# Optional: Act as different subject (for administrative operations)
-export GROUPER_ACT_AS_SUBJECT_ID="your_admin_subject_id"
-export GROUPER_ACT_AS_SUBJECT_SOURCE_ID="your_subject_source"
-export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
+GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000"
+GROUPER_DEBUG="true"                    # Enable debug logging
+NODE_TLS_REJECT_UNAUTHORIZED="0"        # Accept self-signed certificates
 ```
 
+### Authentication
+Credentials are provided by MCP clients via OAuth 2.1 Bearer tokens. The server does not store credentials - they are passed securely through the MCP protocol.
 
-## Installation
+## Command Line Options
 
-1. Clone this repository
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Build the project:
-   ```bash
-   npm run build
-   ```
-
-## Usage
-
-### Development
-Run in development mode with:
+### run.sh Options
 ```bash
-npm run dev
+./bin/run.sh [OPTIONS]
+
+Options:
+  -p, --port PORT     Port to run on (default: 3050 HTTP, 3443 HTTPS)
+  -u, --url URL       Grouper base URL
+      --no-debug      Disable debug mode
+  -f, --foreground    Run in foreground (default: detached)
+      --https         Enable HTTPS mode (requires certificates)
+  -h, --help          Show help message
 ```
 
-### Production
-Build and run:
+### Container Management
 ```bash
-npm run build
-npm start
+# Stop the server
+docker stop grouper-mcp-3443  # (or grouper-mcp-3050 for HTTP)
+
+# View logs
+docker logs -f grouper-mcp-3443
+
+# Run in foreground for debugging
+./bin/run.sh --https -f -u https://your-grouper-url
 ```
-
-### With Claude Desktop
-
-Add to your Claude Desktop MCP configuration:
-
-```json
-{
-  "mcpServers": {
-    "grouper": {
-      "command": "node",
-      "args": ["/path/to/grouper-mcp/dist/index.js"],
-      "env": {
-        "GROUPER_BASE_URL": "https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
-        "GROUPER_USERNAME": "your_username",
-        "GROUPER_PASSWORD": "your_password",
-        "GROUPER_DEBUG": "true",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-      }
-    }
-  }
-}
-```
-
-**Environment Variables:**
-- `GROUPER_DEBUG`: Set to `"true"` to enable detailed logging for troubleshooting
-- `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `"0"` if using self-signed certificates
 
 ## Examples
 
@@ -159,16 +200,55 @@ Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 Assign attribute "classification" with value "academic" to group "edu:department:engineering:students"
 ```
 
+## Transport Modes
+
+The server supports multiple transport modes:
+
+### HTTPS Transport (Recommended)
+- **Port**: 3443 (default)
+- **Features**: OAuth 2.1 Bearer authentication, SSL/TLS security
+- **Use case**: Production deployments, MCP clients requiring secure connections
+- **Endpoints**:
+  - Health: `https://localhost:3443/health`
+  - OAuth metadata: `https://localhost:3443/.well-known/oauth-protected-resource`
+  - MCP SSE: `https://localhost:3443/sse`
+
+### HTTP Transport
+- **Port**: 3050 (default)
+- **Features**: OAuth 2.1 Bearer authentication
+- **Use case**: Local development, testing
+- **Endpoints**:
+  - Health: `http://localhost:3050/health`
+  - OAuth metadata: `http://localhost:3050/.well-known/oauth-protected-resource`
+  - MCP SSE: `http://localhost:3050/sse`
+
+### Stdio Transport
+- **Use case**: Local development with direct process communication
+- **Command**: `node dist/index.js --transport stdio`
+
 ## Authentication
 
-The server supports Grouper's "act as" functionality for administrative operations. Configure the acting subject using the environment variables listed above.
+The server supports OAuth 2.1 Bearer token authentication:
+- Credentials are provided via the `Authorization: Bearer <token>` header
+- Token format: Base64-encoded `username:password`
+- No credentials are stored in the container
+- Supports Grouper's "act as" functionality for administrative operations
 
 ## Logging
 
-The server automatically logs all activity to help with debugging:
+The server automatically logs all activity for debugging:
 
-### Log Files
-- **Location**: `~/.grouper-mcp/logs/` (default) or custom via `GROUPER_LOG_DIR`
+### Container Logs
+```bash
+# View real-time logs
+docker logs -f grouper-mcp-3443
+
+# View recent logs
+docker logs --tail 100 grouper-mcp-3443
+```
+
+### Log Files (inside container)
+- **Location**: `/app/logs/`
 - **Files**:
   - `grouper-mcp.log` - All log messages (info, debug, errors)
   - `grouper-mcp-errors.log` - Error messages only
@@ -177,27 +257,73 @@ The server automatically logs all activity to help with debugging:
 - Server startup and connection events
 - All HTTP requests to Grouper (with credentials redacted)
 - All HTTP responses (including error details)
+- MCP client connections and authentication
 - Detailed error information with context
 
 ### Debug Mode
-Set `GROUPER_DEBUG=true` to enable verbose debug logging showing:
+Enable with `GROUPER_DEBUG=true` or `--debug` flag:
 - Request/response details
 - API call parameters
 - Detailed error traces
+- Authentication flow information
 
-### Example Log Entry
+## Troubleshooting
+
+### Health Check
+```bash
+# HTTPS
+curl -k https://localhost:3443/health
+
+# HTTP
+curl http://localhost:3050/health
 ```
-[2024-01-15T10:30:45.123Z] [ERROR] HTTP Response: 400 Bad Request {"url":"https://grouper.edu/grouper-ws/servicesRest/json/v4_0_000/groups","status":400,"body":{"error":"Invalid group name format"}}
+
+### Common Issues
+- **Certificate errors**: Use `-k` flag with curl for self-signed certificates
+- **Port conflicts**: Change port with `-p` option
+- **Connection refused**: Verify container is running with `docker ps`
+- **Authentication failures**: Check Bearer token format and Grouper credentials
+
+## Development
+
+For local development without Docker:
+
+```bash
+# Install dependencies
+npm install
+
+# Generate certificates (for HTTPS mode)
+./bin/generate-certs.sh
+
+# Run in development mode
+npm run dev
+
+# Build TypeScript
+npm run build
+
+# Run built version
+npm start
 ```
 
-## Error Handling
+## Files and Scripts
 
-The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude. Check the log files for detailed error information when troubleshooting.
-
-## Planned Features
-
-Planned features and improvements are tracked in [TODO.md](docs/TODO.md).
+- **`bin/generate-certs.sh`** - Generate self-signed HTTPS certificates
+- **`bin/build.sh`** - Build Docker container
+- **`bin/run.sh`** - Run Docker container with options
+- **`src/`** - TypeScript source code
+- **`dist/`** - Compiled JavaScript (after build)
+- **`certs/`** - HTTPS certificates (after generation)
+- **`Dockerfile`** - Multi-stage container build
+- **`docker-compose.yml`** - Container orchestration
 
 ## API Compatibility
 
-This server is designed to work with Grouper v4.0.000 web services API. It should be compatible with most recent versions of Grouper.
+This server is designed to work with Grouper v4.0.000 web services API. It should be compatible with most recent versions of Grouper that support the v4 REST API.
+
+## Contributing
+
+Planned features and improvements are tracked in [TODO.md](docs/TODO.md). The server is designed to be easily extensible - additional Grouper web service endpoints can be added by:
+
+1. Adding new tool definitions in `src/tool-definitions.ts`
+2. Implementing handlers in `src/tool-handlers.ts`
+3. Adding corresponding client methods in `src/grouper-client.ts`

@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  grouper-mcp:
+    build: .
+    ports:
+      - "3050:3050"
+    environment:
+      # Instance-level configuration only
+      - GROUPER_BASE_URL=${GROUPER_BASE_URL:-https://grouperdemo.internet2.edu/grouper-ws/servicesRest/json/v4_0_000}
+      - GROUPER_DEBUG=${GROUPER_DEBUG:-true}
+      - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+      # Auth credentials will be provided via OAuth Bearer tokens from AI agents
+    volumes:
+      # Mount logs directory for easier access
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service that mounts source code
+  grouper-mcp-dev:
+    build:
+      context: .
+      target: development
+    ports:
+      - "3050:3050"
+    environment:
+      - GROUPER_BASE_URL=${GROUPER_BASE_URL:-https://grouperdemo.internet2.edu/grouper-ws/servicesRest/json/v4_0_000}
+      - GROUPER_DEBUG=${GROUPER_DEBUG:-true}
+      - NODE_TLS_REJECT_UNAUTHORIZED=${NODE_TLS_REJECT_UNAUTHORIZED:-0}
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - ./logs:/app/logs
+    command: npm run dev -- --transport http --port 3050
+    profiles:
+      - dev
