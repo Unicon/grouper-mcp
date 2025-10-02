@@ -4,23 +4,13 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **10 core tools** for essential Grouper operations. It focuses on the most commonly used group management functionality.
+This MCP server provides **10 core tools** for essential Grouper operations, organized into three main categories:
 
-### Group Management (6 tools)
-- **grouper_find_groups_by_name_approximate**: Search for groups by approximate name match
-- **grouper_get_group_by_exact_name**: Get detailed information about a specific group by exact name
-- **grouper_get_group_by_uuid**: Get detailed information about a specific group by UUID
-- **grouper_create_group**: Create a new group
-- **grouper_update_group**: Update group properties (display name, description)
-- **grouper_delete_group**: Delete a group
+- **Group Management** (6 tools) - Search, create, retrieve, update, and delete groups
+- **Member Management** (3 tools) - Add, remove, and list group members
+- **Attribute Management** (1 tool) - Assign attributes to groups
 
-### Member Management (3 tools)
-- **grouper_add_member**: Add a member to a group
-- **grouper_remove_member**: Remove a member from a group
-- **grouper_get_members**: Get all members of a group
-
-### Attribute Management (1 tool)
-- **grouper_assign_attribute**: Assign an attribute to a group
+For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
 ## Available but Not Implemented
 
