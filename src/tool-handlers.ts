@@ -128,18 +128,18 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_create_group': {
-      const { name, displayName, description } = args as {
+      const { name, displayExtension, description } = args as {
         name: string;
-        displayName?: string;
+        displayExtension?: string;
         description?: string;
       };
       try {
-        const newGroup = await client.createGroup({ name, displayName, description });
+        const newGroup = await client.createGroup({ name, displayExtension, description });
         return {
           content: [
             {
               type: 'text',
-              text: `Successfully created group "${name}"${displayName ? ` with display name "${displayName}"` : ''}`,
+              text: `Successfully created group "${name}"${displayExtension ? ` with display extension "${displayExtension}"` : ''}`,
             },
           ],
         };
@@ -157,14 +157,14 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_update_group': {
-      const { groupName, displayName, description } = args as {
+      const { groupName, displayExtension, description } = args as {
         groupName: string;
-        displayName?: string;
+        displayExtension?: string;
         description?: string;
       };
       try {
         const updates: Partial<GrouperGroup> = {};
-        if (displayName !== undefined) updates.displayName = displayName;
+        if (displayExtension !== undefined) updates.displayExtension = displayExtension;
         if (description !== undefined) updates.description = description;
 
         const updatedGroup = await client.updateGroup(groupName, updates);

@@ -51,9 +51,9 @@ export const toolDefinitions = [
           type: 'string',
           description: 'The full name of the group (e.g., "edu:example:mygroup")',
         },
-        displayName: {
+        displayExtension: {
           type: 'string',
-          description: 'Human-readable display name for the group',
+          description: 'Human-readable display name for the group extension (rightmost part after the last colon). For example, if name is "test:groupFolder:groupName", displayExtension would be shown as "groupName"',
         },
         description: {
           type: 'string',
@@ -73,9 +73,9 @@ export const toolDefinitions = [
           type: 'string',
           description: 'The current name of the group to update',
         },
-        displayName: {
+        displayExtension: {
           type: 'string',
-          description: 'New display name for the group',
+          description: 'New display extension for the group (human-readable name for the rightmost part after the last colon)',
         },
         description: {
           type: 'string',
@@ -203,7 +203,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_assign_attribute',
-    description: 'Assign an attribute to a group',
+    description: 'Assign an attribute to a group and return status of the attribute assignment operation.',
     inputSchema: {
       type: 'object',
       properties: {

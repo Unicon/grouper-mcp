@@ -126,7 +126,7 @@ export class GrouperClient {
       return response.WsGroupSaveResults?.results[0]?.wsGroup;
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'createGroup', { groupName: group.name, displayName: group.displayName });
+      logError(grouperError, 'createGroup', { groupName: group.name, displayExtension: group.displayExtension });
       throw grouperError;
     }
   }

@@ -8,22 +8,6 @@
 - Useful for testing, demonstrations, or restricted access scenarios
 - Only search and read operations would be available
 
-## Provide Expected Result Format in Tool Descriptions
-
-AI models rely on tool descriptions to understand how to use tools effectively and interpret their results. Currently, the tool descriptions focus on input parameters but don't specify the expected output format. By adding clear result format documentation to each tool description, AI models will be able to:
-
-- Better understand what data to expect from successful tool calls
-- More accurately parse and interpret the returned results
-- Provide more relevant follow-up actions based on the structured data
-
-Additionally, error handling should be standardized across all tools. Error states should be caught by the MCP server and provided in the tool results in a consistent, easy-to-parse format that clearly indicates:
-- Whether the operation succeeded or failed
-- Specific error codes or types when available
-- Human-readable error messages
-- Contextual information to help with troubleshooting
-
-This improvement would enhance the overall user experience by making tool interactions more predictable and reliable for AI models.
-
 ## Implement Remaining Web Service End Points
 
 The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
@@ -64,29 +48,30 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Run batch operations and complex administrative tasks
 - Custom scripting for advanced workflows
 
-## HTTP Protocol Support
-- Add option to run the MCP server using HTTP protocol instead of stdio
+## HTTP/HTTPS Protocol Support (In Progress)
+- 🚧 **Work in Progress** - Implementation ongoing in separate branch
+- Add option to run the MCP server using HTTP/HTTPS protocol instead of stdio
 - This would allow the server to run as an external service rather than locally
 - Benefits include:
   - Better separation of concerns and deployment flexibility
   - Ability to run the server on a different machine or container
   - Support for multiple concurrent connections
   - Enhanced monitoring and logging capabilities
-- Implementation would require:
+  - Docker containerization support
+- Implementation includes:
   - HTTP transport layer configuration
+  - HTTPS support with SSL certificates
+  - OAuth 2.1 Bearer token authentication
+  - Docker containerization
   - Port and host binding options
-  - Request/response handling over HTTP
-  - Authentication mechanisms for HTTP connections
+  - Request/response handling over HTTP/HTTPS
   - Documentation updates for HTTP deployment scenarios
 
 **See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide and resources.**
 
 ## Possible Bugs
 
-### Group Creation Display Name Issue
-- When creating a group, the display name may not be getting set properly
-- Need to investigate if the displayName parameter is being correctly passed to the Grouper API
-- Verify that created groups have the expected displayName value
+_No known bugs at this time._
 
 ## Testing Infrastructure
 
@@ -108,3 +93,9 @@ The Grouper web services API offers many additional endpoints that are **not cur
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
+
+---
+
+## ✅ Completed Features
+
+- Tool description result formats and standardized error handling

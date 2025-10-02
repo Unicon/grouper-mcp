@@ -4,68 +4,16 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **13 core tools** for essential Grouper operations. It focuses on the most commonly used group management and subject lookup functionality.
+This MCP server provides **14 core tools** for essential Grouper operations, organized into four main categories:
 
-### Group Management (6 tools)
-- **grouper_find_groups_by_name_approximate**: Search for groups by approximate name match
-- **grouper_get_group_by_exact_name**: Get detailed information about a specific group by exact name
-- **grouper_get_group_by_uuid**: Get detailed information about a specific group by UUID
-- **grouper_create_group**: Create a new group
-- **grouper_update_group**: Update group properties (display name, description)
-- **grouper_delete_group**: Delete a group
+- **Group Management** (6 tools) - Search, create, retrieve, update, and delete groups
+- **Member Management** (3 tools) - Add, remove, and list group members
+- **Attribute Management** (1 tool) - Assign attributes to groups
+- **Subject Management** (4 tools) **BETA** - Search for information about subjects
 
-### Member Management (3 tools)
-- **grouper_add_member**: Add a member to a group
-- **grouper_remove_member**: Remove a member from a group
-- **grouper_get_members**: Get all members of a group
+For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
-### Subject Management (4 tools) - **BETA**
-- **grouper_find_subjects**: Search for subjects across all sources or a specific source
-- **grouper_get_subject**: Get detailed information about a specific subject by ID
-- **grouper_get_subject_by_identifier**: Get detailed information about a specific subject by identifier
-- **grouper_search_subjects_by_text**: Search for subjects by text matching their identifiers or names
-
-*Note: Subject management tools are currently in beta and work in progress. While functional, they may not perform exactly as expected and are subject to improvements.*
-
-### Attribute Management (1 tool)
-- **grouper_assign_attribute**: Assign an attribute to a group
-
-## Available but Not Implemented
-
-The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
-
-### Stems/Folders Management
-- Create and manage organizational folders/stems
-- Stem privilege management
-- Hierarchical organization operations
-
-### Advanced Privilege Management
-- Group privilege assignment (admin, read, view, update, etc.)
-- Privilege inheritance and delegation
-- Access control queries
-
-### Advanced Subject Management
-- Subject source management and configuration
-- External subject registration and management
-- Subject attribute modification
-
-### Attribute Definition Management
-- Create and manage attribute definitions
-- Attribute definition privileges
-- Complex attribute operations
-
-### Audit and History
-- Audit log queries
-- Change history tracking
-- Activity monitoring
-
-### Advanced Group Operations
-- Group copying and moving
-- Composite group creation
-- Group type assignment
-- Bulk operations
-
-**Note**: This implementation covers the **essential group lifecycle, membership management, and subject lookup** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
+This implementation covers the essential group lifecycle and membership management operations that handle most common use cases. Many additional Grouper web service endpoints are not yet implemented but are planned - see the [TODO.md](docs/TODO.md#implement-remaining-web-service-end-points) for the complete list of planned features.
 
 ## Configuration
 
