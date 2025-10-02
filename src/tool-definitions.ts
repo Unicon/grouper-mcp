@@ -203,7 +203,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_assign_attribute',
-    description: 'Assign an attribute to a group',
+    description: 'Assign an attribute to a group and return status of the attribute assignment operation.',
     inputSchema: {
       type: 'object',
       properties: {
