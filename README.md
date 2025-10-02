@@ -12,42 +12,7 @@ This MCP server provides **10 core tools** for essential Grouper operations, org
 
 For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
-## Available but Not Implemented
-
-The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
-
-### Stems/Folders Management
-- Create and manage organizational folders/stems
-- Stem privilege management
-- Hierarchical organization operations
-
-### Advanced Privilege Management
-- Group privilege assignment (admin, read, view, update, etc.)
-- Privilege inheritance and delegation
-- Access control queries
-
-### Subject Management
-- Find subjects across multiple sources
-- Subject source management
-- External subject registration
-
-### Attribute Definition Management
-- Create and manage attribute definitions
-- Attribute definition privileges
-- Complex attribute operations
-
-### Audit and History
-- Audit log queries
-- Change history tracking
-- Activity monitoring
-
-### Advanced Group Operations
-- Group copying and moving
-- Composite group creation
-- Group type assignment
-- Bulk operations
-
-**Note**: This implementation covers the **essential group lifecycle and membership management** operations that handle most common use cases. Additional endpoints can be added based on organizational requirements.
+This implementation covers the essential group lifecycle and membership management operations that handle most common use cases. Many additional Grouper web service endpoints are not yet implemented but are planned - see the [TODO.md](docs/TODO.md#implement-remaining-web-service-end-points) for the complete list of planned features.
 
 ## Configuration
 
