@@ -83,10 +83,7 @@ The Grouper web services API offers many additional endpoints that are **not cur
 
 ## Possible Bugs
 
-### Group Creation Display Name Issue
-- When creating a group, the display name may not be getting set properly
-- Need to investigate if the displayName parameter is being correctly passed to the Grouper API
-- Verify that created groups have the expected displayName value
+_No known bugs at this time._
 
 ## Testing Infrastructure
 

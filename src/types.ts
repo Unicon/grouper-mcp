@@ -17,10 +17,10 @@ export interface GrouperSubject {
 export interface GrouperGroup {
   name: string;
   uuid?: string;
-  displayName?: string;
+  displayName?: string; // Read-only: full path returned by API, not used for saves
   description?: string;
   extension?: string;
-  displayExtension?: string;
+  displayExtension?: string; // Used for saves: human-readable name for the rightmost part after last colon
   typeOfGroup?: string;
   idIndex?: string;
   enabled?: string;
