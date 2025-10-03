@@ -330,7 +330,12 @@ export class GrouperClient {
       }
 
       const response = await this.makeRequest('/subjects', 'POST', requestBody);
-      return response.WsGetSubjectsResults?.wsSubjects || [];
+      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
+
+      // Filter out failed results
+      return subjects.filter((s: GrouperSubject) =>
+        s && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
+      );
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'findSubjects');
@@ -346,7 +351,13 @@ export class GrouperClient {
         }
       });
       const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
-      return subjects.length > 0 ? subjects[0] : null;
+
+      // Find the first successful result
+      const successfulSubject = subjects.find((s: GrouperSubject) =>
+        s && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
+      );
+
+      return successfulSubject || null;
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'getSubject');
@@ -391,9 +402,11 @@ export class GrouperClient {
       const response = await this.makeRequest('/subjects', 'POST', requestBody);
       const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
       
-      // Filter out null results and duplicates
-      const validSubjects = subjects.filter((s: GrouperSubject) => s && (s.id || s.identifier));
-      const uniqueSubjects = validSubjects.filter((subject: GrouperSubject, index: number, self: GrouperSubject[]) => 
+      // Filter out null results, failed results, and duplicates
+      const validSubjects = subjects.filter((s: GrouperSubject) =>
+        s && (s.id || s.identifier) && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
+      );
+      const uniqueSubjects = validSubjects.filter((subject: GrouperSubject, index: number, self: GrouperSubject[]) =>
         index === self.findIndex(s => (s.id === subject.id || s.identifier === subject.identifier))
       );
       
