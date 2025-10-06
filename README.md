@@ -4,12 +4,12 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **14 core tools** for essential Grouper operations, organized into four main categories:
+This MCP server provides **15 core tools** for essential Grouper operations, organized into four main categories:
 
-- **Group Management** (6 tools) - Search, create, retrieve, update, and delete groups
+- **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups
 - **Member Management** (3 tools) - Add, remove, and list group members
 - **Attribute Management** (1 tool) - Assign attributes to groups
-- **Subject Management** (4 tools) **BETA** - Search for information about subjects
+- **Subject Management** (3 tools) - Search for and retrieve information about subjects
 
 For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
@@ -31,6 +31,10 @@ export GROUPER_PASSWORD="your_password"
 export GROUPER_ACT_AS_SUBJECT_ID="your_admin_subject_id"
 export GROUPER_ACT_AS_SUBJECT_SOURCE_ID="your_subject_source"
 export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
+
+# Optional: Logging configuration
+export GROUPER_LOG_DIR="/custom/log/directory"  # Default: ~/.grouper-mcp/logs/
+export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
 ```
 
 
@@ -115,19 +119,14 @@ Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 Assign attribute "classification" with value "academic" to group "edu:department:engineering:students"
 ```
 
-### Find subjects
-```
-Find subjects with identifier containing "john.doe"
-```
-
 ### Get subject details
 ```
 Get detailed information for subject with ID "jdoe123"
 ```
 
-### Search subjects by text
+### Search subjects
 ```
-Search for subjects containing "engineering" in their name or identifier
+Search for subjects containing "Smith" in their name or other searchable fields
 ```
 
 ## Authentication

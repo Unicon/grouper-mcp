@@ -315,18 +315,43 @@ export class GrouperClient {
     }
   }
 
-  async findSubjects(searchQuery: string, sourceId?: string): Promise<GrouperSubject[]> {
+  async getSubjects(params: {
+    subjectId?: string;
+    subjectIdentifier?: string;
+    searchString?: string;
+    subjectSourceId?: string;
+  }): Promise<GrouperSubject[]> {
     try {
       const requestBody: any = {
         WsRestGetSubjectsRequest: {
-          wsSubjectLookups: [{
-            subjectIdentifier: searchQuery
-          }]
+          includeSubjectDetail: 'T'
         }
       };
 
-      if (sourceId) {
-        requestBody.WsRestGetSubjectsRequest.wsSubjectLookups[0].subjectSourceId = sourceId;
+      // Handle search string approach (different API structure)
+      if (params.searchString) {
+        requestBody.WsRestGetSubjectsRequest.searchString = params.searchString;
+
+        if (params.subjectSourceId) {
+          requestBody.WsRestGetSubjectsRequest.sourceIds = params.subjectSourceId;
+        }
+      } else {
+        // Handle lookup-based approach (by ID or identifier)
+        const lookup: any = {};
+
+        if (params.subjectId) {
+          lookup.subjectId = params.subjectId;
+        }
+
+        if (params.subjectIdentifier) {
+          lookup.subjectIdentifier = params.subjectIdentifier;
+        }
+
+        if (params.subjectSourceId) {
+          lookup.subjectSourceId = params.subjectSourceId;
+        }
+
+        requestBody.WsRestGetSubjectsRequest.wsSubjectLookups = [lookup];
       }
 
       const response = await this.makeRequest('/subjects', 'POST', requestBody);
@@ -338,82 +363,7 @@ export class GrouperClient {
       );
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'findSubjects');
-      throw grouperError;
-    }
-  }
-
-  async getSubject(subjectLookup: GrouperSubjectLookup): Promise<GrouperSubject | null> {
-    try {
-      const response = await this.makeRequest('/subjects', 'POST', {
-        WsRestGetSubjectsRequest: {
-          wsSubjectLookups: [subjectLookup]
-        }
-      });
-      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
-
-      // Find the first successful result
-      const successfulSubject = subjects.find((s: GrouperSubject) =>
-        s && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
-      );
-
-      return successfulSubject || null;
-    } catch (error) {
-      const grouperError = handleGrouperError(error);
-      logError(grouperError, 'getSubject');
-      return null;
-    }
-  }
-
-  async getSubjectById(subjectId: string, sourceId?: string): Promise<GrouperSubject | null> {
-    const lookup: GrouperSubjectLookup = { subjectId };
-    if (sourceId) {
-      lookup.subjectSourceId = sourceId;
-    }
-    return this.getSubject(lookup);
-  }
-
-  async getSubjectByIdentifier(identifier: string, sourceId?: string): Promise<GrouperSubject | null> {
-    const lookup: GrouperSubjectLookup = { subjectIdentifier: identifier };
-    if (sourceId) {
-      lookup.subjectSourceId = sourceId;
-    }
-    return this.getSubject(lookup);
-  }
-
-  async searchSubjectsByText(searchText: string, sourceId?: string): Promise<GrouperSubject[]> {
-    try {
-      // Use multiple specific lookups to simulate text search
-      const lookups = [
-        { subjectIdentifier: searchText },
-        { subjectId: searchText }
-      ];
-
-      if (sourceId) {
-        lookups.forEach(lookup => (lookup as any).subjectSourceId = sourceId);
-      }
-
-      const requestBody = {
-        WsRestGetSubjectsRequest: {
-          wsSubjectLookups: lookups
-        }
-      };
-
-      const response = await this.makeRequest('/subjects', 'POST', requestBody);
-      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
-      
-      // Filter out null results, failed results, and duplicates
-      const validSubjects = subjects.filter((s: GrouperSubject) =>
-        s && (s.id || s.identifier) && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
-      );
-      const uniqueSubjects = validSubjects.filter((subject: GrouperSubject, index: number, self: GrouperSubject[]) =>
-        index === self.findIndex(s => (s.id === subject.id || s.identifier === subject.identifier))
-      );
-      
-      return uniqueSubjects;
-    } catch (error) {
-      const grouperError = handleGrouperError(error);
-      logError(grouperError, 'searchSubjectsByText');
+      logError(grouperError, 'getSubjects');
       throw grouperError;
     }
   }

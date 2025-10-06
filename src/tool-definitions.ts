@@ -224,79 +224,57 @@ export const toolDefinitions = [
     },
   },
   {
-    name: 'grouper_find_subjects',
-    description: 'Find subjects by search query with optional source filtering. Returns formatted text with comprehensive subject information for each matching subject, including Subject ID, Display Name, Description, Source, and additional attributes.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        searchQuery: {
-          type: 'string',
-          description: 'Search query to find subjects by identifier or name',
-        },
-        sourceId: {
-          type: 'string',
-          description: 'Optional subject source ID to limit search scope',
-        },
-      },
-      required: ['searchQuery'],
-    },
-  },
-  {
-    name: 'grouper_get_subject',
-    description: 'Get detailed information about a specific subject using flexible lookup criteria. Returns comprehensive subject information including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject does not exist.',
+    name: 'grouper_get_subject_by_id',
+    description: 'Get detailed information about a specific subject by subject ID. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject ID does not exist.',
     inputSchema: {
       type: 'object',
       properties: {
         subjectId: {
           type: 'string',
           description: 'The subject ID to retrieve',
-        },
-        subjectIdentifier: {
-          type: 'string',
-          description: 'The subject identifier to retrieve (alternative to subjectId)',
         },
         subjectSourceId: {
           type: 'string',
-          description: 'Optional subject source ID',
-        },
-      },
-      required: [],
-    },
-  },
-  {
-    name: 'grouper_get_subject_by_id',
-    description: 'Get detailed information about a specific subject by ID. Returns comprehensive subject information or "Subject not found" if the subject ID does not exist.',
-    inputSchema: {
-      type: 'object',
-      properties: {
-        subjectId: {
-          type: 'string',
-          description: 'The subject ID to retrieve',
-        },
-        sourceId: {
-          type: 'string',
-          description: 'Optional subject source ID',
+          description: 'Optional subject source ID to limit search scope',
         },
       },
       required: ['subjectId'],
     },
   },
   {
-    name: 'grouper_search_subjects_by_text',
-    description: 'Search for subjects by text matching across name and identifier fields. Returns formatted text with comprehensive subject information for each matching subject, including count of found subjects and detailed metadata.',
+    name: 'grouper_get_subject_by_identifier',
+    description: 'Get detailed information about a specific subject by subject identifier. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject identifier does not exist.',
     inputSchema: {
       type: 'object',
       properties: {
-        searchText: {
+        subjectIdentifier: {
           type: 'string',
-          description: 'Text to search for in subject names and identifiers',
+          description: 'The subject identifier to retrieve',
         },
-        sourceId: {
+        subjectSourceId: {
           type: 'string',
           description: 'Optional subject source ID to limit search scope',
         },
       },
-      required: ['searchText'],
+      required: ['subjectIdentifier'],
+    },
+  },
+  {
+    name: 'grouper_search_subjects',
+    description: 'Search for subjects using Grouper\'s text search functionality. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes. Uses Grouper\'s native searchString capability for flexible text matching.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        searchString: {
+          type: 'string',
+          description: 'Search string to find subjects (searches across names, identifiers, and other subject data)',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID to limit search scope',
+        },
+      },
+      required: ['searchString'],
     },
   },
 ];

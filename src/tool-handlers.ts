@@ -511,26 +511,26 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
       }
     }
 
-    case 'grouper_find_subjects': {
-      const { searchQuery, sourceId } = args as {
-        searchQuery: string;
-        sourceId?: string;
+    case 'grouper_get_subject_by_id': {
+      const { subjectId, subjectSourceId } = args as {
+        subjectId: string;
+        subjectSourceId?: string;
       };
       try {
-        const subjects = await client.findSubjects(searchQuery, sourceId);
+        const subjects = await client.getSubjects({ subjectId, subjectSourceId });
 
         if (subjects.length === 0) {
           return {
             content: [
               {
                 type: 'text',
-                text: `No subjects found matching "${searchQuery}"`,
+                text: `Subject with ID "${subjectId}" not found`,
               },
             ],
           };
         }
 
-        let responseText = `Found ${subjects.length} subjects matching "${searchQuery}":\n\n`;
+        let responseText = `Found ${subjects.length} subject(s) with ID "${subjectId}":\n\n`;
 
         subjects.forEach((subject, index) => {
           responseText += `Subject ${index + 1}:\n`;
@@ -563,7 +563,7 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
           content: [
             {
               type: 'text',
-              text: `Error finding subjects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
           isError: true,
@@ -571,138 +571,86 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
       }
     }
 
-    case 'grouper_get_subject': {
-      const { subjectId, subjectIdentifier, subjectSourceId } = args as {
-        subjectId?: string;
-        subjectIdentifier?: string;
+    case 'grouper_get_subject_by_identifier': {
+      const { subjectIdentifier, subjectSourceId } = args as {
+        subjectIdentifier: string;
         subjectSourceId?: string;
       };
       try {
-        const lookup = { subjectId, subjectIdentifier, subjectSourceId };
-        const subject = await client.getSubject(lookup);
-
-        if (!subject) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Subject not found`,
-              },
-            ],
-          };
-        }
-
-        let responseText = `Subject Details:\n`;
-        responseText += `- Subject ID: ${subject.id || 'N/A'}\n`;
-        responseText += `- Display Name: ${subject.name || 'N/A'}\n`;
-        responseText += `- Description: ${subject.description || 'N/A'}\n`;
-        responseText += `- Identifier: ${subject.identifier || 'N/A'}\n`;
-        responseText += `- Source: ${subject.sourceId || 'N/A'}\n`;
-        responseText += `- Result Code: ${subject.resultCode || 'N/A'}\n`;
-
-        if (subject.attributeValues && Object.keys(subject.attributeValues).length > 0) {
-          responseText += `- Additional Attributes:\n`;
-          Object.entries(subject.attributeValues).forEach(([key, value]) => {
-            responseText += `  - ${key}: ${value}\n`;
-          });
-        }
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: responseText,
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
-
-    case 'grouper_get_subject_by_id': {
-      const { subjectId, sourceId } = args as {
-        subjectId: string;
-        sourceId?: string;
-      };
-      try {
-        const subject = await client.getSubjectById(subjectId, sourceId);
-
-        if (!subject) {
-          return {
-            content: [
-              {
-                type: 'text',
-                text: `Subject with ID "${subjectId}" not found`,
-              },
-            ],
-          };
-        }
-
-        let responseText = `Subject Details:\n`;
-        responseText += `- Subject ID: ${subject.id || 'N/A'}\n`;
-        responseText += `- Display Name: ${subject.name || 'N/A'}\n`;
-        responseText += `- Description: ${subject.description || 'N/A'}\n`;
-        responseText += `- Identifier: ${subject.identifier || 'N/A'}\n`;
-        responseText += `- Source: ${subject.sourceId || 'N/A'}\n`;
-        responseText += `- Result Code: ${subject.resultCode || 'N/A'}\n`;
-
-        if (subject.attributeValues && Object.keys(subject.attributeValues).length > 0) {
-          responseText += `- Additional Attributes:\n`;
-          Object.entries(subject.attributeValues).forEach(([key, value]) => {
-            responseText += `  - ${key}: ${value}\n`;
-          });
-        }
-
-        return {
-          content: [
-            {
-              type: 'text',
-              text: responseText,
-            },
-          ],
-        };
-      } catch (error) {
-        return {
-          content: [
-            {
-              type: 'text',
-              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
-          isError: true,
-        };
-      }
-    }
-
-    case 'grouper_search_subjects_by_text': {
-      const { searchText, sourceId } = args as {
-        searchText: string;
-        sourceId?: string;
-      };
-      try {
-        const subjects = await client.searchSubjectsByText(searchText, sourceId);
+        const subjects = await client.getSubjects({ subjectIdentifier, subjectSourceId });
 
         if (subjects.length === 0) {
           return {
             content: [
               {
                 type: 'text',
-                text: `No subjects found containing "${searchText}" in their name or identifier`,
+                text: `Subject with identifier "${subjectIdentifier}" not found`,
               },
             ],
           };
         }
 
-        let responseText = `Found ${subjects.length} subjects containing "${searchText}":\n\n`;
+        let responseText = `Found ${subjects.length} subject(s) with identifier "${subjectIdentifier}":\n\n`;
+
+        subjects.forEach((subject, index) => {
+          responseText += `Subject ${index + 1}:\n`;
+          responseText += `- Subject ID: ${subject.id || 'N/A'}\n`;
+          responseText += `- Display Name: ${subject.name || 'N/A'}\n`;
+          responseText += `- Description: ${subject.description || 'N/A'}\n`;
+          responseText += `- Identifier: ${subject.identifier || 'N/A'}\n`;
+          responseText += `- Source: ${subject.sourceId || 'N/A'}\n`;
+          responseText += `- Result Code: ${subject.resultCode || 'N/A'}\n`;
+
+          if (subject.attributeValues && Object.keys(subject.attributeValues).length > 0) {
+            responseText += `- Additional Attributes:\n`;
+            Object.entries(subject.attributeValues).forEach(([key, value]) => {
+              responseText += `  - ${key}: ${value}\n`;
+            });
+          }
+          responseText += '\n';
+        });
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: responseText.trim(),
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving subject: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_search_subjects': {
+      const { searchString, subjectSourceId } = args as {
+        searchString: string;
+        subjectSourceId?: string;
+      };
+      try {
+        const subjects = await client.getSubjects({ searchString, subjectSourceId });
+
+        if (subjects.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No subjects found matching "${searchString}"`,
+              },
+            ],
+          };
+        }
+
+        let responseText = `Found ${subjects.length} subject(s) matching "${searchString}":\n\n`;
 
         subjects.forEach((subject, index) => {
           responseText += `Subject ${index + 1}:\n`;
