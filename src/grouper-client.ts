@@ -1,4 +1,4 @@
-import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject } from './types.js';
+import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
 import { logger } from './logger.js';
 
@@ -311,6 +311,59 @@ export class GrouperClient {
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'assignAttribute', { groupName, attributeName: attribute.nameOfAttributeDefName, value: attribute.value });
+      throw grouperError;
+    }
+  }
+
+  async getSubjects(params: {
+    subjectId?: string;
+    subjectIdentifier?: string;
+    searchString?: string;
+    subjectSourceId?: string;
+  }): Promise<GrouperSubject[]> {
+    try {
+      const requestBody: any = {
+        WsRestGetSubjectsRequest: {
+          includeSubjectDetail: 'T'
+        }
+      };
+
+      // Handle search string approach (different API structure)
+      if (params.searchString) {
+        requestBody.WsRestGetSubjectsRequest.searchString = params.searchString;
+
+        if (params.subjectSourceId) {
+          requestBody.WsRestGetSubjectsRequest.sourceIds = params.subjectSourceId;
+        }
+      } else {
+        // Handle lookup-based approach (by ID or identifier)
+        const lookup: any = {};
+
+        if (params.subjectId) {
+          lookup.subjectId = params.subjectId;
+        }
+
+        if (params.subjectIdentifier) {
+          lookup.subjectIdentifier = params.subjectIdentifier;
+        }
+
+        if (params.subjectSourceId) {
+          lookup.subjectSourceId = params.subjectSourceId;
+        }
+
+        requestBody.WsRestGetSubjectsRequest.wsSubjectLookups = [lookup];
+      }
+
+      const response = await this.makeRequest('/subjects', 'POST', requestBody);
+      const subjects = response.WsGetSubjectsResults?.wsSubjects || [];
+
+      // Filter out failed results
+      return subjects.filter((s: GrouperSubject) =>
+        s && s.success === 'T' && s.resultCode !== 'SUBJECT_NOT_FOUND'
+      );
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getSubjects');
       throw grouperError;
     }
   }

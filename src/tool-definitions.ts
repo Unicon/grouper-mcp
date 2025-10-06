@@ -223,4 +223,58 @@ export const toolDefinitions = [
       required: ['groupName', 'attributeName'],
     },
   },
+  {
+    name: 'grouper_get_subject_by_id',
+    description: 'Get detailed information about a specific subject by subject ID. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject ID does not exist.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        subjectId: {
+          type: 'string',
+          description: 'The subject ID to retrieve',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID to limit search scope',
+        },
+      },
+      required: ['subjectId'],
+    },
+  },
+  {
+    name: 'grouper_get_subject_by_identifier',
+    description: 'Get detailed information about a specific subject by subject identifier. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject identifier does not exist.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        subjectIdentifier: {
+          type: 'string',
+          description: 'The subject identifier to retrieve',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID to limit search scope',
+        },
+      },
+      required: ['subjectIdentifier'],
+    },
+  },
+  {
+    name: 'grouper_search_subjects',
+    description: 'Search for subjects using Grouper\'s text search functionality. Returns comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes. Uses Grouper\'s native searchString capability for flexible text matching.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        searchString: {
+          type: 'string',
+          description: 'Search string to find subjects (searches across names, identifiers, and other subject data)',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID to limit search scope',
+        },
+      },
+      required: ['searchString'],
+    },
+  },
 ];

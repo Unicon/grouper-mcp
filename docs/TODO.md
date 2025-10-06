@@ -23,7 +23,6 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Access control queries
 
 ### Subject Management
-- Find subjects across multiple sources
 - Subject source management
 - External subject registration
 

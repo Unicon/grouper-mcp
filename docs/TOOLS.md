@@ -4,11 +4,12 @@ This document provides comprehensive documentation for all available tools in th
 
 ## Overview
 
-The Grouper MCP server provides **10 core tools** for essential Grouper operations, organized into three main categories:
+The Grouper MCP server provides **15 core tools** for essential Grouper operations, organized into four main categories:
 
-- **[Group Management](#group-management)** (6 tools) - Search, create, retrieve, update, and delete groups
+- **[Group Management](#group-management)** (8 tools) - Search, create, retrieve, update, and delete groups
 - **[Member Management](#member-management)** (3 tools) - Add, remove, and list group members
 - **[Attribute Management](#attribute-management)** (1 tool) - Assign attributes to groups
+- **[Subject Management](#subject-management)** (3 tools) - Search for and retrieve information about subjects
 
 ---
 
@@ -224,6 +225,59 @@ Assign attribute "classification" with value "academic" to group "edu:department
 
 ---
 
+## Subject Management
+
+### 🆔 grouper_get_subject_by_id
+
+Get detailed information about subjects by subject ID using Grouper's native lookup functionality.
+
+**Parameters:**
+- **`subjectId`** (required, string) - The subject ID to retrieve
+- **`subjectSourceId`** (optional, string) - Optional subject source ID to limit search scope
+
+**Returns:** Comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject ID does not exist.
+
+**Example Usage:**
+```
+Get details for subject with ID "jdoe123"
+```
+
+---
+
+### 🔖 grouper_get_subject_by_identifier
+
+Get detailed information about subjects by subject identifier using Grouper's native lookup functionality.
+
+**Parameters:**
+- **`subjectIdentifier`** (required, string) - The subject identifier to retrieve
+- **`subjectSourceId`** (optional, string) - Optional subject source ID to limit search scope
+
+**Returns:** Comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes, or "Subject not found" if the subject identifier does not exist.
+
+**Example Usage:**
+```
+Get details for subject with identifier "jdoe"
+```
+
+---
+
+### 🔍 grouper_search_subjects
+
+Search for subjects using Grouper's native text search functionality (searchString).
+
+**Parameters:**
+- **`searchString`** (required, string) - Search string to find subjects (searches across names, identifiers, and other subject data using Grouper's native search capabilities)
+- **`subjectSourceId`** (optional, string) - Optional subject source ID to limit search scope
+
+**Returns:** Comprehensive subject information for all matching subjects including Subject ID, Display Name, Description, Source, and additional attributes. Uses Grouper's native searchString capability for flexible text matching.
+
+**Example Usage:**
+```
+Search for subjects containing "Smith" in their name or other searchable fields
+```
+
+---
+
 ## Common Response Format
 
 All tools return comprehensive information when applicable, including:
@@ -254,10 +308,13 @@ All tools return comprehensive information when applicable, including:
 ### Subject/Member Information
 - **Subject ID** - Unique subject identifier
 - **Display Name** - Human-readable name
+- **Description** - Subject description
+- **Identifier** - Subject identifier (alternative lookup)
 - **Login ID** - Login identifier
 - **Email** - Email address
 - **Source** - Subject source system
-- **Member ID** - Membership identifier
+- **Member ID** - Membership identifier (for group membership operations)
+- **Result Code** - Success/failure status for subject operations
 - **Additional Attributes** - Any requested additional subject attributes
 
 ---
