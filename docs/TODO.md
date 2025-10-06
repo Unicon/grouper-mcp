@@ -47,26 +47,50 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Run batch operations and complex administrative tasks
 - Custom scripting for advanced workflows
 
-## HTTP/HTTPS Protocol Support (In Progress)
-- 🚧 **Work in Progress** - Implementation ongoing in separate branch
-- Add option to run the MCP server using HTTP/HTTPS protocol instead of stdio
-- This would allow the server to run as an external service rather than locally
-- Benefits include:
-  - Better separation of concerns and deployment flexibility
-  - Ability to run the server on a different machine or container
-  - Support for multiple concurrent connections
-  - Enhanced monitoring and logging capabilities
-  - Docker containerization support
-- Implementation includes:
-  - HTTP transport layer configuration
-  - HTTPS support with SSL certificates
-  - OAuth 2.1 Bearer token authentication
-  - Docker containerization
-  - Port and host binding options
-  - Request/response handling over HTTP/HTTPS
-  - Documentation updates for HTTP deployment scenarios
+## Streamable HTTP Transport Support (Planned - Phased Approach)
 
-**See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide and resources.**
+This feature will enable the MCP server to run as a remote service accessible over HTTPS using the modern Streamable HTTP transport protocol (MCP spec 2025-03-26).
+
+### Benefits
+- Remote access from any MCP-compatible client
+- Support for multiple concurrent connections/sessions
+- Enhanced deployment flexibility (Docker, cloud platforms)
+- Centralized server management
+- Better monitoring and logging capabilities
+
+### Implementation Phases
+
+#### Phase 1: Local Streamable HTTP (No Authentication) ⏳
+- Convert from stdio to Streamable HTTP transport
+- Implement session management (required by spec)
+- Add Express.js HTTP server with single `/mcp` endpoint
+- Support concurrent sessions
+- Test locally without authentication
+- Keep stdio transport working alongside HTTP
+
+**Status**: Planning complete
+**See**: [STREAMABLE_HTTP_IMPLEMENTATION.md](STREAMABLE_HTTP_IMPLEMENTATION.md) for detailed implementation guide
+
+#### Phase 2: Docker Containerization 📦
+- Create Dockerfile for server
+- Docker Compose setup for easy deployment
+- Environment variable management
+- Volume mounting for logs
+- Multi-stage builds for optimized images
+- Container registry publishing
+
+**Status**: Not started
+
+#### Phase 3: OAuth 2.1 Authentication 🔐
+- Implement OAuth 2.1 with PKCE
+- Bearer token authentication
+- OAuth discovery endpoints (`.well-known/*`)
+- Token management and validation
+- Secure production deployment
+
+**Status**: Not started
+
+**Note**: The previous HTTP_FEATURE_NOTES.md document contains reference information but is not the current implementation plan.
 
 ## Possible Bugs
 
