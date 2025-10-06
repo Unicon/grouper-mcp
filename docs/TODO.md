@@ -89,6 +89,18 @@ _No known bugs at this time._
 - Tool parameter validation and response formatting
 - Authentication and configuration handling
 
+## Documentation Improvements
+
+### Multi-Agent Configuration Documentation
+- Add configuration examples for other MCP-compatible AI agents beyond Claude Desktop
+- Include setup instructions for:
+  - Continue (VS Code extension)
+  - Cline (VS Code extension)
+  - Zed Editor
+  - Other MCP-compatible tools and platforms
+- Document any agent-specific configuration differences or requirements
+- Provide troubleshooting tips for each platform
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
