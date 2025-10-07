@@ -9,7 +9,13 @@
     "start": "node dist/index.js",
     "start:http": "node dist/http-server.js",
     "dev": "tsx src/index.ts",
-    "dev:http": "tsx src/http-server.ts"
+    "dev:http": "tsx src/http-server.ts",
+    "docker:build": "bash scripts/docker-build.sh",
+    "docker:up": "bash scripts/docker-run.sh",
+    "docker:down": "bash scripts/docker-stop.sh",
+    "docker:logs": "docker-compose logs -f",
+    "docker:dev": "docker-compose -f docker-compose.dev.yml up",
+    "docker:dev:down": "docker-compose -f docker-compose.dev.yml down"
   },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.17.3",

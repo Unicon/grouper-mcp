@@ -72,6 +72,8 @@ npm start
 
 The server can run as a remote HTTPS service, allowing AI agents to connect over the network.
 
+#### Local Deployment
+
 **Development:**
 ```bash
 npm run dev:http
@@ -107,6 +109,37 @@ To regenerate self-signed certificates:
 ```bash
 openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
 ```
+
+#### Docker Deployment
+
+The easiest way to deploy the HTTPS server is using Docker:
+
+**Quick Start:**
+```bash
+# 1. Configure environment
+cp .env.example .env
+# Edit .env with your Grouper credentials
+
+# 2. Ensure SSL certificates exist
+ls certs/cert.pem certs/key.pem
+
+# 3. Build and run
+npm run docker:build
+npm run docker:up
+
+# 4. Verify
+curl -k https://localhost:3000/health
+```
+
+**Common Commands:**
+```bash
+npm run docker:up       # Start server
+npm run docker:down     # Stop server
+npm run docker:logs     # View logs
+npm run docker:dev      # Development mode with hot-reload
+```
+
+For comprehensive Docker deployment documentation, including troubleshooting, monitoring, production deployment, and cloud deployment options, see **[docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)**.
 
 ### With Claude Desktop (Stdio)
 

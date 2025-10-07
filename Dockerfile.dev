@@ -1,0 +1,22 @@
+# Development Dockerfile for Grouper MCP Server
+# Optimized for hot-reload and rapid iteration
+FROM node:24-alpine AS development
+
+WORKDIR /app
+
+# Install dependencies
+COPY package*.json ./
+RUN npm install
+
+# Copy configuration
+COPY tsconfig.json ./
+
+# Source code will be mounted as volume for hot-reload
+# But copy it here as fallback
+COPY src/ ./src/
+
+# Expose HTTPS port
+EXPOSE 3000
+
+# Development uses tsx for hot-reload
+CMD ["npm", "run", "dev:http"]

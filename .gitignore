@@ -40,3 +40,8 @@ coverage/
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# Docker
+.env.production
+.env.staging
+docker-compose.override.yml

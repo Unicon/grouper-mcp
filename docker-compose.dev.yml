@@ -1,0 +1,59 @@
+services:
+  grouper-mcp-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+      target: development
+    image: grouper-mcp:dev
+    container_name: grouper-mcp-dev
+
+    ports:
+      - "3000:3000"
+
+    environment:
+      # Grouper Web Services Configuration
+      GROUPER_BASE_URL: ${GROUPER_BASE_URL}
+      GROUPER_USERNAME: ${GROUPER_USERNAME}
+      GROUPER_PASSWORD: ${GROUPER_PASSWORD}
+      GROUPER_ACT_AS_SUBJECT_ID: ${GROUPER_ACT_AS_SUBJECT_ID:-}
+      GROUPER_ACT_AS_SUBJECT_SOURCE_ID: ${GROUPER_ACT_AS_SUBJECT_SOURCE_ID:-}
+      GROUPER_ACT_AS_SUBJECT_IDENTIFIER: ${GROUPER_ACT_AS_SUBJECT_IDENTIFIER:-}
+
+      # Server Configuration
+      PORT: 3000
+      USE_HTTPS: true
+      SSL_CERT_PATH: /app/certs/cert.pem
+      SSL_KEY_PATH: /app/certs/key.pem
+
+      # Logging Configuration
+      GROUPER_DEBUG: true
+      GROUPER_LOG_DIR: /app/logs
+
+      # Node environment
+      NODE_ENV: development
+
+    volumes:
+      # Source code for hot-reload (read-only)
+      - ./src:/app/src:ro
+      - ./tsconfig.json:/app/tsconfig.json:ro
+
+      # SSL Certificates (read-only)
+      - ./certs:/app/certs:ro
+
+      # Logs (bind mount for easy access)
+      - ./logs:/app/logs
+
+      # Node modules (use named volume to avoid re-installing)
+      - node_modules:/app/node_modules
+
+    command: npm run dev:http
+
+    networks:
+      - grouper-network-dev
+
+volumes:
+  node_modules:
+
+networks:
+  grouper-network-dev:
+    driver: bridge
