@@ -60,13 +60,14 @@ This feature will enable the MCP server to run as a remote service accessible ov
 
 ### Implementation Phases
 
-#### Phase 1: Local Streamable HTTP (No Authentication) ⏳
-- Convert from stdio to Streamable HTTP transport
+#### Phase 1: Local Streamable HTTPS (No Authentication) ⏳
+- Convert from stdio to Streamable HTTP transport over HTTPS
+- Generate self-signed SSL certificates for local development
 - Implement session management (required by spec)
-- Add Express.js HTTP server with single `/mcp` endpoint
+- Add Express.js HTTPS server with single `/mcp` endpoint
 - Support concurrent sessions
 - Test locally without authentication
-- Keep stdio transport working alongside HTTP
+- Keep stdio transport working alongside HTTPS
 
 **Status**: Planning complete
 **See**: [STREAMABLE_HTTP_IMPLEMENTATION.md](STREAMABLE_HTTP_IMPLEMENTATION.md) for detailed implementation guide

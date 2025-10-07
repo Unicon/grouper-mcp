@@ -6,8 +6,10 @@ This document outlines the phased approach to converting the Grouper MCP server 
 
 ## Implementation Phases
 
-### Phase 1: Local Streamable HTTP (No Authentication)
-**Goal**: Get the MCP server working with Streamable HTTP transport locally without authentication.
+### Phase 1: Local Streamable HTTPS (No Authentication)
+**Goal**: Get the MCP server working with Streamable HTTP transport over HTTPS locally without authentication.
+
+**Important**: Most AI agents require HTTPS, so we'll use self-signed certificates for local development.
 
 ### Phase 2: Docker Containerization
 **Goal**: Package the server in a Docker container for easy deployment.
@@ -17,9 +19,26 @@ This document outlines the phased approach to converting the Grouper MCP server 
 
 ---
 
-## Phase 1: Local Streamable HTTP Implementation
+## Phase 1: Local Streamable HTTPS Implementation
 
-### 1.1 Dependencies
+### 1.1 SSL Certificate Setup
+
+Generate self-signed certificates for local HTTPS development:
+
+```bash
+# Create certs directory
+mkdir -p certs
+
+# Generate private key and certificate (valid for 365 days)
+openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+**Important**:
+- The `certs/` directory is already in `.gitignore` (visible in git status)
+- Self-signed certificates will trigger browser warnings - this is expected for local dev
+- For production, you'll use proper certificates from Let's Encrypt or your certificate authority
+
+### 1.2 Dependencies
 
 Add required packages:
 
@@ -29,11 +48,11 @@ npm install --save-dev @types/express @types/cors @types/uuid
 ```
 
 **Why these packages:**
-- `express`: HTTP server framework
+- `express`: HTTP/HTTPS server framework
 - `cors`: Handle Cross-Origin Resource Sharing headers
 - `uuid`: Generate unique session IDs
 
-### 1.2 Project Structure Changes
+### 1.3 Project Structure Changes
 
 Create new files:
 ```
@@ -45,7 +64,7 @@ src/
   └── [existing files unchanged]
 ```
 
-### 1.3 Implementation Steps
+### 1.4 Implementation Steps
 
 #### Step 1: Extract Core Server Logic
 
@@ -192,7 +211,7 @@ export class SessionManager {
 
 ---
 
-#### Step 3: Create HTTP Server
+#### Step 3: Create HTTPS Server
 
 **File: `src/http-server.ts`**
 
@@ -200,6 +219,9 @@ export class SessionManager {
 #!/usr/bin/env node
 
 import express, { Request, Response } from 'express';
+import https from 'https';
+import fs from 'fs';
+import path from 'path';
 import cors from 'cors';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
 import { createMCPServer } from './server-core.js';
@@ -208,6 +230,7 @@ import { logger } from './logger.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const USE_HTTPS = process.env.USE_HTTPS !== 'false'; // Default to true
 const sessionManager = new SessionManager();
 
 // Middleware
@@ -332,11 +355,39 @@ app.delete('/mcp', async (req: Request, res: Response) => {
 
 // Start server
 async function main() {
-  app.listen(PORT, () => {
-    logger.info(`Grouper MCP HTTP server listening on port ${PORT}`);
-    logger.info(`Health check: http://localhost:${PORT}/health`);
-    logger.info(`MCP endpoint: http://localhost:${PORT}/mcp`);
-  });
+  if (USE_HTTPS) {
+    // Load SSL certificates
+    const certPath = process.env.SSL_CERT_PATH || path.join(process.cwd(), 'certs', 'cert.pem');
+    const keyPath = process.env.SSL_KEY_PATH || path.join(process.cwd(), 'certs', 'key.pem');
+
+    try {
+      const httpsOptions = {
+        cert: fs.readFileSync(certPath),
+        key: fs.readFileSync(keyPath),
+      };
+
+      https.createServer(httpsOptions, app).listen(PORT, () => {
+        logger.info(`Grouper MCP HTTPS server listening on port ${PORT}`);
+        logger.info(`Health check: https://localhost:${PORT}/health`);
+        logger.info(`MCP endpoint: https://localhost:${PORT}/mcp`);
+        logger.info('Using self-signed certificates - clients may need to accept certificate warnings');
+      });
+
+    } catch (error) {
+      logger.error('Failed to load SSL certificates:', error);
+      logger.error('Please run: openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"');
+      process.exit(1);
+    }
+
+  } else {
+    // HTTP mode (not recommended for production)
+    app.listen(PORT, () => {
+      logger.info(`Grouper MCP HTTP server listening on port ${PORT} (HTTPS disabled)`);
+      logger.info(`Health check: http://localhost:${PORT}/health`);
+      logger.info(`MCP endpoint: http://localhost:${PORT}/mcp`);
+      logger.warn('WARNING: Running without HTTPS - not suitable for production use');
+    });
+  }
 
   // Graceful shutdown
   process.on('SIGTERM', () => {
@@ -353,12 +404,12 @@ async function main() {
 }
 
 main().catch((error) => {
-  logger.error('Fatal error in HTTP server:', error);
+  logger.error('Fatal error in HTTPS server:', error);
   process.exit(1);
 });
 ```
 
-**Why**: This is the HTTP server entry point that handles Streamable HTTP transport with session management.
+**Why**: This server supports both HTTPS (default, required by most AI agents) and HTTP (fallback for testing). It loads SSL certificates from the `certs/` directory.
 
 ---
 
@@ -393,7 +444,7 @@ main().catch((error) => {
 
 ---
 
-### 1.4 Build Configuration
+### 1.5 Build Configuration
 
 **Update `package.json`:**
 
@@ -429,7 +480,7 @@ main().catch((error) => {
 
 ---
 
-### 1.5 Environment Variables
+### 1.6 Environment Variables
 
 **Update `.env` (example):**
 
@@ -439,8 +490,11 @@ GROUPER_BASE_URL=https://your-grouper-instance.edu/grouper-ws/servicesRest/json/
 GROUPER_USERNAME=your_username
 GROUPER_PASSWORD=your_password
 
-# HTTP Server Configuration (new)
+# HTTPS Server Configuration (new)
 PORT=3000
+USE_HTTPS=true                         # Set to false to disable HTTPS (not recommended)
+SSL_CERT_PATH=/path/to/cert.pem        # Optional: Override default cert location
+SSL_KEY_PATH=/path/to/key.pem          # Optional: Override default key location
 
 # Logging (unchanged)
 GROUPER_DEBUG=true
@@ -449,9 +503,16 @@ GROUPER_LOG_DIR=~/.grouper-mcp/logs/
 
 ---
 
-### 1.6 Testing the HTTP Server
+### 1.7 Testing the HTTPS Server
 
-#### Start the server:
+#### Step 1: Generate SSL Certificates
+
+```bash
+mkdir -p certs
+openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+#### Step 2: Start the server
 
 ```bash
 # Development mode
@@ -462,14 +523,14 @@ npm run build
 npm run start:http
 ```
 
-#### Test with curl:
+#### Step 3: Test with curl
 
 ```bash
-# Health check
-curl http://localhost:3000/health
+# Health check (use -k to accept self-signed certificate)
+curl -k https://localhost:3000/health
 
 # Initialize session
-curl -X POST http://localhost:3000/mcp \
+curl -k -X POST https://localhost:3000/mcp \
   -H "Content-Type: application/json" \
   -d '{
     "jsonrpc": "2.0",
@@ -489,18 +550,21 @@ curl -X POST http://localhost:3000/mcp \
 
 Look for the `Mcp-Session-Id` header in the response, then use it for subsequent requests.
 
+**Note**: The `-k` flag tells curl to accept self-signed certificates. AI agents may require you to configure them to accept self-signed certificates as well.
+
 ---
 
-### 1.7 Client Configuration
+### 1.8 Client Configuration
 
 For MCP clients that support Streamable HTTP (once implemented):
 
 ```json
 {
   "mcpServers": {
-    "grouper-http": {
-      "url": "http://localhost:3000/mcp",
-      "transport": "streamable-http"
+    "grouper-https": {
+      "url": "https://localhost:3000/mcp",
+      "transport": "streamable-http",
+      "allowSelfSignedCerts": true
     }
   }
 }
@@ -511,45 +575,54 @@ Or use the `mcp-remote` bridge from stdio clients:
 ```json
 {
   "mcpServers": {
-    "grouper-http": {
+    "grouper-https": {
       "command": "npx",
       "args": [
         "-y",
         "mcp-remote",
-        "http://localhost:3000/mcp",
+        "https://localhost:3000/mcp",
         "--transport", "http-only"
-      ]
+      ],
+      "env": {
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
     }
   }
 }
 ```
 
+**Note**: `NODE_TLS_REJECT_UNAUTHORIZED=0` disables certificate verification for self-signed certs. Remove this in production with proper certificates.
+
 ---
 
-### 1.8 Verification Checklist
+### 1.9 Verification Checklist
 
-- [ ] Dependencies installed
+- [ ] SSL certificates generated in `certs/` directory
+- [ ] Dependencies installed (`express`, `cors`, `uuid`)
 - [ ] New files created (`server-core.ts`, `session-manager.ts`, `http-server.ts`)
 - [ ] `index.ts` refactored to use `server-core.ts`
-- [ ] `package.json` updated with new scripts
-- [ ] Server starts without errors: `npm run dev:http`
-- [ ] Health endpoint works: `curl http://localhost:3000/health`
+- [ ] `package.json` updated with new scripts and dependencies
+- [ ] Server starts with HTTPS: `npm run dev:http`
+- [ ] Health endpoint works: `curl -k https://localhost:3000/health`
 - [ ] Initialize request creates session and returns `Mcp-Session-Id`
 - [ ] Subsequent requests with session ID work correctly
 - [ ] stdio transport still works: `npm run dev`
+- [ ] Logs show HTTPS server listening message
 
 ---
 
 ## Success Criteria for Phase 1
 
-✅ HTTP server starts and listens on configured port
+✅ HTTPS server starts and listens on configured port
+✅ Self-signed SSL certificates work correctly
 ✅ Sessions are created on initialize requests
 ✅ Session IDs are returned in headers
 ✅ Subsequent requests use existing sessions
-✅ All existing Grouper tools work via HTTP transport
+✅ All existing Grouper tools work via HTTPS transport
 ✅ Stdio transport remains functional
 ✅ Logs show request/response activity
 ✅ Idle sessions are cleaned up automatically
+✅ AI agents can connect via HTTPS (with self-signed cert configuration)
 
 ---
 
