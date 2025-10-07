@@ -53,13 +53,10 @@ docker-compose --version
 Self-signed certificates are required for HTTPS. If you don't have them:
 
 ```bash
-mkdir -p certs
-openssl req -x509 -newkey rsa:4096 \
-  -keyout certs/key.pem \
-  -out certs/cert.pem \
-  -days 365 -nodes \
-  -subj "/CN=localhost"
+bash scripts/generate-certs.sh
 ```
+
+This creates browser-compatible certificates with proper extensions (Digital Signature, Key Encipherment, TLS Server Authentication).
 
 ---
 
@@ -287,7 +284,7 @@ docker-compose logs
 
 2. **Missing SSL certificates**
    ```bash
-   openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+   bash scripts/generate-certs.sh
    ```
 
 3. **Port already in use**

@@ -105,9 +105,45 @@ export SSL_KEY_PATH=/path/to/key.pem    # Custom key path (optional)
 
 Self-signed certificates are included in `certs/` for local development. For production, replace with proper certificates from a Certificate Authority.
 
-To regenerate self-signed certificates:
+To regenerate self-signed certificates (browser-compatible):
 ```bash
-openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+bash scripts/generate-certs.sh
+```
+
+Or manually:
+```bash
+# Create config file with proper extensions
+cat > /tmp/openssl-san.cnf << 'EOF'
+[req]
+default_bits = 4096
+prompt = no
+default_md = sha256
+distinguished_name = dn
+req_extensions = v3_req
+
+[dn]
+C = US
+ST = Local
+L = Local
+O = Grouper MCP
+CN = localhost
+
+[v3_req]
+subjectAltName = @alt_names
+keyUsage = digitalSignature, keyEncipherment
+extendedKeyUsage = serverAuth
+
+[alt_names]
+DNS.1 = localhost
+DNS.2 = *.localhost
+IP.1 = 127.0.0.1
+IP.2 = ::1
+EOF
+
+# Generate certificates with proper extensions
+openssl req -x509 -newkey rsa:4096 -sha256 -days 365 -nodes \
+  -keyout certs/key.pem -out certs/cert.pem \
+  -config /tmp/openssl-san.cnf -extensions v3_req
 ```
 
 #### Docker Deployment

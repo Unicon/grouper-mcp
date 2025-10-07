@@ -27,15 +27,13 @@ Generate self-signed certificates for local HTTPS development:
 
 ```bash
 # Create certs directory
-mkdir -p certs
-
-# Generate private key and certificate (valid for 365 days)
-openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+bash scripts/generate-certs.sh
 ```
 
 **Important**:
 - The `certs/` directory is already in `.gitignore` (visible in git status)
-- Self-signed certificates will trigger browser warnings - this is expected for local dev
+- Self-signed certificates will trigger browser warnings - this is expected for local dev (click "Advanced" → "Proceed")
+- The script generates browser-compatible certificates with proper extensions (Digital Signature, Key Encipherment)
 - For production, you'll use proper certificates from Let's Encrypt or your certificate authority
 
 ### 1.2 Dependencies
@@ -375,7 +373,7 @@ async function main() {
 
     } catch (error) {
       logger.error('Failed to load SSL certificates:', error);
-      logger.error('Please run: openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"');
+      logger.error('Please run: bash scripts/generate-certs.sh');
       process.exit(1);
     }
 
@@ -509,7 +507,7 @@ GROUPER_LOG_DIR=~/.grouper-mcp/logs/
 
 ```bash
 mkdir -p certs
-openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+bash scripts/generate-certs.sh
 ```
 
 #### Step 2: Start the server
