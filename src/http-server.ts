@@ -7,6 +7,7 @@ import path from 'path';
 import cors from 'cors';
 import { v4 as uuidv4 } from 'uuid';
 import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
+import { SSEServerTransport } from '@modelcontextprotocol/sdk/server/sse.js';
 import { createMCPServer } from './server-core.js';
 import { logger } from './logger.js';
 
@@ -16,6 +17,7 @@ const USE_HTTPS = process.env.USE_HTTPS !== 'false'; // Default to true
 
 // Store transport instances by session ID
 const transports = new Map<string, StreamableHTTPServerTransport>();
+const sseTransports: Record<string, SSEServerTransport> = {};
 
 // Middleware
 app.use(express.json());
@@ -141,6 +143,75 @@ app.delete('/mcp', async (req: Request, res: Response) => {
   }
 });
 
+// ==================== SSE Transport Endpoints (Deprecated Protocol 2024-11-05) ====================
+
+// SSE endpoint for establishing the stream (for ChatGPT compatibility)
+app.get('/sse', async (req: Request, res: Response) => {
+  logger.info('SSE: Received GET request to /sse (establishing SSE stream)');
+
+  try {
+    // Create a new SSE transport for the client
+    // The endpoint for POST messages is '/message' with ?sessionId query parameter
+    const transport = new SSEServerTransport('/message', res);
+
+    // Store the transport by session ID
+    const sessionId = transport.sessionId;
+    sseTransports[sessionId] = transport;
+
+    logger.info(`SSE: Created session ${sessionId}`);
+
+    // Set up onclose handler to clean up transport when closed
+    transport.onclose = () => {
+      logger.info(`SSE: Transport closed for session ${sessionId}`);
+      delete sseTransports[sessionId];
+    };
+
+    // Connect the transport to the MCP server
+    const server = createMCPServer();
+    await server.connect(transport);
+
+    logger.info(`SSE: Established SSE stream with session ID: ${sessionId}`);
+
+  } catch (error) {
+    logger.error('SSE: Error establishing SSE stream:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error establishing SSE stream');
+    }
+  }
+});
+
+// Messages endpoint for receiving client JSON-RPC requests (SSE transport)
+app.post('/message', async (req: Request, res: Response) => {
+  logger.info('SSE: Received POST request to /message');
+
+  // Extract session ID from URL query parameter
+  // In the SSE protocol, this is added by the client based on the endpoint event
+  const sessionId = req.query.sessionId as string;
+
+  if (!sessionId) {
+    logger.error('SSE: No session ID provided in request URL');
+    res.status(400).send('Missing sessionId parameter');
+    return;
+  }
+
+  const transport = sseTransports[sessionId];
+  if (!transport) {
+    logger.error(`SSE: No active transport found for session ID: ${sessionId}`);
+    res.status(404).send('Session not found');
+    return;
+  }
+
+  try {
+    // Handle the POST message with the transport
+    await transport.handlePostMessage(req, res, req.body);
+  } catch (error) {
+    logger.error('SSE: Error handling request:', error);
+    if (!res.headersSent) {
+      res.status(500).send('Error handling request');
+    }
+  }
+});
+
 // Start server
 async function main() {
   if (USE_HTTPS) {
@@ -157,7 +228,8 @@ async function main() {
       https.createServer(httpsOptions, app).listen(PORT, () => {
         logger.info(`Grouper MCP HTTPS server listening on port ${PORT}`);
         logger.info(`Health check: https://localhost:${PORT}/health`);
-        logger.info(`MCP endpoint: https://localhost:${PORT}/mcp`);
+        logger.info(`Streamable HTTP endpoint: https://localhost:${PORT}/mcp`);
+        logger.info(`SSE endpoint (deprecated): https://localhost:${PORT}/sse`);
         logger.info('Using self-signed certificates - clients may need to accept certificate warnings');
       });
 
@@ -178,15 +250,33 @@ async function main() {
   }
 
   // Graceful shutdown
-  process.on('SIGTERM', () => {
+  process.on('SIGTERM', async () => {
     logger.info('SIGTERM received, shutting down gracefully');
     transports.clear();
+    // Close all SSE transports
+    for (const sessionId in sseTransports) {
+      try {
+        await sseTransports[sessionId].close();
+        delete sseTransports[sessionId];
+      } catch (error) {
+        logger.error(`Error closing SSE transport for session ${sessionId}:`, error);
+      }
+    }
     process.exit(0);
   });
 
-  process.on('SIGINT', () => {
+  process.on('SIGINT', async () => {
     logger.info('SIGINT received, shutting down gracefully');
     transports.clear();
+    // Close all SSE transports
+    for (const sessionId in sseTransports) {
+      try {
+        await sseTransports[sessionId].close();
+        delete sseTransports[sessionId];
+      } catch (error) {
+        logger.error(`Error closing SSE transport for session ${sessionId}:`, error);
+      }
+    }
     process.exit(0);
   });
 }

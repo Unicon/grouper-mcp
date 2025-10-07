@@ -34,6 +34,11 @@ npm run docker:up
 curl -k https://localhost:3000/health
 ```
 
+**Available Endpoints:**
+- **Streamable HTTP** (Modern): `https://localhost:3000/mcp`
+- **SSE** (ChatGPT compatible): `https://localhost:3000/sse`
+- **Health Check**: `https://localhost:3000/health`
+
 ---
 
 ## Prerequisites

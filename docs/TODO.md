@@ -111,6 +111,27 @@ This feature will enable the MCP server to run as a remote service accessible ov
 
 **See**: [docs/DOCKER_DEPLOYMENT.md](DOCKER_DEPLOYMENT.md) for comprehensive deployment guide
 
+#### Phase 2.5: SSE Transport Support (ChatGPT Compatibility) ✅ COMPLETED
+- ✅ Add SSE (Server-Sent Events) transport endpoints
+- ✅ Implement dual-endpoint architecture (GET /sse, POST /message)
+- ✅ Session management for SSE connections
+- ✅ Maintain compatibility with deprecated SSE protocol (2024-11-05)
+- ✅ Test SSE transport functionality
+- ✅ Update documentation for ChatGPT configuration
+
+**Status**: ✅ Completed (2025-10-07)
+
+**Key Implementation Details:**
+- Updated `src/http-server.ts` - Added SSE transport alongside Streamable HTTP
+- SSE endpoint: `GET /sse` - Establishes SSE stream
+- Message endpoint: `POST /message?sessionId=<id>` - Client-to-server messages
+- Session management using `SSEServerTransport` from MCP SDK
+- Both transports share the same MCP server core
+- Graceful shutdown closes both transport types
+- ChatGPT can now connect using legacy SSE protocol
+
+**Purpose**: Enable ChatGPT compatibility while maintaining modern Streamable HTTP transport for other clients
+
 #### Phase 3: OAuth 2.1 Authentication 🔐
 - Implement OAuth 2.1 with PKCE
 - Bearer token authentication

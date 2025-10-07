@@ -85,12 +85,27 @@ npm run build
 npm run start:http
 ```
 
-**Default URL:** `https://localhost:3000/mcp`
+**Available Transports:**
+
+The server supports two MCP transport protocols:
+
+1. **Streamable HTTP** (Recommended - Modern Protocol)
+   - Endpoint: `https://localhost:3000/mcp`
+   - Single endpoint for all MCP operations
+   - Protocol version: 2025-03-26
+
+2. **SSE (Server-Sent Events)** (Legacy - For ChatGPT Compatibility)
+   - SSE Endpoint: `https://localhost:3000/sse`
+   - Message Endpoint: `https://localhost:3000/message`
+   - Protocol version: 2024-11-05
+   - Required for ChatGPT and older MCP clients
 
 **Endpoints:**
 - `GET /health` - Health check with active session count
-- `POST /mcp` - Main MCP endpoint (initialize, tools/list, tools/call)
-- `DELETE /mcp` - Delete a session (requires `Mcp-Session-Id` header)
+- `POST /mcp` - Streamable HTTP endpoint (initialize, tools/list, tools/call)
+- `DELETE /mcp` - Delete a Streamable HTTP session (requires `Mcp-Session-Id` header)
+- `GET /sse` - SSE stream endpoint (deprecated, for ChatGPT compatibility)
+- `POST /message` - SSE message endpoint (requires `?sessionId=` query parameter)
 
 **Configuration:**
 ```bash
@@ -176,6 +191,29 @@ npm run docker:dev      # Development mode with hot-reload
 ```
 
 For comprehensive Docker deployment documentation, including troubleshooting, monitoring, production deployment, and cloud deployment options, see **[docs/DOCKER_DEPLOYMENT.md](docs/DOCKER_DEPLOYMENT.md)**.
+
+### With ChatGPT (SSE Transport)
+
+ChatGPT uses the legacy SSE (Server-Sent Events) transport. Configure it with:
+
+**SSE URL:** `https://localhost:3000/sse` (or `https://127.0.0.1:3000/sse`)
+
+**Steps:**
+1. Start the server (Docker or locally):
+   ```bash
+   npm run docker:up
+   # or
+   npm run start:http
+   ```
+
+2. In ChatGPT settings, add a new MCP server:
+   - **Name**: Grouper MCP
+   - **SSE URL**: `https://localhost:3000/sse`
+   - Accept the self-signed certificate warning when prompted
+
+3. ChatGPT will connect via SSE and automatically use the `/message` endpoint for requests
+
+**Note:** The SSE transport is deprecated in the MCP specification (as of 2025-03-26) but is still required for ChatGPT compatibility. The server supports both SSE and the modern Streamable HTTP transport.
 
 ### With Claude Desktop (Stdio)
 
