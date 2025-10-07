@@ -32,6 +32,11 @@ export class Logger {
     appendFileSync(this.logFile, formatted);
   }
 
+  warn(message: string, context?: any): void {
+    const formatted = this.formatMessage('WARN', message, context);
+    appendFileSync(this.logFile, formatted);
+  }
+
   error(message: string, context?: any): void {
     const formatted = this.formatMessage('ERROR', message, context);
     appendFileSync(this.errorFile, formatted);

@@ -53,20 +53,62 @@ export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
 
 ## Usage
 
-### Development
-Run in development mode with:
+The server supports two transport modes:
+
+### 1. Stdio Transport (Local/Desktop Clients)
+
+**Development:**
 ```bash
 npm run dev
 ```
 
-### Production
-Build and run:
+**Production:**
 ```bash
 npm run build
 npm start
 ```
 
-### With Claude Desktop
+### 2. HTTPS Transport (Remote Access)
+
+The server can run as a remote HTTPS service, allowing AI agents to connect over the network.
+
+**Development:**
+```bash
+npm run dev:http
+```
+
+**Production:**
+```bash
+npm run build
+npm run start:http
+```
+
+**Default URL:** `https://localhost:3000/mcp`
+
+**Endpoints:**
+- `GET /health` - Health check with active session count
+- `POST /mcp` - Main MCP endpoint (initialize, tools/list, tools/call)
+- `DELETE /mcp` - Delete a session (requires `Mcp-Session-Id` header)
+
+**Configuration:**
+```bash
+# Optional environment variables for HTTPS server
+export PORT=3000                    # Server port (default: 3000)
+export USE_HTTPS=true               # Enable HTTPS (default: true)
+export SSL_CERT_PATH=/path/to/cert.pem  # Custom cert path (optional)
+export SSL_KEY_PATH=/path/to/key.pem    # Custom key path (optional)
+```
+
+**SSL Certificates:**
+
+Self-signed certificates are included in `certs/` for local development. For production, replace with proper certificates from a Certificate Authority.
+
+To regenerate self-signed certificates:
+```bash
+openssl req -x509 -newkey rsa:4096 -keyout certs/key.pem -out certs/cert.pem -days 365 -nodes -subj "/CN=localhost"
+```
+
+### With Claude Desktop (Stdio)
 
 Add to your Claude Desktop MCP configuration:
 

@@ -1,61 +1,15 @@
 #!/usr/bin/env node
 
-import { Server } from '@modelcontextprotocol/sdk/server/index.js';
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
-import {
-  CallToolRequestSchema,
-  ListToolsRequestSchema,
-} from '@modelcontextprotocol/sdk/types.js';
-import { GrouperClient } from './grouper-client.js';
-import { GrouperConfig } from './types.js';
+import { createMCPServer } from './server-core.js';
 import { logger } from './logger.js';
-import { toolDefinitions } from './tool-definitions.js';
-import { handleTool } from './tool-handlers.js';
-
-
-const server = new Server(
-  {
-    name: 'grouper-mcp',
-    version: '0.1.0',
-  },
-  {
-    capabilities: {
-      tools: {},
-    },
-  }
-);
-
-let grouperClient: GrouperClient | null = null;
-
-function initializeGrouperClient(): GrouperClient {
-  if (!grouperClient) {
-    const config: GrouperConfig = {
-      baseUrl: process.env.GROUPER_BASE_URL || 'https://grouperdemo.internet2.edu/grouper-ws/servicesRest/json/v4_0_000',
-      username: process.env.GROUPER_USERNAME,
-      password: process.env.GROUPER_PASSWORD,
-      actAsSubjectId: process.env.GROUPER_ACT_AS_SUBJECT_ID,
-      actAsSubjectSourceId: process.env.GROUPER_ACT_AS_SUBJECT_SOURCE_ID,
-      actAsSubjectIdentifier: process.env.GROUPER_ACT_AS_SUBJECT_IDENTIFIER,
-    };
-    grouperClient = new GrouperClient(config);
-  }
-  return grouperClient;
-}
-
-server.setRequestHandler(ListToolsRequestSchema, async () => {
-  return {
-    tools: toolDefinitions,
-  };
-});
-
-server.setRequestHandler(CallToolRequestSchema, async (request) => {
-  const client = initializeGrouperClient();
-  return await handleTool(request, client);
-});
 
 async function main() {
-  logger.info('Starting Grouper MCP server');
+  logger.info('Starting Grouper MCP server (stdio)');
+
+  const server = createMCPServer();
   const transport = new StdioServerTransport();
+
   await server.connect(transport);
   logger.info('Grouper MCP server connected and running on stdio');
 }

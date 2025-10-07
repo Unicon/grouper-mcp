@@ -616,20 +616,71 @@ Or use the `mcp-remote` bridge from stdio clients:
 ✅ HTTPS server starts and listens on configured port
 ✅ Self-signed SSL certificates work correctly
 ✅ Sessions are created on initialize requests
-✅ Session IDs are returned in headers
+✅ Session IDs are managed by StreamableHTTPServerTransport
 ✅ Subsequent requests use existing sessions
 ✅ All existing Grouper tools work via HTTPS transport
 ✅ Stdio transport remains functional
 ✅ Logs show request/response activity
-✅ Idle sessions are cleaned up automatically
 ✅ AI agents can connect via HTTPS (with self-signed cert configuration)
+
+---
+
+## Phase 1 Implementation Notes (Completed 2025-10-06)
+
+### What Was Actually Implemented
+
+1. **Session Management Approach:**
+   - Used `StreamableHTTPServerTransport` built-in session management
+   - Stored transport instances in a `Map<string, StreamableHTTPServerTransport>`
+   - Session IDs generated with `uuidv4()` and passed to transport via `sessionIdGenerator`
+   - Simpler than custom SessionManager - let the SDK handle session lifecycle
+
+2. **Key Differences from Plan:**
+   - **SessionManager class not used** - The SDK's `StreamableHTTPServerTransport` handles session ID management internally
+   - Simplified to direct Map storage of transport instances
+   - No automatic session cleanup (Phase 2 enhancement)
+
+3. **Logger Enhancement:**
+   - Added `warn()` method to logger (logger.ts:35-38) for better log categorization
+
+4. **Files Created:**
+   - `src/server-core.ts` - Shared MCP server creation logic
+   - `src/http-server.ts` - HTTPS server with session management
+   - `src/session-manager.ts` - Created but not used (may be useful for Phase 2/3)
+
+5. **Files Modified:**
+   - `src/index.ts` - Refactored to use `server-core.ts`
+   - `src/logger.ts` - Added `warn()` method
+   - `package.json` - Added scripts and dependencies
+
+6. **Testing Results:**
+   - Health endpoint working: `curl -k https://localhost:3000/health`
+   - Initialize working with proper Accept headers
+   - Stdio transport confirmed working: `echo '...' | npm start`
 
 ---
 
 ## Next: Phase 2 - Docker Containerization
 
-(To be documented after Phase 1 completion)
+**Goals:**
+- Create optimized Dockerfile with multi-stage build
+- Docker Compose for easy local development
+- Environment variable management
+- Volume mounting for logs and certificates
+- Health checks
+- Container registry publishing (optional)
+
+(To be documented during Phase 2 implementation)
+
+---
 
 ## Next: Phase 3 - OAuth 2.1 Authentication
 
-(To be documented after Phase 2 completion)
+**Goals:**
+- OAuth 2.1 with PKCE implementation
+- Bearer token authentication
+- OAuth discovery endpoints
+- Token storage and validation
+- Production-ready security
+
+(To be documented during Phase 3 implementation)
