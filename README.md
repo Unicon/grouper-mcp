@@ -40,6 +40,8 @@ export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
 
 ## Installation
 
+### Option 1: Local Installation
+
 1. Clone this repository
 2. Install dependencies:
    ```bash
@@ -51,22 +53,68 @@ export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
    npm run build
    ```
 
+### Option 2: Docker Installation
+
+1. Clone this repository
+2. Build the Docker image:
+   ```bash
+   docker build -t grouper-mcp .
+   ```
+
 ## Usage
 
-### Development
+### Local Development
 Run in development mode with:
 ```bash
 npm run dev
 ```
 
-### Production
+### Local Production
 Build and run:
 ```bash
 npm run build
 npm start
 ```
 
-### With Claude Desktop
+### Docker Usage
+
+Run the container with your configuration:
+
+```bash
+docker run -i \
+  -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="your_username" \
+  -e GROUPER_PASSWORD="your_password" \
+  -e GROUPER_DEBUG="true" \
+  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
+  -v $(pwd)/logs:/home/mcp/.grouper-mcp/logs \
+  grouper-mcp:latest
+```
+
+#### With Claude Desktop (Docker)
+
+Add to your Claude Desktop MCP configuration:
+
+```json
+{
+  "mcpServers": {
+    "grouper": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GROUPER_BASE_URL=https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
+        "-e", "GROUPER_USERNAME=your_username",
+        "-e", "GROUPER_PASSWORD=your_password",
+        "-e", "GROUPER_DEBUG=true",
+        "-e", "NODE_TLS_REJECT_UNAUTHORIZED=0",
+        "grouper-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+### With Claude Desktop (Local)
 
 Add to your Claude Desktop MCP configuration:
 

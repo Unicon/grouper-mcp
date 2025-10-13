@@ -1,0 +1,44 @@
+# Node modules
+node_modules/
+npm-debug.log*
+
+# Build output (will be generated during build)
+dist/
+
+# Development files
+*.md
+docs/
+
+# Git
+.git/
+.gitignore
+
+# Environment files (should be provided at runtime)
+.env
+.env.*
+
+# Claude Desktop config (contains credentials)
+claude_desktop_config.json
+
+# Logs (will be generated at runtime)
+*.log
+logs/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Docker files (not needed inside the image)
+Dockerfile
+.dockerignore
+docker-compose.yml
+
+# Certs directory (should be mounted if needed)
+certs/
