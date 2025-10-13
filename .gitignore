@@ -26,6 +26,9 @@ pids
 # Coverage directory used by tools like istanbul
 coverage/
 
+# Local Claude file for reference
+claude_desktop_config.json
+
 # IDE files
 .vscode/
 .idea/
