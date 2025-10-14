@@ -1,12 +1,27 @@
 import { GrouperClient } from './grouper-client.js';
 import { GrouperGroup } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, isReadOnlyMode, isWriteTool } from './utils.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
-  
-  switch (request.params.name) {
+  const toolName = request.params.name;
+
+  // Runtime check: block write operations in read-only mode
+  if (isReadOnlyMode() && isWriteTool(toolName)) {
+    logger.info(`Write operation blocked in read-only mode: ${toolName}`);
+    return {
+      content: [
+        {
+          type: 'text',
+          text: `Operation not allowed: Server is running in read-only mode. The tool "${toolName}" performs write operations and cannot be executed.`,
+        },
+      ],
+      isError: true,
+    };
+  }
+
+  switch (toolName) {
 
     case 'grouper_find_groups_by_name_approximate': {
       const { query } = args as { query: string };
@@ -692,6 +707,6 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     default:
-      throw new Error(`Unknown tool: ${request.params.name}`);
+      throw new Error(`Unknown tool: ${toolName}`);
   }
 }

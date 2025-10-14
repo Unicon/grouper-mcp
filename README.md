@@ -35,6 +35,42 @@ export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
 # Optional: Logging configuration
 export GROUPER_LOG_DIR="/custom/log/directory"  # Default: ~/.grouper-mcp/logs/
 export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
+
+# Optional: Read-only mode
+export READ_ONLY="true"  # Enable read-only mode (default: false)
+```
+
+### Read-Only Mode
+
+The server can be configured to run in read-only mode, which restricts access to read operations only. This is useful for:
+- Production monitoring and auditing without risk of accidental changes
+- Providing safe access to Grouper data for reporting purposes
+- Running multiple instances where only some should have write access
+
+**When READ_ONLY=true:**
+- Only read operations are available (searches, queries, retrieving information)
+- Write operations (create, update, delete, add/remove members) are blocked
+- Blocked tools do not appear in the tool list
+- Runtime checks prevent execution if a write tool is somehow called
+
+**Read-only tools** (available when READ_ONLY=true):
+- `grouper_find_groups_by_name_approximate` - Search for groups
+- `grouper_get_group_by_exact_name` - Get group details by name
+- `grouper_get_group_by_uuid` - Get group details by UUID
+- `grouper_get_members` - Get group membership information
+- `grouper_get_subject_by_id` - Get subject details by ID
+- `grouper_get_subject_by_identifier` - Get subject details by identifier
+- `grouper_search_subjects` - Search for subjects
+
+**Write tools** (blocked when READ_ONLY=true):
+- `grouper_create_group` - Create new groups
+- `grouper_update_group` - Modify group properties
+- `grouper_delete_group_by_name` - Delete groups by name
+- `grouper_delete_group_by_uuid` - Delete groups by UUID
+- `grouper_delete_group_by_id_index` - Delete groups by ID index
+- `grouper_add_member` - Add members to groups
+- `grouper_remove_member` - Remove members from groups
+- `grouper_assign_attribute` - Assign attributes to groups
 ```
 
 
@@ -86,6 +122,7 @@ docker run -i \
   -e GROUPER_USERNAME="your_username" \
   -e GROUPER_PASSWORD="your_password" \
   -e GROUPER_DEBUG="true" \
+  -e READ_ONLY="false" \
   -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
   -v $(pwd)/logs:/home/mcp/.grouper-mcp/logs \
   grouper-mcp:latest
@@ -106,6 +143,7 @@ Add to your Claude Desktop MCP configuration:
         "-e", "GROUPER_USERNAME=your_username",
         "-e", "GROUPER_PASSWORD=your_password",
         "-e", "GROUPER_DEBUG=true",
+        "-e", "READ_ONLY=false",
         "-e", "NODE_TLS_REJECT_UNAUTHORIZED=0",
         "grouper-mcp:latest"
       ]
@@ -129,6 +167,7 @@ Add to your Claude Desktop MCP configuration:
         "GROUPER_USERNAME": "your_username",
         "GROUPER_PASSWORD": "your_password",
         "GROUPER_DEBUG": "true",
+        "READ_ONLY": "false",
         "NODE_TLS_REJECT_UNAUTHORIZED": "0"
       }
     }
@@ -138,6 +177,7 @@ Add to your Claude Desktop MCP configuration:
 
 **Environment Variables:**
 - `GROUPER_DEBUG`: Set to `"true"` to enable detailed logging for troubleshooting
+- `READ_ONLY`: Set to `"true"` to enable read-only mode (blocks all write operations)
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `"0"` if using self-signed certificates
 
 ## Examples

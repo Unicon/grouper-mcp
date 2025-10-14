@@ -1,5 +1,33 @@
 import { GrouperGroup } from './types.js';
 
+/**
+ * Check if the server is running in read-only mode
+ */
+export function isReadOnlyMode(): boolean {
+  return process.env.READ_ONLY === 'true';
+}
+
+/**
+ * List of tool names that perform write operations
+ */
+export const WRITE_TOOLS = [
+  'grouper_create_group',
+  'grouper_update_group',
+  'grouper_delete_group_by_name',
+  'grouper_delete_group_by_uuid',
+  'grouper_delete_group_by_id_index',
+  'grouper_add_member',
+  'grouper_remove_member',
+  'grouper_assign_attribute',
+] as const;
+
+/**
+ * Check if a tool name is a write operation
+ */
+export function isWriteTool(toolName: string): boolean {
+  return WRITE_TOOLS.includes(toolName as any);
+}
+
 export function formatSingleGroupDetails(group: GrouperGroup): string {
   let detailText = `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nExtension: ${group.extension || 'N/A'}\nDisplay Extension: ${group.displayExtension || 'N/A'}\nType of Group: ${group.typeOfGroup || 'N/A'}\nID Index: ${group.idIndex || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`;
   
