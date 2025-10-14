@@ -71,8 +71,6 @@ The server can be configured to run in read-only mode, which restricts access to
 - `grouper_add_member` - Add members to groups
 - `grouper_remove_member` - Remove members from groups
 - `grouper_assign_attribute` - Assign attributes to groups
-```
-
 
 ## Installation
 
