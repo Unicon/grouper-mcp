@@ -15,6 +15,9 @@ RUN npm ci
 COPY tsconfig.json ./
 COPY src ./src
 
+# Copy config directory (including properties file if it exists)
+COPY config ./config
+
 # Build TypeScript
 RUN npm run build
 
@@ -36,6 +39,11 @@ RUN npm ci --only=production && \
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist ./dist
+
+# Copy config directory from builder (will include properties file if it was present)
+# To build with config: create config/grouper-mcp.properties before building
+# To build without config: just build normally (will use env vars only)
+COPY --from=builder --chown=mcp:mcp /app/config ./config
 
 # Create logs directory with proper permissions
 RUN mkdir -p /home/mcp/.grouper-mcp/logs && \

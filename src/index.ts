@@ -11,6 +11,7 @@ import { GrouperConfig } from './types.js';
 import { logger } from './logger.js';
 import { toolDefinitions } from './tool-definitions.js';
 import { handleTool } from './tool-handlers.js';
+import { isReadOnlyMode, isWriteTool } from './utils.js';
 
 
 const server = new Server(
@@ -43,8 +44,18 @@ function initializeGrouperClient(): GrouperClient {
 }
 
 server.setRequestHandler(ListToolsRequestSchema, async () => {
+  // Filter out write tools when in read-only mode
+  const availableTools = isReadOnlyMode()
+    ? toolDefinitions.filter(tool => !isWriteTool(tool.name))
+    : toolDefinitions;
+
+  logger.info(`Listing tools (READ_ONLY=${isReadOnlyMode()})`, {
+    totalTools: toolDefinitions.length,
+    availableTools: availableTools.length
+  });
+
   return {
-    tools: toolDefinitions,
+    tools: availableTools,
   };
 });
 
