@@ -17,6 +17,9 @@ docs/
 .env
 .env.*
 
+# Config files - only copy if explicitly created (not the .example)
+config/grouper-mcp.properties.example
+
 # Claude Desktop config (contains credentials)
 claude_desktop_config.json
 

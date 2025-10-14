@@ -1,0 +1,37 @@
+# Grouper MCP Server Configuration
+#
+# This is an example configuration file. To use it:
+# 1. Copy this file to config/grouper-mcp.properties
+# 2. Uncomment and set the properties you want to configure
+# 3. Rebuild your application or Docker image
+#
+# Note: Properties in this file take precedence over environment variables
+
+# ==============================================================================
+# Read-Only Mode
+# ==============================================================================
+# When set to true, the server will only allow read operations (searches,
+# queries, retrieving information). All write operations (create, update,
+# delete, add/remove members) will be blocked.
+#
+# This is useful for:
+# - Production monitoring and auditing without risk of accidental changes
+# - Providing safe access to Grouper data for reporting purposes
+# - Running multiple instances where only some should have write access
+#
+# If set in this properties file, it CANNOT be overridden by the READ_ONLY
+# environment variable, making it suitable for building immutable read-only
+# Docker images.
+#
+# Default: false (if not set, falls back to READ_ONLY environment variable)
+# grouper-mcp.readOnly=true
+
+# ==============================================================================
+# Future Configuration Options
+# ==============================================================================
+# Additional properties will be added here as new features are implemented.
+# Examples might include:
+# - Protocol configuration (SSE, WebSocket, etc.)
+# - Connection pooling settings
+# - Cache configuration
+# - Rate limiting options

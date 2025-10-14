@@ -47,11 +47,37 @@ The server can be configured to run in read-only mode, which restricts access to
 - Providing safe access to Grouper data for reporting purposes
 - Running multiple instances where only some should have write access
 
+**Configuration Priority:**
+1. **Properties file** (`config/grouper-mcp.properties`) - Highest priority, cannot be overridden
+2. **Environment variable** (`READ_ONLY=true`) - Used if no properties file exists
+3. **Default** - `false` (read-write mode)
+
 **When READ_ONLY=true:**
 - Only read operations are available (searches, queries, retrieving information)
 - Write operations (create, update, delete, add/remove members) are blocked
 - Blocked tools do not appear in the tool list
 - Runtime checks prevent execution if a write tool is somehow called
+
+#### Using Properties File (Recommended for Docker)
+
+For immutable read-only Docker images, use the properties file approach:
+
+```bash
+# 1. Create properties file from example
+cp config/grouper-mcp.properties.example config/grouper-mcp.properties
+
+# 2. Edit and uncomment the readOnly setting
+# grouper-mcp.readOnly=true
+
+# 3. Build Docker image - the properties file will be baked in
+docker build -t grouper-mcp:readonly .
+
+# 4. The container will ALWAYS run in read-only mode
+# Environment variables cannot override the properties file setting
+docker run -i grouper-mcp:readonly
+```
+
+This approach ensures the container cannot be switched to read-write mode at runtime, making it suitable for production deployments where write access should be permanently disabled.
 
 **Read-only tools** (available when READ_ONLY=true):
 - `grouper_find_groups_by_name_approximate` - Search for groups

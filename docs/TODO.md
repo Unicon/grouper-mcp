@@ -2,12 +2,6 @@
 
 ## Planned Features
 
-### Read-Only Mode
-- Add configuration option to enable read-only mode
-- When enabled, all write operations (create, update, delete, add/remove members) would be disabled
-- Useful for testing, demonstrations, or restricted access scenarios
-- Only search and read operations would be available
-
 ## Implement Remaining Web Service End Points
 
 The Grouper web services API offers many additional endpoints that are **not currently implemented** in this MCP server:
@@ -110,3 +104,4 @@ _Add additional todo items and planned improvements here._
 ## ✅ Completed Features
 
 - Tool description result formats and standardized error handling
+- **Read-Only Mode** - Configuration option to enable read-only mode via environment variable (`READ_ONLY=true`) or properties file (`config/grouper-mcp.properties`). When enabled, all write operations are blocked at both registration and runtime. Properties file takes precedence over environment variables, enabling immutable read-only Docker images.

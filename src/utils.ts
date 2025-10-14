@@ -1,10 +1,12 @@
 import { GrouperGroup } from './types.js';
+import { config } from './config.js';
 
 /**
  * Check if the server is running in read-only mode
+ * Priority: config/grouper-mcp.properties > READ_ONLY env var > false
  */
 export function isReadOnlyMode(): boolean {
-  return process.env.READ_ONLY === 'true';
+  return config.getBoolean('grouper-mcp.readOnly', 'READ_ONLY', false);
 }
 
 /**

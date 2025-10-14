@@ -8,6 +8,9 @@ node_modules/
 .env
 .env.local
 
+# Configuration files (keep .example versions)
+config/grouper-mcp.properties
+
 # Claude context file
 CLAUDE.md
 
