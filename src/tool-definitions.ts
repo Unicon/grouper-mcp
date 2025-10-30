@@ -277,4 +277,46 @@ export const toolDefinitions = [
       required: ['searchString'],
     },
   },
+  {
+    name: 'grouper_find_stems_by_name_approximate',
+    description: 'Search for stems/folders in Grouper by approximate name match. Stems are organizational folders that contain groups and other stems, forming a hierarchical structure. Returns formatted text with comprehensive stem information for each matching stem including: name (full stem path), displayName (human-readable display name), description (stem purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), and idIndex (numeric ID). Returns count of found stems and formatted details for each match.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        query: {
+          type: 'string',
+          description: 'Search query for approximate stem name matching',
+        },
+      },
+      required: ['query'],
+    },
+  },
+  {
+    name: 'grouper_get_stem_by_exact_name',
+    description: 'Get detailed information about a specific stem/folder by exact name match. Returns formatted text with comprehensive stem information including: name (full stem path), displayName (human-readable display name), description (stem purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), and idIndex (numeric ID). Returns "Stem not found" if the exact stem name does not exist.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        stemName: {
+          type: 'string',
+          description: 'The exact full name of the stem to retrieve (e.g., "edu:apps" or "org:departments")',
+        },
+      },
+      required: ['stemName'],
+    },
+  },
+  {
+    name: 'grouper_get_stem_by_uuid',
+    description: 'Get detailed information about a specific stem/folder by UUID. Returns formatted text with comprehensive stem information including: name (full stem path), displayName (human-readable display name), description (stem purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), and idIndex (numeric ID). Returns "Stem not found" if the UUID does not exist.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        stemUuid: {
+          type: 'string',
+          description: 'The UUID of the stem to retrieve',
+        },
+      },
+      required: ['stemUuid'],
+    },
+  },
 ];

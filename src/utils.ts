@@ -1,4 +1,4 @@
-import { GrouperGroup } from './types.js';
+import { GrouperGroup, GrouperStem } from './types.js';
 import { config } from './config.js';
 
 /**
@@ -173,6 +173,24 @@ export function formatMemberResults(result: any, includeGroupDetail?: boolean, i
       }
     }
   });
-  
+
   return output;
+}
+
+// Stem (folder) formatting functions
+
+export function formatSingleStemDetails(stem: GrouperStem): string {
+  let detailText = `Stem: ${stem.name}\nDisplay Name: ${stem.displayName || 'N/A'}\nDescription: ${stem.description || 'N/A'}\nUUID: ${stem.uuid || 'N/A'}\nExtension: ${stem.extension || 'N/A'}\nDisplay Extension: ${stem.displayExtension || 'N/A'}\nID Index: ${stem.idIndex || 'N/A'}`;
+
+  return detailText;
+}
+
+export function formatStemCollectionDetails(stem: GrouperStem): string {
+  let detailText = `• ${stem.name}${stem.displayName ? ` (${stem.displayName})` : ''}`;
+  if (stem.description) detailText += `\n  Description: ${stem.description}`;
+  if (stem.uuid) detailText += `\n  UUID: ${stem.uuid}`;
+  if (stem.extension) detailText += `\n  Extension: ${stem.extension}`;
+  if (stem.idIndex) detailText += `\n  ID Index: ${stem.idIndex}`;
+
+  return detailText;
 }

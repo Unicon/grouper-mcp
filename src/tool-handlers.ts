@@ -1,7 +1,7 @@
 import { GrouperClient } from './grouper-client.js';
 import { GrouperGroup } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, isReadOnlyMode, isWriteTool } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, isReadOnlyMode, isWriteTool } from './utils.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
@@ -699,6 +699,125 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
             {
               type: 'text',
               text: `Error searching subjects: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_find_stems_by_name_approximate': {
+      const { query } = args as { query: string };
+      try {
+        const stems = await client.findStemsByNameApproximate(query);
+
+        if (stems.length === 0) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `No stems found matching "${query}"`,
+              },
+            ],
+          };
+        }
+
+        const formattedStems = stems.map(formatStemCollectionDetails).join('\n\n');
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Found ${stems.length} stem(s) matching "${query}":\n\n${formattedStems}`,
+            },
+          ],
+        };
+      } catch (error) {
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error searching stems: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_stem_by_exact_name': {
+      const { stemName } = args as { stemName: string };
+      try {
+        const stem = await client.findStemByFilter({ stemName }, 'FIND_BY_STEM_NAME');
+        logger.debug('Stem retrieved by exact name', { stemName, stem });
+        if (!stem) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Stem "${stemName}" not found`,
+              },
+            ],
+          };
+        }
+
+        const detailText = formatSingleStemDetails(stem);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: detailText,
+            },
+          ],
+        };
+      } catch (error) {
+        logger.error('Error in grouper_get_stem_by_exact_name tool', { stemName, error });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving stem: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_stem_by_uuid': {
+      const { stemUuid } = args as { stemUuid: string };
+      try {
+        const stem = await client.findStemByFilter({ stemUuid }, 'FIND_BY_STEM_UUID');
+        logger.debug('Stem retrieved by UUID', { stemUuid, stem });
+        if (!stem) {
+          return {
+            content: [
+              {
+                type: 'text',
+                text: `Stem with UUID "${stemUuid}" not found`,
+              },
+            ],
+          };
+        }
+
+        const detailText = formatSingleStemDetails(stem);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: detailText,
+            },
+          ],
+        };
+      } catch (error) {
+        logger.error('Error in grouper_get_stem_by_uuid tool', { stemUuid, error });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving stem: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
           isError: true,
