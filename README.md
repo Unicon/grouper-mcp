@@ -84,6 +84,9 @@ This approach ensures the container cannot be switched to read-write mode at run
 - `grouper_find_groups_by_name_approximate` - Search for groups
 - `grouper_get_group_by_exact_name` - Get group details by name
 - `grouper_get_group_by_uuid` - Get group details by UUID
+- `grouper_find_stems_by_name_approximate` - Search for stems/folders
+- `grouper_get_stem_by_exact_name` - Get stem details by name
+- `grouper_get_stem_by_uuid` - Get stem details by UUID
 - `grouper_get_members` - Get group membership information
 - `grouper_get_subject_by_id` - Get subject details by ID
 - `grouper_get_subject_by_identifier` - Get subject details by identifier
