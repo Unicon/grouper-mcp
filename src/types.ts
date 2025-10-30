@@ -83,3 +83,13 @@ export interface GrouperPermission {
   role: string;
   action: string;
 }
+
+export interface GrouperStem {
+  name: string;
+  uuid?: string;
+  displayName?: string;
+  description?: string;
+  extension?: string;
+  displayExtension?: string;
+  idIndex?: string;
+}

@@ -4,9 +4,10 @@ This document provides comprehensive documentation for all available tools in th
 
 ## Overview
 
-The Grouper MCP server provides **15 core tools** for essential Grouper operations, organized into four main categories:
+The Grouper MCP server provides **18 core tools** for essential Grouper operations, organized into five main categories:
 
 - **[Group Management](#group-management)** (8 tools) - Search, create, retrieve, update, and delete groups
+- **[Stem/Folder Management](#stemfolder-management)** (3 tools) - Search and browse organizational hierarchy
 - **[Member Management](#member-management)** (3 tools) - Add, remove, and list group members
 - **[Attribute Management](#attribute-management)** (1 tool) - Assign attributes to groups
 - **[Subject Management](#subject-management)** (3 tools) - Search for and retrieve information about subjects
@@ -143,6 +144,58 @@ Delete a group from Grouper by ID index.
 **Example Usage:**
 ```
 Delete group with ID index "12345"
+```
+
+---
+
+## Stem/Folder Management
+
+Stems are organizational folders in Grouper that contain groups and other stems, forming a hierarchical structure. They provide the organizational backbone for managing groups.
+
+### 🔍 grouper_find_stems_by_name_approximate
+
+Search for stems/folders by approximate name matching.
+
+**Parameters:**
+- **`query`** (required, string) - Search query for approximate stem name matching
+
+**Returns:** Formatted text with comprehensive stem information for each matching stem, including count of found stems and detailed information.
+
+**Example Usage:**
+```
+Find all stems containing "department" in their name
+```
+
+---
+
+### 📁 grouper_get_stem_by_exact_name
+
+Get detailed information about a specific stem/folder by exact name match.
+
+**Parameters:**
+- **`stemName`** (required, string) - The exact full name of the stem to retrieve (e.g., "edu:apps" or "org:departments")
+
+**Returns:** Comprehensive stem information or "Stem not found" if the exact stem name does not exist.
+
+**Example Usage:**
+```
+Get details for stem "edu:apps:webapps"
+```
+
+---
+
+### 🆔 grouper_get_stem_by_uuid
+
+Get detailed information about a specific stem/folder by UUID.
+
+**Parameters:**
+- **`stemUuid`** (required, string) - The UUID of the stem to retrieve
+
+**Returns:** Comprehensive stem information or "Stem not found" if the UUID does not exist.
+
+**Example Usage:**
+```
+Get details for stem with UUID "12345678-1234-1234-1234-123456789abc"
 ```
 
 ---
@@ -293,6 +346,15 @@ All tools return comprehensive information when applicable, including:
 - **idIndex** - Numeric ID
 - **enabled** - Enabled status
 
+### Stem/Folder Information
+- **name** - Full stem name/path
+- **displayName** - Human-readable display name (full path)
+- **description** - Stem purpose description
+- **uuid** - Unique identifier
+- **extension** - Short name (rightmost part after last colon)
+- **displayExtension** - Human-readable version of extension
+- **idIndex** - Numeric ID
+
 ### Detailed Metadata
 - **hasComposite** - Whether group has composite membership
 - **createTime** - When the group was created
@@ -332,7 +394,9 @@ All tools include comprehensive error handling:
 ## Notes
 
 - **Group Names**: Use full path notation with colons (e.g., "edu:department:engineering:students")
+- **Stem Names**: Use full path notation with colons (e.g., "edu:apps:webapps"). Stems are the organizational folders that contain groups
+- **Hierarchical Structure**: Stems form a tree structure where stems can contain other stems and groups
 - **Subject Sources**: Most operations default to the main subject source if not specified
 - **Permissions**: Operations require appropriate Grouper permissions for the authenticated user
-- **Case Sensitivity**: Group names and subject IDs are typically case-sensitive
+- **Case Sensitivity**: Group names, stem names, and subject IDs are typically case-sensitive
 - **Attribute Definitions**: Must use full path notation for attribute names

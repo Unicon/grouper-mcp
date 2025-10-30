@@ -1,4 +1,4 @@
-import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult } from './types.js';
+import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult, GrouperStem } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
 import { logger } from './logger.js';
 
@@ -364,6 +364,45 @@ export class GrouperClient {
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'getSubjects');
+      throw grouperError;
+    }
+  }
+
+  // Stem (folder) operations
+
+  async findStemsByNameApproximate(query: string): Promise<GrouperStem[]> {
+    try {
+      const response = await this.makeRequest('/stems', 'POST', {
+        WsRestFindStemsRequest: {
+          wsStemQueryFilter: {
+            stemQueryFilterType: 'FIND_BY_STEM_NAME_APPROXIMATE',
+            stemName: query
+          }
+        }
+      });
+      return response.WsFindStemsResults?.stemResults || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'findStemsByNameApproximate', { query });
+      throw grouperError;
+    }
+  }
+
+  async findStemByFilter(filter: { stemName?: string; stemUuid?: string }, queryFilterType: string): Promise<GrouperStem | null> {
+    try {
+      const response = await this.makeRequest('/stems', 'POST', {
+        WsRestFindStemsRequest: {
+          wsStemQueryFilter: {
+            stemQueryFilterType: queryFilterType,
+            ...filter
+          }
+        }
+      });
+      const results = response.WsFindStemsResults?.stemResults || [];
+      return results.length > 0 ? results[0] : null;
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'findStemByFilter', { filter, queryFilterType });
       throw grouperError;
     }
   }
