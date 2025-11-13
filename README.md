@@ -18,6 +18,17 @@ This implementation covers the essential group lifecycle and membership manageme
 
 ## Configuration
 
+The server can be configured using environment variables or a properties file.
+
+### Configuration Methods
+
+**Configuration Priority:**
+1. **Properties file** (`config/grouper-mcp.properties`) - Highest priority, cannot be overridden
+2. **Environment variables** - Used if no properties file exists or setting not defined in properties file
+3. **Defaults** - Built-in default values
+
+### Environment Variables
+
 Configure the server using environment variables:
 
 ```bash
@@ -41,44 +52,50 @@ export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
 export READ_ONLY="true"  # Enable read-only mode (default: false)
 ```
 
-### Read-Only Mode
+### Properties File Configuration
 
-The server can be configured to run in read-only mode, which restricts access to read operations only. This is useful for:
-- Production monitoring and auditing without risk of accidental changes
-- Providing safe access to Grouper data for reporting purposes
-- Running multiple instances where only some should have write access
-
-**Configuration Priority:**
-1. **Properties file** (`config/grouper-mcp.properties`) - Highest priority, cannot be overridden
-2. **Environment variable** (`READ_ONLY=true`) - Used if no properties file exists
-3. **Default** - `false` (read-write mode)
-
-**When READ_ONLY=true:**
-- Only read operations are available (searches, queries, retrieving information)
-- Write operations (create, update, delete, add/remove members) are blocked
-- Blocked tools do not appear in the tool list
-- Runtime checks prevent execution if a write tool is somehow called
-
-#### Using Properties File (Recommended for Docker)
-
-For immutable read-only Docker images, use the properties file approach:
+For production deployments or when you need immutable configuration (especially useful for Docker images), use a properties file:
 
 ```bash
 # 1. Create properties file from example
 cp config/grouper-mcp.properties.example config/grouper-mcp.properties
 
-# 2. Edit and uncomment the readOnly setting
+# 2. Edit the properties file and set your configuration
+# Example properties:
 # grouper-mcp.readOnly=true
 
 # 3. Build Docker image - the properties file will be baked in
-docker build -t grouper-mcp:readonly .
+docker build -t grouper-mcp:configured .
 
-# 4. The container will ALWAYS run in read-only mode
-# Environment variables cannot override the properties file setting
-docker run -i grouper-mcp:readonly
+# 4. The container will use the properties file configuration
+# Environment variables cannot override properties file settings
+docker run -i grouper-mcp:configured
 ```
 
-This approach ensures the container cannot be switched to read-write mode at runtime, making it suitable for production deployments where write access should be permanently disabled.
+**Benefits of properties file approach:**
+- Configuration is immutable at runtime
+- Prevents accidental configuration changes via environment variables
+- Ideal for production deployments where settings should be locked
+- Enables building specialized Docker images (e.g., read-only images)
+
+### Read-Only Mode
+
+The server can be configured to run in read-only mode, which restricts access to read operations only.
+
+**Use cases:**
+- Production monitoring and auditing without risk of accidental changes
+- Providing safe access to Grouper data for reporting purposes
+- Running multiple instances where only some should have write access
+
+**Configuration:**
+- Via environment variable: `READ_ONLY=true`
+- Via properties file: `grouper-mcp.readOnly=true`
+
+**When read-only mode is enabled:**
+- Only read operations are available (searches, queries, retrieving information)
+- Write operations (create, update, delete, add/remove members) are blocked
+- Blocked tools do not appear in the tool list
+- Runtime checks prevent execution if a write tool is somehow called
 
 **Read-only tools** (available when READ_ONLY=true):
 - `grouper_find_groups_by_name_approximate` - Search for groups
@@ -207,6 +224,190 @@ Add to your Claude Desktop MCP configuration:
 - `GROUPER_DEBUG`: Set to `"true"` to enable detailed logging for troubleshooting
 - `READ_ONLY`: Set to `"true"` to enable read-only mode (blocks all write operations)
 - `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `"0"` if using self-signed certificates
+
+### With Open WebUI
+
+[Open WebUI](https://docs.openwebui.com/) (v0.6.31+) provides a web-based interface for interacting with AI models and supports MCP servers via Streamable HTTP protocol. You can integrate grouper-mcp with Open WebUI using MCPO as a proxy.
+
+#### Prerequisites
+
+- Open WebUI v0.6.31 or higher
+- MCPO installed (see [MCPO section](#exposing-via-httpsse-with-mcpo) below for installation)
+- grouper-mcp Docker image built
+
+#### Step 1: Start MCPO with Grouper MCP
+
+Run MCPO to expose grouper-mcp via HTTP:
+
+```bash
+uvx mcpo --port 8000 --api-key "your-secret-key" -- \
+  docker run -i --rm \
+    -e GROUPER_BASE_URL=https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000 \
+    -e GROUPER_USERNAME=your_username \
+    -e GROUPER_PASSWORD=your_password \
+    -e GROUPER_DEBUG=true \
+    -e READ_ONLY=false \
+    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    grouper-mcp:latest
+```
+
+**For local development with host.docker.internal:**
+```bash
+uvx mcpo --port 8000 --api-key "top-secret" -- \
+  docker run -i --rm \
+    -e GROUPER_BASE_URL=https://host.docker.internal:9443/grouper-ws/servicesRest/json/v4_0_000 \
+    -e GROUPER_USERNAME=GrouperSystem \
+    -e GROUPER_PASSWORD=pass \
+    -e GROUPER_DEBUG=true \
+    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    -e READ_ONLY=false \
+    grouper-mcp:latest
+```
+
+Verify the server is running by visiting `http://localhost:8000/docs` to see the auto-generated API documentation.
+
+#### Step 2: Configure Open WebUI
+
+1. Log in to your Open WebUI instance
+2. Navigate to **⚙️ Admin Settings → External Tools**
+3. Click **+ (Add Server)**
+4. Select **MCP (Streamable HTTP)** as the server type
+5. Configure the connection:
+   - **Server URL**: `http://localhost:8000` (or your MCPO server URL)
+   - **API Key**: `your-secret-key` (the key you set when starting MCPO)
+6. Click **Save**
+7. Restart Open WebUI if prompted
+
+#### Step 3: Use Grouper Tools in Open WebUI
+
+Once configured, all grouper-mcp tools will be available in your Open WebUI chats:
+
+- Start a new chat or open an existing conversation
+- The AI can now call Grouper tools automatically based on your requests
+- Example prompts:
+  - "Search for groups containing 'engineering'"
+  - "Show me the members of group edu:department:engineering:students"
+  - "Create a new group named edu:projects:research with display name 'Research Projects'"
+
+#### Important Notes
+
+- **Transport Protocol**: Open WebUI only supports Streamable HTTP for MCP servers. Traditional stdio MCP servers must be proxied through MCPO.
+- **Authentication**: MCPO provides API key authentication. For production deployments, ensure you use strong API keys.
+- **Network Access**: If running MCPO on a different machine than Open WebUI, ensure the server URL is accessible from the Open WebUI instance.
+- **HTTPS**: For production deployments, consider running MCPO behind a reverse proxy (nginx, Caddy) with HTTPS enabled.
+
+For more information about Open WebUI's MCP support, see the [Open WebUI MCP Documentation](https://docs.openwebui.com/features/mcp/).
+
+### Exposing via HTTP/SSE with MCPO
+
+[MCPO (MCP-to-OpenAPI Proxy)](https://github.com/open-webui/mcpo) is a lightweight proxy that converts MCP servers into OpenAPI-compatible HTTP endpoints. This allows you to expose grouper-mcp tools as RESTful APIs with auto-generated interactive documentation, making them accessible to HTTP-based AI agents and other tools.
+
+#### What is MCPO?
+
+MCPO addresses the limitations of traditional MCP servers that communicate via stdio by:
+- Providing a secure HTTP/SSE interface
+- Adding authentication support via API keys
+- Generating interactive OpenAPI documentation
+- Enabling integration with standard HTTP tools and agents
+
+#### Installation
+
+Install MCPO via uv (recommended):
+```bash
+pip install uv  # if not already installed
+```
+
+Or via pip:
+```bash
+pip install mcpo
+```
+
+#### Basic Usage with Grouper MCP
+
+Expose grouper-mcp via HTTP on port 8000:
+
+```bash
+uvx mcpo --port 8000 --api-key "your-secret-key" -- \
+  docker run -i --rm \
+    -e GROUPER_BASE_URL=https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000 \
+    -e GROUPER_USERNAME=your_username \
+    -e GROUPER_PASSWORD=your_password \
+    -e GROUPER_DEBUG=true \
+    -e READ_ONLY=false \
+    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    grouper-mcp:latest
+```
+
+**For local development/testing with host.docker.internal:**
+```bash
+uvx mcpo --port 8000 --api-key "top-secret" -- \
+  docker run -i --rm \
+    -e GROUPER_BASE_URL=https://host.docker.internal:9443/grouper-ws/servicesRest/json/v4_0_000 \
+    -e GROUPER_USERNAME=GrouperSystem \
+    -e GROUPER_PASSWORD=pass \
+    -e GROUPER_DEBUG=true \
+    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
+    -e READ_ONLY=false \
+    grouper-mcp:latest
+```
+
+#### Accessing the HTTP API
+
+Once running, you can access:
+- **API endpoint**: `http://localhost:8000`
+- **Interactive documentation**: `http://localhost:8000/docs`
+- **OpenAPI schema**: `http://localhost:8000/openapi.json`
+
+#### Making API Calls
+
+All API requests require the API key in the Authorization header:
+
+```bash
+curl -X POST http://localhost:8000/grouper_find_groups_by_name_approximate \
+  -H "Authorization: Bearer your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"searchTerm": "engineering"}'
+```
+
+#### Advanced MCPO Options
+
+**Custom root path:**
+```bash
+uvx mcpo --port 8000 --api-key "your-key" --root-path "/api/grouper" -- docker run ...
+```
+
+**Using a local build instead of Docker:**
+```bash
+uvx mcpo --port 8000 --api-key "your-key" -- \
+  node /path/to/grouper-mcp/dist/index.js
+```
+
+**Multiple MCP servers via config file:**
+
+Create a config file (`mcpo-config.json`):
+```json
+{
+  "mcpServers": {
+    "grouper": {
+      "command": "docker",
+      "args": [
+        "run", "-i", "--rm",
+        "-e", "GROUPER_BASE_URL=https://your-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
+        "-e", "GROUPER_USERNAME=your_username",
+        "-e", "GROUPER_PASSWORD=your_password",
+        "grouper-mcp:latest"
+      ]
+    }
+  }
+}
+```
+
+Run with config:
+```bash
+uvx mcpo --config mcpo-config.json --api-key "your-key"
+```
+
+For more information on MCPO features and configuration options, see the [MCPO documentation](https://github.com/open-webui/mcpo).
 
 ## Examples
 
