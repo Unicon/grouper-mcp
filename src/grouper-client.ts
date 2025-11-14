@@ -406,4 +406,52 @@ export class GrouperClient {
       throw grouperError;
     }
   }
+
+  async getSubjectMemberships(
+    subjectId: string,
+    options?: {
+      subjectSourceId?: string;
+      subjectIdentifier?: string;
+      memberFilter?: string;
+      enabled?: string;
+    }
+  ): Promise<any> {
+    try {
+      const wsSubjectLookup: any = {
+        subjectId: subjectId,
+      };
+
+      if (options?.subjectSourceId) {
+        wsSubjectLookup.subjectSourceId = options.subjectSourceId;
+      }
+
+      if (options?.subjectIdentifier) {
+        wsSubjectLookup.subjectIdentifier = options.subjectIdentifier;
+      }
+
+      const requestBody: any = {
+        WsRestGetMembershipsRequest: {
+          wsSubjectLookups: [wsSubjectLookup],
+          includeGroupDetail: "T",
+          includeSubjectDetail: "T",
+        }
+      };
+
+      if (options?.memberFilter) {
+        requestBody.WsRestGetMembershipsRequest.memberFilter = options.memberFilter;
+      }
+
+      if (options?.enabled) {
+        requestBody.WsRestGetMembershipsRequest.enabled = options.enabled;
+      }
+
+      const response = await this.makeRequest('/memberships', 'POST', requestBody);
+
+      return response.WsGetMembershipsResults || {};
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getSubjectMemberships', { subjectId, options });
+      throw grouperError;
+    }
+  }
 }
