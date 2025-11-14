@@ -319,4 +319,34 @@ export const toolDefinitions = [
       required: ['stemUuid'],
     },
   },
+  {
+    name: 'grouper_get_subject_groups',
+    description: 'Get all group memberships for a specific subject/user. Returns formatted text with comprehensive information about each group the subject is a member of, including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, membership type (immediate/effective), and detailed metadata when available. Returns "No group memberships found" if the subject is not a member of any groups.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        subjectId: {
+          type: 'string',
+          description: 'The subject ID of the user to retrieve group memberships for',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID to limit search scope',
+        },
+        subjectIdentifier: {
+          type: 'string',
+          description: 'Optional subject identifier (alternative to subjectId)',
+        },
+        memberFilter: {
+          type: 'string',
+          description: 'Filter for membership type: "All", "Effective", "Immediate", "Composite", "NonImmediate" (default: "All")',
+        },
+        enabled: {
+          type: 'string',
+          description: 'Filter for enabled groups: "T" for enabled only, "F" for disabled only, or omit for all (default: all)',
+        },
+      },
+      required: ['subjectId'],
+    },
+  },
 ];

@@ -9,7 +9,7 @@ This directory contains comprehensive documentation for the Grouper MCP server p
 #### [🛠️ TOOLS.md](TOOLS.md)
 **Comprehensive API Reference for MCP Tools**
 
-Complete documentation of all 15 available MCP tools including:
+Complete documentation of all 19 available MCP tools including:
 - Detailed parameter specifications and types
 - Usage examples for each tool
 - Response format documentation

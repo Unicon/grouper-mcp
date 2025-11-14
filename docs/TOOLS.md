@@ -4,13 +4,13 @@ This document provides comprehensive documentation for all available tools in th
 
 ## Overview
 
-The Grouper MCP server provides **18 core tools** for essential Grouper operations, organized into five main categories:
+The Grouper MCP server provides **19 core tools** for essential Grouper operations, organized into five main categories:
 
 - **[Group Management](#group-management)** (8 tools) - Search, create, retrieve, update, and delete groups
 - **[Stem/Folder Management](#stemfolder-management)** (3 tools) - Search and browse organizational hierarchy
 - **[Member Management](#member-management)** (3 tools) - Add, remove, and list group members
 - **[Attribute Management](#attribute-management)** (1 tool) - Assign attributes to groups
-- **[Subject Management](#subject-management)** (3 tools) - Search for and retrieve information about subjects
+- **[Subject Management](#subject-management)** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
 ---
 
@@ -327,6 +327,28 @@ Search for subjects using Grouper's native text search functionality (searchStri
 **Example Usage:**
 ```
 Search for subjects containing "Smith" in their name or other searchable fields
+```
+
+---
+
+### 👥 grouper_get_subject_groups
+
+Get all group memberships for a specific subject/user.
+
+**Parameters:**
+- **`subjectId`** (required, string) - The subject ID of the user to retrieve group memberships for
+- **`subjectSourceId`** (optional, string) - Optional subject source ID to limit search scope
+- **`subjectIdentifier`** (optional, string) - Optional subject identifier (alternative to subjectId)
+- **`memberFilter`** (optional, string) - Filter for membership type: "All", "Effective", "Immediate", "Composite", "NonImmediate" (default: "All")
+- **`enabled`** (optional, string) - Filter for enabled groups: "T" for enabled only, "F" for disabled only, or omit for all (default: all)
+
+**Returns:** Formatted text with comprehensive information about each group the subject is a member of, including group details, membership type (immediate/effective), and enabled status. Returns "No group memberships found" if the subject is not a member of any groups.
+
+**Example Usage:**
+```
+Get all groups for user jdoe
+Get immediate group memberships for subject ID 12345
+Get enabled group memberships for subject identifier jsmith@example.edu
 ```
 
 ---

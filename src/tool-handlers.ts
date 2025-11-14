@@ -1,7 +1,7 @@
 import { GrouperClient } from './grouper-client.js';
 import { GrouperGroup } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, isReadOnlyMode, isWriteTool } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, isReadOnlyMode, isWriteTool } from './utils.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
@@ -818,6 +818,55 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
             {
               type: 'text',
               text: `Error retrieving stem: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_subject_groups': {
+      const {
+        subjectId,
+        subjectSourceId,
+        subjectIdentifier,
+        memberFilter,
+        enabled
+      } = args as {
+        subjectId: string;
+        subjectSourceId?: string;
+        subjectIdentifier?: string;
+        memberFilter?: string;
+        enabled?: string;
+      };
+
+      try {
+        const result = await client.getSubjectMemberships(subjectId, {
+          subjectSourceId,
+          subjectIdentifier,
+          memberFilter,
+          enabled,
+        });
+
+        logger.debug('Subject memberships retrieved', { subjectId, result });
+
+        const formattedOutput = formatSubjectMemberships(result);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedOutput,
+            },
+          ],
+        };
+      } catch (error) {
+        logger.error('Error in grouper_get_subject_groups tool', { subjectId, error });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error retrieving subject memberships: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
           isError: true,
