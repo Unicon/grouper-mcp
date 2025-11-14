@@ -15,7 +15,36 @@ For most use cases, you don't need to implement HTTP/SSE transport yourself. **[
 - **Built-in authentication** - API key support out of the box
 - **Production ready** - Used by thousands of MCP deployments
 
-### Quick Example
+### All-in-One Docker Image (Easiest Option)
+
+The grouper-mcp project provides a pre-configured Docker image with both the MCP server and MCPO built-in:
+
+```bash
+# Build the HTTP-enabled image
+docker build -f Dockerfile.http -t grouper-mcp:http .
+
+# Run with HTTP access
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL=https://your-instance.edu/grouper-ws/servicesRest/json/v4_0_000 \
+  -e GROUPER_USERNAME=your_username \
+  -e GROUPER_PASSWORD=your_password \
+  -e MCPO_API_KEY=your-secret-key \
+  -e GROUPER_DEBUG=true \
+  grouper-mcp:http
+
+# Access your API
+curl -X POST http://localhost:8000/grouper_find_groups_by_name_approximate \
+  -H "Authorization: Bearer your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"searchTerm": "engineering"}'
+
+# View interactive docs
+open http://localhost:8000/docs
+```
+
+### Separate MCPO Installation
+
+Alternatively, run MCPO separately if you need more control:
 
 ```bash
 # Install and run (using the existing grouper-mcp Docker image)
@@ -26,15 +55,6 @@ uvx mcpo --port 8000 --api-key "your-secret-key" -- \
     -e GROUPER_PASSWORD=your_password \
     -e GROUPER_DEBUG=true \
     grouper-mcp:latest
-
-# Access your API
-curl -X POST http://localhost:8000/grouper_find_groups_by_name_approximate \
-  -H "Authorization: Bearer your-secret-key" \
-  -H "Content-Type: application/json" \
-  -d '{"searchTerm": "engineering"}'
-
-# View interactive docs
-open http://localhost:8000/docs
 ```
 
 See the main [README.md](../README.md#exposing-via-httpsse-with-mcpo) for complete MCPO usage documentation.

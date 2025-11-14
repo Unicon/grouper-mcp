@@ -121,7 +121,39 @@ The server can be configured to run in read-only mode, which restricts access to
 
 ## Installation
 
-### Option 1: Local Installation
+### Option 1: Docker Installation (Recommended)
+
+#### Standard stdio MCP Server
+
+For use with Claude Desktop or other MCP clients that support stdio:
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd grouper-mcp
+
+# Build the Docker image
+docker build -t grouper-mcp:latest .
+```
+
+#### HTTP-Enabled Server (with MCPO)
+
+For HTTP/SSE access (Open WebUI, web-based AI agents, etc.):
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd grouper-mcp
+
+# Build the HTTP-enabled Docker image
+docker build -f Dockerfile.http -t grouper-mcp:http .
+```
+
+This image includes both the MCP server and MCPO proxy, providing instant HTTP access without additional setup.
+
+### Option 2: Local Installation
+
+For development or custom deployments:
 
 1. Clone this repository
 2. Install dependencies:
@@ -132,14 +164,6 @@ The server can be configured to run in read-only mode, which restricts access to
 3. Build the project:
    ```bash
    npm run build
-   ```
-
-### Option 2: Docker Installation
-
-1. Clone this repository
-2. Build the Docker image:
-   ```bash
-   docker build -t grouper-mcp .
    ```
 
 ## Usage
@@ -237,7 +261,42 @@ Add to your Claude Desktop MCP configuration:
 
 #### Step 1: Start MCPO with Grouper MCP
 
-Run MCPO to expose grouper-mcp via HTTP:
+**Option A: All-in-One Docker Image (Recommended)**
+
+Use the HTTP-enabled Docker image that includes both MCP server and MCPO:
+
+```bash
+# Build the image (if not already built)
+docker build -f Dockerfile.http -t grouper-mcp:http .
+
+# Run with HTTP access
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="your_username" \
+  -e GROUPER_PASSWORD="your_password" \
+  -e MCPO_API_KEY="your-secret-key" \
+  -e GROUPER_DEBUG="true" \
+  -e READ_ONLY="false" \
+  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
+  grouper-mcp:http
+```
+
+**For local development with host.docker.internal:**
+```bash
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL="https://host.docker.internal:9443/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="GrouperSystem" \
+  -e GROUPER_PASSWORD="pass" \
+  -e MCPO_API_KEY="top-secret" \
+  -e GROUPER_DEBUG="true" \
+  -e READ_ONLY="false" \
+  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
+  grouper-mcp:http
+```
+
+**Option B: Separate MCPO Installation**
+
+Run MCPO separately to expose the standard grouper-mcp Docker image:
 
 ```bash
 uvx mcpo --port 8000 --api-key "your-secret-key" -- \
@@ -251,20 +310,7 @@ uvx mcpo --port 8000 --api-key "your-secret-key" -- \
     grouper-mcp:latest
 ```
 
-**For local development with host.docker.internal:**
-```bash
-uvx mcpo --port 8000 --api-key "top-secret" -- \
-  docker run -i --rm \
-    -e GROUPER_BASE_URL=https://host.docker.internal:9443/grouper-ws/servicesRest/json/v4_0_000 \
-    -e GROUPER_USERNAME=GrouperSystem \
-    -e GROUPER_PASSWORD=pass \
-    -e GROUPER_DEBUG=true \
-    -e NODE_TLS_REJECT_UNAUTHORIZED=0 \
-    -e READ_ONLY=false \
-    grouper-mcp:latest
-```
-
-Verify the server is running by visiting `http://localhost:8000/docs` to see the auto-generated API documentation.
+**Verify the server is running** by visiting `http://localhost:8000/docs` to see the auto-generated API documentation.
 
 #### Step 2: Configure Open WebUI
 
@@ -295,6 +341,11 @@ Once configured, all grouper-mcp tools will be available in your Open WebUI chat
 - **Authentication**: MCPO provides API key authentication. For production deployments, ensure you use strong API keys.
 - **Network Access**: If running MCPO on a different machine than Open WebUI, ensure the server URL is accessible from the Open WebUI instance.
 - **HTTPS**: For production deployments, consider running MCPO behind a reverse proxy (nginx, Caddy) with HTTPS enabled.
+- **Special Characters in Group Names**: Open WebUI converts special characters (like `-`, `:`, etc.) to asterisks (`*`) in tool call parameters. When working with group names containing special characters, wrap them in triple backticks (code blocks) in your prompts to preserve the exact name:
+  ```
+  Get members of group ```edu:app:my-app:users```
+  ```
+  Without the code block, the group name might be corrupted (e.g., `edu:app:my-app:users` becomes `edu*app*my*app*users`).
 
 For more information about Open WebUI's MCP support, see the [Open WebUI MCP Documentation](https://docs.openwebui.com/features/mcp/).
 
@@ -310,7 +361,73 @@ MCPO addresses the limitations of traditional MCP servers that communicate via s
 - Generating interactive OpenAPI documentation
 - Enabling integration with standard HTTP tools and agents
 
-#### Installation
+#### Option 1: All-in-One Docker Image (Recommended)
+
+The simplest way to run grouper-mcp with HTTP access is to use the pre-built Docker image that includes both the MCP server and MCPO:
+
+```bash
+# Build the HTTP-enabled Docker image
+docker build -f Dockerfile.http -t grouper-mcp:http .
+
+# Run with HTTP access on port 8000
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="your_username" \
+  -e GROUPER_PASSWORD="your_password" \
+  -e MCPO_API_KEY="your-secret-key" \
+  -e GROUPER_DEBUG="true" \
+  -e READ_ONLY="false" \
+  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
+  grouper-mcp:http
+```
+
+**For local development with host.docker.internal:**
+```bash
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL="https://host.docker.internal:9443/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="GrouperSystem" \
+  -e GROUPER_PASSWORD="pass" \
+  -e MCPO_API_KEY="top-secret" \
+  -e GROUPER_DEBUG="true" \
+  -e READ_ONLY="false" \
+  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
+  grouper-mcp:http
+```
+
+**Environment Variables:**
+- `MCPO_API_KEY`: API key for authentication (default: `change-me-in-production`)
+- `MCPO_PORT`: HTTP port (default: `8000`)
+- `MCPO_HOST`: Bind address (default: `0.0.0.0`)
+- All standard grouper-mcp environment variables (see [Configuration](#configuration))
+
+**Accessing Logs:**
+
+Logs are written to `/home/mcp/.grouper-mcp/logs/` inside the container. To access them:
+
+```bash
+# Option 1: Mount a volume to persist logs (recommended)
+docker run -p 8000:8000 \
+  -v $(pwd)/logs:/home/mcp/.grouper-mcp/logs \
+  -e GROUPER_BASE_URL="..." \
+  -e MCPO_API_KEY="..." \
+  grouper-mcp:http
+
+# Option 2: View logs from a running container
+docker exec <container-id> cat /home/mcp/.grouper-mcp/logs/grouper-mcp.log
+
+# Option 3: Copy logs from container to host
+docker cp <container-id>:/home/mcp/.grouper-mcp/logs ./logs
+```
+
+Log files available:
+- `grouper-mcp.log` - All log messages (info, debug, errors)
+- `grouper-mcp-errors.log` - Error messages only
+
+#### Option 2: Separate MCPO Installation
+
+If you prefer to run MCPO separately or want more control over the setup:
+
+**Installation:**
 
 Install MCPO via uv (recommended):
 ```bash
@@ -322,7 +439,7 @@ Or via pip:
 pip install mcpo
 ```
 
-#### Basic Usage with Grouper MCP
+**Basic Usage:**
 
 Expose grouper-mcp via HTTP on port 8000:
 
