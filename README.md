@@ -18,94 +18,52 @@ This implementation covers the essential group lifecycle and membership manageme
 
 ## Configuration
 
-Configure the server using environment variables:
+The server supports configuration via environment variables or properties files. Key environment variables:
 
-```bash
-# Required: Base URL for Grouper web services
-export GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000"
+- **`GROUPER_BASE_URL`** (required): Full URL to Grouper web services endpoint
+- **`GROUPER_USERNAME`** (required): Grouper authentication username
+- **`GROUPER_PASSWORD`** (required): Grouper authentication password
+- **`READ_ONLY`**: Enable read-only mode (`"true"` or `"false"`)
+- **`GROUPER_DEBUG`**: Enable detailed debug logging (`"true"` or `"false"`)
+- **`NODE_TLS_REJECT_UNAUTHORIZED`**: Set to `"0"` for self-signed certificates (development only)
 
-# Required: Basic authentication credentials
-export GROUPER_USERNAME="your_username"
-export GROUPER_PASSWORD="your_password"
-
-# Optional: Act as different subject (for administrative operations)
-export GROUPER_ACT_AS_SUBJECT_ID="your_admin_subject_id"
-export GROUPER_ACT_AS_SUBJECT_SOURCE_ID="your_subject_source"
-export GROUPER_ACT_AS_SUBJECT_IDENTIFIER="your_admin_identifier"
-
-# Optional: Logging configuration
-export GROUPER_LOG_DIR="/custom/log/directory"  # Default: ~/.grouper-mcp/logs/
-export GROUPER_DEBUG="true"  # Enable verbose debug logging (default: false)
-
-# Optional: Read-only mode
-export READ_ONLY="true"  # Enable read-only mode (default: false)
-```
-
-### Read-Only Mode
-
-The server can be configured to run in read-only mode, which restricts access to read operations only. This is useful for:
-- Production monitoring and auditing without risk of accidental changes
-- Providing safe access to Grouper data for reporting purposes
-- Running multiple instances where only some should have write access
-
-**Configuration Priority:**
-1. **Properties file** (`config/grouper-mcp.properties`) - Highest priority, cannot be overridden
-2. **Environment variable** (`READ_ONLY=true`) - Used if no properties file exists
-3. **Default** - `false` (read-write mode)
-
-**When READ_ONLY=true:**
-- Only read operations are available (searches, queries, retrieving information)
-- Write operations (create, update, delete, add/remove members) are blocked
-- Blocked tools do not appear in the tool list
-- Runtime checks prevent execution if a write tool is somehow called
-
-#### Using Properties File (Recommended for Docker)
-
-For immutable read-only Docker images, use the properties file approach:
-
-```bash
-# 1. Create properties file from example
-cp config/grouper-mcp.properties.example config/grouper-mcp.properties
-
-# 2. Edit and uncomment the readOnly setting
-# grouper-mcp.readOnly=true
-
-# 3. Build Docker image - the properties file will be baked in
-docker build -t grouper-mcp:readonly .
-
-# 4. The container will ALWAYS run in read-only mode
-# Environment variables cannot override the properties file setting
-docker run -i grouper-mcp:readonly
-```
-
-This approach ensures the container cannot be switched to read-write mode at runtime, making it suitable for production deployments where write access should be permanently disabled.
-
-**Read-only tools** (available when READ_ONLY=true):
-- `grouper_find_groups_by_name_approximate` - Search for groups
-- `grouper_get_group_by_exact_name` - Get group details by name
-- `grouper_get_group_by_uuid` - Get group details by UUID
-- `grouper_find_stems_by_name_approximate` - Search for stems/folders
-- `grouper_get_stem_by_exact_name` - Get stem details by name
-- `grouper_get_stem_by_uuid` - Get stem details by UUID
-- `grouper_get_members` - Get group membership information
-- `grouper_get_subject_by_id` - Get subject details by ID
-- `grouper_get_subject_by_identifier` - Get subject details by identifier
-- `grouper_search_subjects` - Search for subjects
-- `grouper_get_subject_groups` - Get all group memberships for a subject
-
-**Write tools** (blocked when READ_ONLY=true):
-- `grouper_create_group` - Create new groups
-- `grouper_update_group` - Modify group properties
-- `grouper_delete_group_by_name` - Delete groups by name
-- `grouper_delete_group_by_uuid` - Delete groups by UUID
-- `grouper_delete_group_by_id_index` - Delete groups by ID index
-- `grouper_add_member` - Add members to groups
-- `grouper_remove_member` - Remove members from groups
-- `grouper_assign_attribute` - Assign attributes to groups
+For complete configuration details including properties files, read-only mode, logging, TLS/SSL, and act-as configuration, see **[Configuration Guide](docs/CONFIGURATION.md)**.
 
 ## Installation
 
-### Option 1: Local Installation
+### Option 1: Docker Installation (Recommended)
+
+#### Standard stdio MCP Server
+
+For use with Claude Desktop or other MCP clients that support stdio:
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd grouper-mcp
+
+# Build the Docker image
+docker build -t grouper-mcp:latest .
+```
+
+#### HTTP-Enabled Server (with MCPO)
+
+For HTTP/SSE access (Open WebUI, web-based AI agents, etc.):
+
+```bash
+# Clone this repository
+git clone <repository-url>
+cd grouper-mcp
+
+# Build the HTTP-enabled Docker image
+docker build -f Dockerfile.http -t grouper-mcp:http .
+```
+
+This image includes both the MCP server and MCPO proxy, providing instant HTTP access without additional setup.
+
+### Option 2: Local Installation
+
+For development or custom deployments:
 
 1. Clone this repository
 2. Install dependencies:
@@ -116,14 +74,6 @@ This approach ensures the container cannot be switched to read-write mode at run
 3. Build the project:
    ```bash
    npm run build
-   ```
-
-### Option 2: Docker Installation
-
-1. Clone this repository
-2. Build the Docker image:
-   ```bash
-   docker build -t grouper-mcp .
    ```
 
 ## Usage
@@ -157,9 +107,9 @@ docker run -i \
   grouper-mcp:latest
 ```
 
-#### With Claude Desktop (Docker)
+### With Claude Desktop
 
-Add to your Claude Desktop MCP configuration:
+To use grouper-mcp with Claude Desktop, add this configuration to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -171,9 +121,6 @@ Add to your Claude Desktop MCP configuration:
         "-e", "GROUPER_BASE_URL=https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
         "-e", "GROUPER_USERNAME=your_username",
         "-e", "GROUPER_PASSWORD=your_password",
-        "-e", "GROUPER_DEBUG=true",
-        "-e", "READ_ONLY=false",
-        "-e", "NODE_TLS_REJECT_UNAUTHORIZED=0",
         "grouper-mcp:latest"
       ]
     }
@@ -181,33 +128,67 @@ Add to your Claude Desktop MCP configuration:
 }
 ```
 
-### With Claude Desktop (Local)
+For detailed setup instructions including configuration file locations, local installation, troubleshooting, and more, see **[Claude Desktop Setup Guide](docs/SETUP_CLAUDE_DESKTOP.md)**.
 
-Add to your Claude Desktop MCP configuration:
+### With Open WebUI
 
-```json
-{
-  "mcpServers": {
-    "grouper": {
-      "command": "node",
-      "args": ["/path/to/grouper-mcp/dist/index.js"],
-      "env": {
-        "GROUPER_BASE_URL": "https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000",
-        "GROUPER_USERNAME": "your_username",
-        "GROUPER_PASSWORD": "your_password",
-        "GROUPER_DEBUG": "true",
-        "READ_ONLY": "false",
-        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
-      }
-    }
-  }
-}
+[Open WebUI](https://docs.openwebui.com/) (v0.6.31+) supports MCP servers via HTTP/SSE using MCPO as a proxy.
+
+**Quick Start:**
+
+1. Build and run the HTTP-enabled Docker image:
+   ```bash
+   docker build -f Dockerfile.http -t grouper-mcp:http .
+   docker run -p 8000:8000 \
+     -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
+     -e GROUPER_USERNAME="your_username" \
+     -e GROUPER_PASSWORD="your_password" \
+     -e MCPO_API_KEY="your-secret-key" \
+     grouper-mcp:http
+   ```
+
+2. In Open WebUI:
+   - Navigate to **⚙️ Admin Settings → External Tools**
+   - Click **+ (Add Server)**
+   - Select **MCP (Streamable HTTP)**
+   - Server URL: `http://localhost:8000`
+   - API Key: `your-secret-key`
+
+3. Start chatting and Grouper tools will be available automatically!
+
+For complete setup instructions, MCPO installation options, production deployment, and troubleshooting, see **[Open WebUI Setup Guide](docs/SETUP_OPEN_WEBUI.md)**.
+
+### HTTP/SSE Access with MCPO
+
+[MCPO (MCP-to-OpenAPI Proxy)](https://github.com/open-webui/mcpo) converts the MCP server to HTTP/SSE, enabling RESTful API access with auto-generated documentation.
+
+**Quick Start:**
+
+```bash
+# Build and run the all-in-one HTTP image
+docker build -f Dockerfile.http -t grouper-mcp:http .
+docker run -p 8000:8000 \
+  -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
+  -e GROUPER_USERNAME="your_username" \
+  -e GROUPER_PASSWORD="your_password" \
+  -e MCPO_API_KEY="your-secret-key" \
+  grouper-mcp:http
+
+# Access the API
+# - Interactive docs: http://localhost:8000/docs
+# - OpenAPI schema: http://localhost:8000/openapi.json
 ```
 
-**Environment Variables:**
-- `GROUPER_DEBUG`: Set to `"true"` to enable detailed logging for troubleshooting
-- `READ_ONLY`: Set to `"true"` to enable read-only mode (blocks all write operations)
-- `NODE_TLS_REJECT_UNAUTHORIZED`: Set to `"0"` if using self-signed certificates
+**Example API Call:**
+
+```bash
+curl -X POST http://localhost:8000/grouper_find_groups_by_name_approximate \
+  -H "Authorization: Bearer your-secret-key" \
+  -H "Content-Type: application/json" \
+  -d '{"searchTerm": "engineering"}'
+```
+
+For complete HTTP setup including separate MCPO installation, production deployment with reverse proxy, advanced configuration, and troubleshooting, see **[HTTP/MCPO Setup Guide](docs/SETUP_HTTP.md)**.
 
 ## Examples
 
@@ -246,40 +227,15 @@ Get detailed information for subject with ID "jdoe123"
 Search for subjects containing "Smith" in their name or other searchable fields
 ```
 
-## Authentication
-
-The server supports Grouper's "act as" functionality for administrative operations. Configure the acting subject using the environment variables listed above.
-
 ## Logging
 
-The server automatically logs all activity to help with debugging:
+The server automatically logs all activity to `~/.grouper-mcp/logs/`:
+- `grouper-mcp.log` - All messages (info, debug, errors)
+- `grouper-mcp-errors.log` - Error messages only
 
-### Log Files
-- **Location**: `~/.grouper-mcp/logs/` (default) or custom via `GROUPER_LOG_DIR`
-- **Files**:
-  - `grouper-mcp.log` - All log messages (info, debug, errors)
-  - `grouper-mcp-errors.log` - Error messages only
+Set `GROUPER_DEBUG=true` to enable verbose debug logging for troubleshooting.
 
-### What Gets Logged
-- Server startup and connection events
-- All HTTP requests to Grouper (with credentials redacted)
-- All HTTP responses (including error details)
-- Detailed error information with context
-
-### Debug Mode
-Set `GROUPER_DEBUG=true` to enable verbose debug logging showing:
-- Request/response details
-- API call parameters
-- Detailed error traces
-
-### Example Log Entry
-```
-[2024-01-15T10:30:45.123Z] [ERROR] HTTP Response: 400 Bad Request {"url":"https://grouper.edu/grouper-ws/servicesRest/json/v4_0_000/groups","status":400,"body":{"error":"Invalid group name format"}}
-```
-
-## Error Handling
-
-The server includes comprehensive error handling and logging. Errors are captured and formatted appropriately for display in Claude. Check the log files for detailed error information when troubleshooting.
+For complete logging configuration including custom log directories and Docker log access, see **[Configuration Guide](docs/CONFIGURATION.md#logging-configuration)**.
 
 ## Planned Features
 
