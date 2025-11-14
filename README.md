@@ -4,13 +4,13 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **18 core tools** for essential Grouper operations, organized into five main categories:
+This MCP server provides **19 core tools** for essential Grouper operations, organized into five main categories:
 
 - **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups
 - **Stem/Folder Management** (3 tools) - Search and browse organizational hierarchy
 - **Member Management** (3 tools) - Add, remove, and list group members
 - **Attribute Management** (1 tool) - Assign attributes to groups
-- **Subject Management** (3 tools) - Search for and retrieve information about subjects
+- **Subject Management** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
 For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
@@ -108,6 +108,7 @@ The server can be configured to run in read-only mode, which restricts access to
 - `grouper_get_subject_by_id` - Get subject details by ID
 - `grouper_get_subject_by_identifier` - Get subject details by identifier
 - `grouper_search_subjects` - Search for subjects
+- `grouper_get_subject_groups` - Get all group memberships for a subject
 
 **Write tools** (blocked when READ_ONLY=true):
 - `grouper_create_group` - Create new groups

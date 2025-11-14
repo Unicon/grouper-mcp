@@ -194,3 +194,68 @@ export function formatStemCollectionDetails(stem: GrouperStem): string {
 
   return detailText;
 }
+
+export function formatSubjectMemberships(result: any): string {
+  const memberships = result.wsMemberships || [];
+  const groups = result.wsGroups || [];
+  const subject = result.wsSubjects?.[0];
+
+  let output = '';
+
+  // Add subject information if available
+  if (subject) {
+    output += '=== SUBJECT INFORMATION ===\n';
+    output += `Subject ID: ${subject.id || 'N/A'}\n`;
+    if (subject.name) output += `Name: ${subject.name}\n`;
+    if (subject.sourceId) output += `Source: ${subject.sourceId}\n`;
+    output += '\n';
+  }
+
+  // Add membership count
+  output += `=== GROUP MEMBERSHIPS (${memberships.length}) ===\n\n`;
+
+  if (memberships.length === 0) {
+    output += 'No group memberships found for this subject.\n';
+    return output;
+  }
+
+  // Create a map of groups by ID for quick lookup
+  const groupMap = new Map();
+  groups.forEach((group: any) => {
+    if (group.uuid) {
+      groupMap.set(group.uuid, group);
+    }
+  });
+
+  // Format each group membership
+  memberships.forEach((membership: any, index: number) => {
+    // Find the corresponding group
+    const group = groupMap.get(membership.groupId);
+
+    if (group) {
+      output += `${index + 1}. ${formatGroupCollectionDetails(group)}\n`;
+
+      // Add membership-specific information
+      if (membership.membershipType) {
+        output += `   Membership Type: ${membership.membershipType}\n`;
+      }
+      if (membership.enabled) {
+        output += `   Enabled: ${membership.enabled}\n`;
+      }
+
+      output += '\n';
+    } else {
+      // Fallback if group details not found - show basic info from membership
+      output += `${index + 1}. ${membership.groupName || 'Unknown Group'}\n`;
+      if (membership.membershipType) {
+        output += `   Membership Type: ${membership.membershipType}\n`;
+      }
+      if (membership.enabled) {
+        output += `   Enabled: ${membership.enabled}\n`;
+      }
+      output += '\n';
+    }
+  });
+
+  return output;
+}
