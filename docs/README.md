@@ -52,13 +52,14 @@ Documentation of key design decisions and architectural choices including:
 **HTTP Transport Implementation Guide**
 
 Detailed technical documentation for HTTP transport functionality including:
-- Implementation requirements and considerations
+- **MCPO Proxy Setup** - Quick, zero-code HTTP/SSE exposure (recommended)
+- Implementation requirements for custom HTTP transport
 - Transport layer configuration options
-- Authentication mechanisms
+- Authentication mechanisms (OAuth 2.1, API keys)
 - Deployment scenarios and best practices
 - Migration guide from stdio to HTTP transport
 
-*Technical reference for HTTP transport setup and configuration.*
+*Technical reference for HTTP transport setup and configuration. Start with MCPO for quick deployment.*
 
 ---
 
@@ -82,6 +83,7 @@ Complete OpenAPI/Swagger specification for Grouper v4.0.000 web services includi
 
 ### For Users
 - **Start with**: [TOOLS.md](TOOLS.md) - Learn what operations are available
+- **HTTP Access**: [../README.md#exposing-via-httpsse-with-mcpo](../README.md#exposing-via-httpsse-with-mcpo) - Expose as HTTP API using MCPO
 - **Reference**: [grouper-swagger-v4.json](grouper-swagger-v4.json) - Understand underlying API capabilities
 - **Future Features**: [TODO.md](TODO.md) - See what's coming next
 

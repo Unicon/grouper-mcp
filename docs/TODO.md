@@ -41,26 +41,29 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Run batch operations and complex administrative tasks
 - Custom scripting for advanced workflows
 
-## HTTP/HTTPS Protocol Support (In Progress)
-- 🚧 **Work in Progress** - Implementation ongoing in separate branch
-- Add option to run the MCP server using HTTP/HTTPS protocol instead of stdio
-- This would allow the server to run as an external service rather than locally
-- Benefits include:
-  - Better separation of concerns and deployment flexibility
-  - Ability to run the server on a different machine or container
-  - Support for multiple concurrent connections
-  - Enhanced monitoring and logging capabilities
-  - Docker containerization support
-- Implementation includes:
-  - HTTP transport layer configuration
-  - HTTPS support with SSL certificates
-  - OAuth 2.1 Bearer token authentication
-  - Docker containerization
-  - Port and host binding options
-  - Request/response handling over HTTP/HTTPS
-  - Documentation updates for HTTP deployment scenarios
+## HTTP/HTTPS Protocol Support
 
-**See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide and resources.**
+- ✅ **MCPO Proxy Available** - HTTP/SSE access is now supported via [MCPO](https://github.com/open-webui/mcpo)
+- MCPO provides zero-code HTTP/SSE exposure of the stdio MCP server
+- Benefits include:
+  - No code changes required to existing MCP server
+  - API key authentication built-in
+  - Auto-generated OpenAPI documentation
+  - Support for multiple concurrent connections
+  - Compatible with Open WebUI and other HTTP-based AI agents
+  - Production-ready deployment option
+
+**See [README.md - MCPO section](../README.md#exposing-via-httpsse-with-mcpo) for usage instructions.**
+
+### Custom HTTP/SSE Transport (Future Enhancement)
+
+For advanced use cases requiring custom authentication or authorization logic:
+- Native HTTP transport implementation with OAuth 2.1
+- Per-user access control tied to Grouper permissions
+- Custom authentication/authorization workflows
+- Advanced session management
+
+**See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide if custom transport is needed.**
 
 ## Possible Bugs
 
@@ -86,8 +89,8 @@ _No known bugs at this time._
 ## Documentation Improvements
 
 ### Multi-Agent Configuration Documentation
-- Add configuration examples for other MCP-compatible AI agents beyond Claude Desktop
-- Include setup instructions for:
+- ✅ **Open WebUI** - Configuration documented (via MCPO proxy)
+- Add configuration examples for additional MCP-compatible AI agents:
   - Continue (VS Code extension)
   - Cline (VS Code extension)
   - Zed Editor
