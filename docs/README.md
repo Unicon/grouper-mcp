@@ -4,6 +4,66 @@ This directory contains comprehensive documentation for the Grouper MCP server p
 
 ## 📚 Documentation Files
 
+### Setup Guides
+
+#### [🖥️ SETUP_CLAUDE_DESKTOP.md](SETUP_CLAUDE_DESKTOP.md)
+**Claude Desktop Integration Guide**
+
+Complete setup instructions for using grouper-mcp with Claude Desktop including:
+- Docker and local installation methods
+- Configuration file locations for macOS, Windows, Linux
+- Environment variable configuration
+- Troubleshooting common issues
+- Read-only mode setup
+
+*Start here if you're integrating with Claude Desktop.*
+
+---
+
+#### [🌐 SETUP_OPEN_WEBUI.md](SETUP_OPEN_WEBUI.md)
+**Open WebUI Integration Guide**
+
+Step-by-step guide for integrating with Open WebUI including:
+- MCPO proxy setup (required for Open WebUI)
+- All-in-one Docker image usage
+- Configuration in Open WebUI interface
+- Special characters workaround
+- Production deployment considerations
+
+*Essential for Open WebUI users (v0.6.31+).*
+
+---
+
+#### [🔌 SETUP_HTTP.md](SETUP_HTTP.md)
+**HTTP/SSE Access with MCPO**
+
+Comprehensive guide for exposing grouper-mcp via HTTP including:
+- All-in-one Docker image with built-in MCPO
+- Separate MCPO installation options
+- RESTful API usage and examples
+- Production deployment with reverse proxy (nginx, Caddy)
+- Advanced configuration and multiple server setups
+
+*Reference for HTTP-based integrations and API access.*
+
+---
+
+#### [⚙️ CONFIGURATION.md](CONFIGURATION.md)
+**Configuration Reference**
+
+Complete configuration documentation including:
+- All environment variables (required and optional)
+- Properties file configuration for immutable deployments
+- Read-only mode details and tool lists
+- Logging configuration and locations
+- TLS/SSL certificate handling
+- Act-as functionality for administrative operations
+- Security best practices
+
+*Authoritative reference for all configuration options.*
+
+---
+
 ### Core Documentation
 
 #### [🛠️ TOOLS.md](TOOLS.md)
@@ -24,10 +84,9 @@ Complete documentation of all 19 available MCP tools including:
 **Planned Features and Development Roadmap**
 
 Track of planned features, improvements, and development tasks including:
-- Read-only mode configuration
 - Additional Grouper web service endpoints to implement
 - Testing infrastructure plans
-- 🚧 HTTP/HTTPS protocol support (work in progress)
+- Enhancement ideas
 
 *Reference for contributors and users interested in upcoming functionality.*
 
@@ -82,9 +141,11 @@ Complete OpenAPI/Swagger specification for Grouper v4.0.000 web services includi
 ## 🗂️ Documentation Organization
 
 ### For Users
-- **Start with**: [TOOLS.md](TOOLS.md) - Learn what operations are available
-- **HTTP Access**: [../README.md#exposing-via-httpsse-with-mcpo](../README.md#exposing-via-httpsse-with-mcpo) - Expose as HTTP API using MCPO
-- **Reference**: [grouper-swagger-v4.json](grouper-swagger-v4.json) - Understand underlying API capabilities
+- **Claude Desktop Setup**: [SETUP_CLAUDE_DESKTOP.md](SETUP_CLAUDE_DESKTOP.md) - Integrate with Claude Desktop
+- **Open WebUI Setup**: [SETUP_OPEN_WEBUI.md](SETUP_OPEN_WEBUI.md) - Integrate with Open WebUI
+- **HTTP Access**: [SETUP_HTTP.md](SETUP_HTTP.md) - Expose as HTTP API using MCPO
+- **Configuration**: [CONFIGURATION.md](CONFIGURATION.md) - All configuration options
+- **Available Tools**: [TOOLS.md](TOOLS.md) - Learn what operations are available
 - **Future Features**: [TODO.md](TODO.md) - See what's coming next
 
 ### For Developers
