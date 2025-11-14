@@ -40,7 +40,6 @@ Thumbs.db
 
 # Docker files (not needed inside the image)
 Dockerfile
-Dockerfile.http
 .dockerignore
 docker-compose.yml
 
