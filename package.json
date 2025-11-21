@@ -1,6 +1,6 @@
 {
   "name": "grouper-mcp",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "description": "MCP server for Grouper web services integration",
   "type": "module",
   "main": "dist/index.js",
