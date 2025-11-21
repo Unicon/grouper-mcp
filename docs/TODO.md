@@ -41,30 +41,6 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Run batch operations and complex administrative tasks
 - Custom scripting for advanced workflows
 
-## HTTP/HTTPS Protocol Support
-
-- ✅ **MCPO Proxy Available** - HTTP/SSE access is now supported via [MCPO](https://github.com/open-webui/mcpo)
-- MCPO provides zero-code HTTP/SSE exposure of the stdio MCP server
-- Benefits include:
-  - No code changes required to existing MCP server
-  - API key authentication built-in
-  - Auto-generated OpenAPI documentation
-  - Support for multiple concurrent connections
-  - Compatible with Open WebUI and other HTTP-based AI agents
-  - Production-ready deployment option
-
-**See [README.md - MCPO section](../README.md#exposing-via-httpsse-with-mcpo) for usage instructions.**
-
-### Custom HTTP/SSE Transport (Future Enhancement)
-
-For advanced use cases requiring custom authentication or authorization logic:
-- Native HTTP transport implementation with OAuth 2.1
-- Per-user access control tied to Grouper permissions
-- Custom authentication/authorization workflows
-- Advanced session management
-
-**See [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide if custom transport is needed.**
-
 ## Possible Bugs
 
 _No known bugs at this time._
@@ -89,7 +65,6 @@ _No known bugs at this time._
 ## Documentation Improvements
 
 ### Multi-Agent Configuration Documentation
-- ✅ **Open WebUI** - Configuration documented (via MCPO proxy)
 - Add configuration examples for additional MCP-compatible AI agents:
   - Continue (VS Code extension)
   - Cline (VS Code extension)
@@ -108,3 +83,5 @@ _Add additional todo items and planned improvements here._
 
 - Tool description result formats and standardized error handling
 - **Read-Only Mode** - Configuration option to enable read-only mode via environment variable (`READ_ONLY=true`) or properties file (`config/grouper-mcp.properties`). When enabled, all write operations are blocked at both registration and runtime. Properties file takes precedence over environment variables, enabling immutable read-only Docker images.
+- **HTTP/HTTPS Protocol Support via MCPO** - HTTP/SSE access is now supported via [MCPO](https://github.com/open-webui/mcpo) proxy. MCPO provides zero-code HTTP/SSE exposure of the stdio MCP server with API key authentication, auto-generated OpenAPI documentation, support for multiple concurrent connections, and compatibility with Open WebUI and other HTTP-based AI agents. See [README.md - MCPO section](../README.md#exposing-via-httpsse-with-mcpo) for usage instructions. For advanced use cases requiring custom authentication or authorization logic, see [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide.
+- **Open WebUI Configuration Documentation** - Complete configuration documentation for integrating with Open WebUI via MCPO proxy.
