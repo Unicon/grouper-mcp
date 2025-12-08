@@ -73,6 +73,56 @@ _No known bugs at this time._
 - Document any agent-specific configuration differences or requirements
 - Provide troubleshooting tips for each platform
 
+## Build-Time Tool Filtering
+
+### Granular Tool Control for Docker Builds
+- Add ability to specify which specific tools are available at Docker build time
+- Tool selection should be immutable and cannot be overridden by environment variables at runtime
+- Use cases:
+  - Create specialized Docker images with only read operations
+  - Create domain-specific images with only group management tools
+  - Create images for specific organizational roles (e.g., membership management only)
+  - Security hardening by removing unnecessary tools from production images
+
+### Implementation Considerations
+- Build-time configuration file or build argument to specify enabled tools
+- Filter tools during Docker image build, not at runtime
+- Document pattern for creating custom Docker images with tool subsets
+- Ensure tool filtering works with both stdio and HTTP/MCPO modes
+- Consider creating pre-built image variants (read-only, admin, membership-only, etc.)
+
+## Audit Logging
+
+### Comprehensive Audit Trail for All Operations
+- Implement standardized audit logging that runs independently of debug logging
+- Audit log should always be enabled (not dependent on GROUPER_DEBUG setting)
+- Track all operations performed through the MCP server for compliance and security monitoring
+
+### Audit Log Requirements
+- Log all tool invocations with:
+  - Timestamp
+  - Tool name
+  - Input parameters (sanitize sensitive data like passwords)
+  - User/subject context (if available via act-as configuration)
+  - Operation result (success/failure)
+  - Response summary (group created, member added, etc.)
+  - Execution time/duration
+- Separate audit log file from debug logs (e.g., `grouper-mcp-audit.log`)
+- Structured log format (JSON) for easier parsing and integration with SIEM systems
+- Log rotation and retention policies
+- Configuration options for:
+  - Audit log location
+  - Log level/verbosity
+  - Whether to include full request/response payloads
+  - Sensitive data masking rules
+
+### Use Cases
+- Compliance auditing (who did what, when)
+- Security monitoring and incident response
+- Usage analytics and reporting
+- Troubleshooting without requiring debug mode
+- Integration with enterprise logging systems (Splunk, ELK, etc.)
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
