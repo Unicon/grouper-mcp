@@ -91,25 +91,9 @@ npm run build
 npm start
 ```
 
-### Docker Usage
-
-Run the container with your configuration:
-
-```bash
-docker run -i \
-  -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
-  -e GROUPER_USERNAME="your_username" \
-  -e GROUPER_PASSWORD="your_password" \
-  -e GROUPER_DEBUG="true" \
-  -e READ_ONLY="false" \
-  -e NODE_TLS_REJECT_UNAUTHORIZED="0" \
-  -v $(pwd)/logs:/home/mcp/.grouper-mcp/logs \
-  grouper-mcp:latest
-```
-
 ### With Claude Desktop
 
-To use grouper-mcp with Claude Desktop, add this configuration to your `claude_desktop_config.json`:
+Once you've built the Docker image (see Installation above), Claude Desktop will automatically launch the container when needed. Simply add this configuration to your `claude_desktop_config.json`:
 
 ```json
 {
@@ -136,9 +120,10 @@ For detailed setup instructions including configuration file locations, local in
 
 **Quick Start:**
 
-1. Build and run the HTTP-enabled Docker image:
+1. Build and run the HTTP-enabled Docker image as a persistent service:
    ```bash
    docker build -f Dockerfile.http -t grouper-mcp:http .
+   # Start the HTTP server (runs continuously - Open WebUI connects to this endpoint)
    docker run -p 8000:8000 \
      -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
      -e GROUPER_USERNAME="your_username" \
@@ -165,8 +150,9 @@ For complete setup instructions, MCPO installation options, production deploymen
 **Quick Start:**
 
 ```bash
-# Build and run the all-in-one HTTP image
+# Build and run the all-in-one HTTP image as a persistent service
 docker build -f Dockerfile.http -t grouper-mcp:http .
+# Start the HTTP server (runs continuously - clients connect to this endpoint)
 docker run -p 8000:8000 \
   -e GROUPER_BASE_URL="https://your-grouper-instance.edu/grouper-ws/servicesRest/json/v4_0_000" \
   -e GROUPER_USERNAME="your_username" \
@@ -174,7 +160,7 @@ docker run -p 8000:8000 \
   -e MCPO_API_KEY="your-secret-key" \
   grouper-mcp:http
 
-# Access the API
+# Access the API (once the server is running)
 # - Interactive docs: http://localhost:8000/docs
 # - OpenAPI schema: http://localhost:8000/openapi.json
 ```
