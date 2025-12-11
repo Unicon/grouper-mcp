@@ -123,6 +123,47 @@ _No known bugs at this time._
 - Troubleshooting without requiring debug mode
 - Integration with enterprise logging systems (Splunk, ELK, etc.)
 
+## Performance Improvements
+
+### Batch Membership Operations
+
+**Issue:** The current `grouper_add_member` and `grouper_remove_member` tools only accept a single subject at a time, requiring AI agents to make multiple API calls when adding/removing several members to/from a group.
+
+**Root Cause:** The Grouper web services API supports batch operations via the `subjectLookups` array in both `WsRestAddMemberRequest` and `WsRestDeleteMemberRequest`, but the MCP tool definitions only expose single-subject parameters.
+
+**Current Implementation:**
+- `src/tool-definitions.ts` - Defines `subjectId`, `subjectSourceId`, `subjectIdentifier` as single string properties
+- `src/tool-handlers.ts` - Constructs a single member object per call
+- `src/grouper-client.ts` - Already wraps member in array (`subjectLookups: [member]`), so minimal changes needed here
+
+**API Evidence (from `docs/grouper-swagger-v4.json`):**
+```json
+"subjectLookups" : {
+  "type" : "array",
+  "items" : {
+    "$ref" : "#/definitions/WsSubjectLookup"
+  }
+}
+```
+
+**Proposed Fix:**
+1. Update tool definitions to accept arrays of subjects (e.g., `subjectIds` as array, or a `subjects` array of objects)
+2. Update tool handlers to process arrays of subjects
+3. Update client methods to accept multiple members
+4. Update tool descriptions to inform AI agents that batch operations are supported
+5. Consider backward compatibility - either keep single-subject tools alongside batch tools, or have the batch tools accept both single and multiple subjects
+
+**Benefits:**
+- Reduced network round trips (1 call instead of N calls for N members)
+- Faster operations for end users
+- Lower load on Grouper server
+- Better AI agent efficiency (less context consumed by repeated tool calls)
+
+**Considerations:**
+- Response formatting needs to handle multiple results with individual success/failure status
+- Error handling for partial failures (some subjects added, others failed)
+- Tool description should clearly communicate batch capability to AI agents
+
 ## Other Improvements
 
 _Add additional todo items and planned improvements here._
