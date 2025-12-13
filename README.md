@@ -230,3 +230,15 @@ Planned features and improvements are tracked in [TODO.md](docs/TODO.md).
 ## API Compatibility
 
 This server is designed to work with Grouper v4.0.000 web services API. It should be compatible with most recent versions of Grouper.
+
+## Feedback & Questions
+
+We welcome all kinds of feedback, including:
+
+- Feature requests and ideas
+- Bug reports
+- Use case questions
+- General feedback and suggestions
+- Contributions and improvements
+
+Please send your feedback to **[jbeard@unicon.net](mailto:jbeard@unicon.net)**
