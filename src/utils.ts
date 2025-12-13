@@ -1,4 +1,4 @@
-import { GrouperGroup, GrouperStem } from './types.js';
+import { GrouperGroup, GrouperStem, BatchMemberResult, GrouperMember } from './types.js';
 import { config } from './config.js';
 
 /**
@@ -258,4 +258,95 @@ export function formatSubjectMemberships(result: any): string {
   });
 
   return output;
+}
+
+/**
+ * Format batch member operation results (add/remove members)
+ */
+export function formatBatchMemberResults(
+  result: BatchMemberResult,
+  operation: 'added' | 'removed',
+  groupName: string,
+  inputMembers: GrouperMember[]
+): string {
+  const totalCount = inputMembers.length;
+  let output = '';
+
+  // Summary line
+  if (totalCount === 1) {
+    // Single member operation - use original format for backward compatibility
+    if (result.successCount === 1) {
+      const subjectId = inputMembers[0].subjectId;
+      output = `Successfully ${operation} member "${subjectId}" ${operation === 'added' ? 'to' : 'from'} group "${groupName}"\n\n`;
+    } else {
+      const subjectId = inputMembers[0].subjectId;
+      const errorMsg = result.results[0]?.resultMessage || 'Unknown error';
+      output = `Failed to ${operation === 'added' ? 'add' : 'remove'} member "${subjectId}" ${operation === 'added' ? 'to' : 'from'} group "${groupName}": ${errorMsg}\n\n`;
+    }
+  } else {
+    // Batch operation
+    output = `${operation === 'added' ? 'Added' : 'Removed'} ${result.successCount} of ${totalCount} members ${operation === 'added' ? 'to' : 'from'} group "${groupName}"\n\n`;
+  }
+
+  // Group details
+  if (result.group) {
+    output += `Group Details:\n${formatSingleGroupDetails(result.group)}\n\n`;
+  }
+
+  // Member results - show individual results for batch operations or details for single
+  if (totalCount > 1) {
+    output += `Member Results:\n`;
+    result.results.forEach((r, index) => {
+      const status = r.success ? '+' : 'x';
+      const subjectId = r.subject?.id || inputMembers[index]?.subjectId || 'Unknown';
+      const displayName = r.subject?.name || '';
+      output += `${status} ${subjectId}`;
+      if (displayName) {
+        output += ` - ${displayName}`;
+      }
+      if (!r.success && r.resultMessage) {
+        output += ` (${r.resultMessage})`;
+      }
+      output += '\n';
+    });
+    output += '\n';
+  }
+
+  // Detailed subject information for successful operations
+  const successfulResults = result.results.filter(r => r.success);
+  if (successfulResults.length > 0) {
+    if (totalCount === 1) {
+      output += `${operation === 'added' ? 'Added' : 'Removed'} Member Details:\n`;
+    } else if (successfulResults.length < result.results.length) {
+      output += `Successfully ${operation === 'added' ? 'Added' : 'Removed'} Members:\n`;
+    }
+
+    successfulResults.forEach((r, index) => {
+      const subject = r.subject;
+      if (totalCount > 1) {
+        output += `${index + 1}. `;
+      }
+      output += `- Subject ID: ${subject.id || 'N/A'}\n`;
+      output += `- Display Name: ${subject.name || 'N/A'}\n`;
+      output += `- Source: ${subject.sourceId || 'N/A'}\n`;
+
+      // Map attribute values using the attribute names if available
+      if (subject.attributeValues && result.subjectAttributeNames) {
+        const attrNames = result.subjectAttributeNames;
+        const attrValues = Object.values(subject.attributeValues);
+        attrNames.forEach((attrName: string, i: number) => {
+          const value = attrValues[i] || 'N/A';
+          if (attrName !== 'name' && value !== 'N/A') {
+            output += `- ${attrName}: ${value}\n`;
+          }
+        });
+      }
+
+      if (totalCount > 1 && index < successfulResults.length - 1) {
+        output += '\n';
+      }
+    });
+  }
+
+  return output.trim();
 }

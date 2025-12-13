@@ -73,6 +73,22 @@ export interface GrouperMember {
   subjectIdentifier?: string;
 }
 
+export interface MemberOperationResult {
+  subject: GrouperSubject;
+  success: boolean;
+  resultCode?: string;
+  resultMessage?: string;
+}
+
+export interface BatchMemberResult {
+  success: boolean;
+  group?: GrouperGroup;
+  results: MemberOperationResult[];
+  subjectAttributeNames?: string[];
+  successCount: number;
+  failureCount: number;
+}
+
 export interface GrouperAttribute {
   nameOfAttributeDefName: string;
   value?: string;

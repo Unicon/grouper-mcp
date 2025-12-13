@@ -129,7 +129,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_add_member',
-    description: 'Add a member to a group and return detailed information about both the group and the added member. Returns formatted text with comprehensive group information including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata. Also includes detailed subject information for the added member including: Subject ID, Display Name, Login ID, Email, Source, Member ID, and additional subject attributes when available.',
+    description: 'Add one or more members to a group. Supports batch operations - pass multiple subjects in the "subjects" array for efficiency instead of making multiple calls. Returns detailed information about the group and results for each member added. For single member additions, you can use either the "subjectId" parameter OR the "subjects" array.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -139,23 +139,45 @@ export const toolDefinitions = [
         },
         subjectId: {
           type: 'string',
-          description: 'The subject ID of the member to add',
+          description: 'The subject ID of a single member to add (use this OR subjects array, not both)',
         },
         subjectSourceId: {
           type: 'string',
-          description: 'Optional subject source ID (defaults to main source)',
+          description: 'Optional subject source ID for single member (used with subjectId)',
         },
         subjectIdentifier: {
           type: 'string',
-          description: 'Optional subject identifier (alternative to subjectId)',
+          description: 'Optional subject identifier for single member (used with subjectId)',
+        },
+        subjects: {
+          type: 'array',
+          description: 'Array of subjects to add in a single batch operation. More efficient than multiple calls. Each object requires subjectId, with optional subjectSourceId and subjectIdentifier.',
+          items: {
+            type: 'object',
+            properties: {
+              subjectId: {
+                type: 'string',
+                description: 'Subject ID (required)',
+              },
+              subjectSourceId: {
+                type: 'string',
+                description: 'Subject source ID (optional)',
+              },
+              subjectIdentifier: {
+                type: 'string',
+                description: 'Subject identifier (optional)',
+              },
+            },
+            required: ['subjectId'],
+          },
         },
       },
-      required: ['groupName', 'subjectId'],
+      required: ['groupName'],
     },
   },
   {
     name: 'grouper_remove_member',
-    description: 'Remove a member from a group and return detailed information about both the group and the removed member. Returns formatted text with comprehensive group information including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata. Also includes detailed subject information for the removed member including: Subject ID, Display Name, Login ID, Email, Source, Member ID, and additional subject attributes when available.',
+    description: 'Remove one or more members from a group. Supports batch operations - pass multiple subjects in the "subjects" array for efficiency instead of making multiple calls. Returns detailed information about the group and results for each member removed. For single member removals, you can use either the "subjectId" parameter OR the "subjects" array.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -165,18 +187,40 @@ export const toolDefinitions = [
         },
         subjectId: {
           type: 'string',
-          description: 'The subject ID of the member to remove',
+          description: 'The subject ID of a single member to remove (use this OR subjects array, not both)',
         },
         subjectSourceId: {
           type: 'string',
-          description: 'Optional subject source ID',
+          description: 'Optional subject source ID for single member (used with subjectId)',
         },
         subjectIdentifier: {
           type: 'string',
-          description: 'Optional subject identifier (alternative to subjectId)',
+          description: 'Optional subject identifier for single member (used with subjectId)',
+        },
+        subjects: {
+          type: 'array',
+          description: 'Array of subjects to remove in a single batch operation. More efficient than multiple calls. Each object requires subjectId, with optional subjectSourceId and subjectIdentifier.',
+          items: {
+            type: 'object',
+            properties: {
+              subjectId: {
+                type: 'string',
+                description: 'Subject ID (required)',
+              },
+              subjectSourceId: {
+                type: 'string',
+                description: 'Subject source ID (optional)',
+              },
+              subjectIdentifier: {
+                type: 'string',
+                description: 'Subject identifier (optional)',
+              },
+            },
+            required: ['subjectId'],
+          },
         },
       },
-      required: ['groupName', 'subjectId'],
+      required: ['groupName'],
     },
   },
   {

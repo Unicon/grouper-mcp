@@ -204,38 +204,68 @@ Get details for stem with UUID "12345678-1234-1234-1234-123456789abc"
 
 ### ➕ grouper_add_member
 
-Add a member to a group.
+Add one or more members to a group. **Supports batch operations** - pass multiple subjects in a single call for efficiency instead of making multiple calls.
 
 **Parameters:**
-- **`groupName`** (required, string) - The full name of the group
-- **`subjectId`** (required, string) - The subject ID of the member to add
-- **`subjectSourceId`** (optional, string) - Optional subject source ID (defaults to main source)
-- **`subjectIdentifier`** (optional, string) - Optional subject identifier (alternative to subjectId)
 
-**Returns:** Detailed information about both the group and the added member, including subject details like Subject ID, Display Name, Login ID, Email, Source, Member ID, and additional subject attributes.
+*For single member (backward compatible):*
+- **`groupName`** (required, string) - The full name of the group
+- **`subjectId`** (string) - The subject ID of a single member to add
+- **`subjectSourceId`** (optional, string) - Subject source ID for single member
+- **`subjectIdentifier`** (optional, string) - Subject identifier for single member
+
+*For batch operations:*
+- **`groupName`** (required, string) - The full name of the group
+- **`subjects`** (array) - Array of subjects to add. Each object should have:
+  - **`subjectId`** (required, string) - Subject ID
+  - **`subjectSourceId`** (optional, string) - Subject source ID
+  - **`subjectIdentifier`** (optional, string) - Subject identifier
+
+**Note:** Use either `subjectId` OR `subjects` array, not both. The `subjects` array is more efficient for adding multiple members.
+
+**Returns:** Detailed information about the group and results for each member added, including success/failure status per member.
 
 **Example Usage:**
 ```
+# Single member
 Add user "jdoe" to group "edu:department:engineering:students"
+
+# Batch operation (more efficient)
+Add users ["jdoe", "jsmith", "mwilson"] to group "edu:department:engineering:students"
 ```
 
 ---
 
 ### ➖ grouper_remove_member
 
-Remove a member from a group.
+Remove one or more members from a group. **Supports batch operations** - pass multiple subjects in a single call for efficiency instead of making multiple calls.
 
 **Parameters:**
-- **`groupName`** (required, string) - The full name of the group
-- **`subjectId`** (required, string) - The subject ID of the member to remove
-- **`subjectSourceId`** (optional, string) - Optional subject source ID
-- **`subjectIdentifier`** (optional, string) - Optional subject identifier (alternative to subjectId)
 
-**Returns:** Detailed information about both the group and the removed member, including comprehensive subject details.
+*For single member (backward compatible):*
+- **`groupName`** (required, string) - The full name of the group
+- **`subjectId`** (string) - The subject ID of a single member to remove
+- **`subjectSourceId`** (optional, string) - Subject source ID for single member
+- **`subjectIdentifier`** (optional, string) - Subject identifier for single member
+
+*For batch operations:*
+- **`groupName`** (required, string) - The full name of the group
+- **`subjects`** (array) - Array of subjects to remove. Each object should have:
+  - **`subjectId`** (required, string) - Subject ID
+  - **`subjectSourceId`** (optional, string) - Subject source ID
+  - **`subjectIdentifier`** (optional, string) - Subject identifier
+
+**Note:** Use either `subjectId` OR `subjects` array, not both. The `subjects` array is more efficient for removing multiple members.
+
+**Returns:** Detailed information about the group and results for each member removed, including success/failure status per member.
 
 **Example Usage:**
 ```
+# Single member
 Remove user "jdoe" from group "edu:department:engineering:students"
+
+# Batch operation (more efficient)
+Remove users ["jdoe", "jsmith"] from group "edu:department:engineering:students"
 ```
 
 ---

@@ -1,4 +1,4 @@
-import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult, GrouperStem } from './types.js';
+import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult, GrouperStem, BatchMemberResult, MemberOperationResult } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
 import { logger } from './logger.js';
 
@@ -187,12 +187,12 @@ export class GrouperClient {
     }
   }
 
-  async addMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
+  async addMembers(groupName: string, members: GrouperMember[]): Promise<BatchMemberResult> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestAddMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member],
+          subjectLookups: members,
           includeGroupDetail: 'T',
           includeSubjectDetail: 'T',
           subjectAttributeNames: ['display_name', 'login_id', 'email_address']
@@ -200,30 +200,50 @@ export class GrouperClient {
       });
 
       const result = response?.WsAddMemberResults || response;
-      
+
       const wsGroup = result?.wsGroupAssigned;
-      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
       const subjectAttributeNames = result?.subjectAttributeNames || [];
 
+      // Parse individual results
+      const operationResults: MemberOperationResult[] = (result?.results || []).map((r: any) => {
+        const isSuccess = r.resultMetadata?.success === 'T';
+        return {
+          subject: r.wsSubject || {},
+          success: isSuccess,
+          resultCode: r.resultMetadata?.resultCode,
+          resultMessage: r.resultMetadata?.resultMessage
+        };
+      });
+
+      const successCount = operationResults.filter(r => r.success).length;
+      const failureCount = operationResults.length - successCount;
+
       return {
-        success: true,
+        success: failureCount === 0,
         group: wsGroup,
-        members: wsSubjects,
-        subjectAttributeNames
+        results: operationResults,
+        subjectAttributeNames,
+        successCount,
+        failureCount
       };
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'addMember', { groupName, member });
-      return { success: false };
+      logError(grouperError, 'addMembers', { groupName, memberCount: members.length });
+      return {
+        success: false,
+        results: [],
+        successCount: 0,
+        failureCount: members.length
+      };
     }
   }
 
-  async deleteMember(groupName: string, member: GrouperMember): Promise<{ success: boolean; group?: GrouperGroup; members?: any[]; subjectAttributeNames?: string[] }> {
+  async deleteMembers(groupName: string, members: GrouperMember[]): Promise<BatchMemberResult> {
     try {
       const response = await this.makeRequest('/groups', 'POST', {
         WsRestDeleteMemberRequest: {
           wsGroupLookup: { groupName },
-          subjectLookups: [member],
+          subjectLookups: members,
           includeGroupDetail: 'T',
           includeSubjectDetail: 'T',
           subjectAttributeNames: ['display_name', 'login_id', 'email_address']
@@ -231,21 +251,42 @@ export class GrouperClient {
       });
 
       const result = response?.WsDeleteMemberResults || response;
-      
-      const wsGroup = result?.wsGroupAssigned;
-      const wsSubjects = result?.results?.map((r: any) => r.wsSubject) || [];
+
+      // Note: Delete response uses 'wsGroup' instead of 'wsGroupAssigned'
+      const wsGroup = result?.wsGroup;
       const subjectAttributeNames = result?.subjectAttributeNames || [];
 
+      // Parse individual results
+      const operationResults: MemberOperationResult[] = (result?.results || []).map((r: any) => {
+        const isSuccess = r.resultMetadata?.success === 'T';
+        return {
+          subject: r.wsSubject || {},
+          success: isSuccess,
+          resultCode: r.resultMetadata?.resultCode,
+          resultMessage: r.resultMetadata?.resultMessage
+        };
+      });
+
+      const successCount = operationResults.filter(r => r.success).length;
+      const failureCount = operationResults.length - successCount;
+
       return {
-        success: true,
+        success: failureCount === 0,
         group: wsGroup,
-        members: wsSubjects,
-        subjectAttributeNames
+        results: operationResults,
+        subjectAttributeNames,
+        successCount,
+        failureCount
       };
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'deleteMember', { groupName, member });
-      return { success: false };
+      logError(grouperError, 'deleteMembers', { groupName, memberCount: members.length });
+      return {
+        success: false,
+        results: [],
+        successCount: 0,
+        failureCount: members.length
+      };
     }
   }
 

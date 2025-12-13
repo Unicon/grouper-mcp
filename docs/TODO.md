@@ -125,44 +125,7 @@ _No known bugs at this time._
 
 ## Performance Improvements
 
-### Batch Membership Operations
-
-**Issue:** The current `grouper_add_member` and `grouper_remove_member` tools only accept a single subject at a time, requiring AI agents to make multiple API calls when adding/removing several members to/from a group.
-
-**Root Cause:** The Grouper web services API supports batch operations via the `subjectLookups` array in both `WsRestAddMemberRequest` and `WsRestDeleteMemberRequest`, but the MCP tool definitions only expose single-subject parameters.
-
-**Current Implementation:**
-- `src/tool-definitions.ts` - Defines `subjectId`, `subjectSourceId`, `subjectIdentifier` as single string properties
-- `src/tool-handlers.ts` - Constructs a single member object per call
-- `src/grouper-client.ts` - Already wraps member in array (`subjectLookups: [member]`), so minimal changes needed here
-
-**API Evidence (from `docs/grouper-swagger-v4.json`):**
-```json
-"subjectLookups" : {
-  "type" : "array",
-  "items" : {
-    "$ref" : "#/definitions/WsSubjectLookup"
-  }
-}
-```
-
-**Proposed Fix:**
-1. Update tool definitions to accept arrays of subjects (e.g., `subjectIds` as array, or a `subjects` array of objects)
-2. Update tool handlers to process arrays of subjects
-3. Update client methods to accept multiple members
-4. Update tool descriptions to inform AI agents that batch operations are supported
-5. Consider backward compatibility - either keep single-subject tools alongside batch tools, or have the batch tools accept both single and multiple subjects
-
-**Benefits:**
-- Reduced network round trips (1 call instead of N calls for N members)
-- Faster operations for end users
-- Lower load on Grouper server
-- Better AI agent efficiency (less context consumed by repeated tool calls)
-
-**Considerations:**
-- Response formatting needs to handle multiple results with individual success/failure status
-- Error handling for partial failures (some subjects added, others failed)
-- Tool description should clearly communicate batch capability to AI agents
+_No pending performance improvements at this time._
 
 ## Other Improvements
 
@@ -176,3 +139,4 @@ _Add additional todo items and planned improvements here._
 - **Read-Only Mode** - Configuration option to enable read-only mode via environment variable (`READ_ONLY=true`) or properties file (`config/grouper-mcp.properties`). When enabled, all write operations are blocked at both registration and runtime. Properties file takes precedence over environment variables, enabling immutable read-only Docker images.
 - **HTTP/HTTPS Protocol Support via MCPO** - HTTP/SSE access is now supported via [MCPO](https://github.com/open-webui/mcpo) proxy. MCPO provides zero-code HTTP/SSE exposure of the stdio MCP server with API key authentication, auto-generated OpenAPI documentation, support for multiple concurrent connections, and compatibility with Open WebUI and other HTTP-based AI agents. See [README.md - MCPO section](../README.md#exposing-via-httpsse-with-mcpo) for usage instructions. For advanced use cases requiring custom authentication or authorization logic, see [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide.
 - **Open WebUI Configuration Documentation** - Complete configuration documentation for integrating with Open WebUI via MCPO proxy.
+- **Batch Membership Operations** - The `grouper_add_member` and `grouper_remove_member` tools now support batch operations. Pass multiple subjects in a single API call via the `subjects` array parameter instead of making multiple calls. Backward compatible - existing single-subject usage still works. Response includes individual success/failure status for each member. See [TOOLS.md](TOOLS.md#member-management) and [BATCH-MEMBERSHIP-IMPLEMENTATION-PLAN.md](BATCH-MEMBERSHIP-IMPLEMENTATION-PLAN.md) for details.
