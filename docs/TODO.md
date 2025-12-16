@@ -12,15 +12,51 @@ The Grouper web services API offers many additional endpoints that are **not cur
 - Hierarchical organization operations
 
 ### Advanced Privilege Management
-- Group privilege assignment (admin, read, view, update, etc.)
+- **`grouper_assign_privilege`** _(high priority)_ - Assign a privilege to a subject on a group
+  - Support all privilege types: admin, read, update, view, optin, optout
+  - Parameters: groupName, subjectId, privilegeType, allowed (true/false)
+  - Essential for delegation and access control workflows
+
+- **`grouper_get_privileges`** _(high priority)_ - Get all privileges assigned to a group
+  - List all subjects with privileges on a specific group
+  - Include privilege type and subject details
+  - Support pagination for groups with many privilege assignments
+
+- **`grouper_revoke_privilege`** _(high priority)_ - Remove a privilege from a subject on a group
+  - Mirror of assign_privilege for removing access
+  - Support all privilege types
+
 - Privilege inheritance and delegation
 - Access control queries
+
+### Member Management Enhancements
+- **`grouper_has_member`** _(low priority)_ - Check if a subject is a member of a group
+  - Parameters: groupName, subjectId
+  - Returns: Boolean (true/false) with membership status
+  - Optimization for common use case (vs. retrieving full member list)
+
+- **`grouper_trace_membership`** _(medium priority)_ - Show how a subject is connected to a group
+  - Parameters: groupName, subjectId
+  - Display membership path (direct, effective, or composite)
+  - Show intermediate groups in effective membership chains
+  - Useful for debugging complex membership hierarchies
+
+- **`grouper_get_member_count`** _(low priority)_ - Get the count of members in a group
+  - Parameters: groupName, memberFilter (All/Immediate/Effective, default: All)
+  - Returns: Just the member count without full member details
+  - Performance optimization for large groups
 
 ### Subject Management
 - Subject source management
 - External subject registration
 
 ### Attribute Definition Management
+- **`grouper_find_attribute_def_names`** _(medium priority)_ - Search for attribute definitions
+  - Parameters: searchTerm (optional - return all if omitted)
+  - Support pagination for large attribute definition sets
+  - Return attribute definition names, descriptions, and types
+  - Complements existing `grouper_assign_attribute` tool
+
 - Create and manage attribute definitions
 - Attribute definition privileges
 - Complex attribute operations
