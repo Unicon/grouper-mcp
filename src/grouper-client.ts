@@ -495,4 +495,104 @@ export class GrouperClient {
       throw grouperError;
     }
   }
+
+  /**
+   * Check if a subject is a member of a group and get membership details
+   */
+  async getMembershipDetails(
+    subjectId: string,
+    groupName: string,
+    options?: {
+      subjectSourceId?: string;
+      membershipFilter?: string;
+    }
+  ): Promise<any> {
+    try {
+      const wsSubjectLookup: any = {
+        subjectId: subjectId,
+      };
+
+      if (options?.subjectSourceId) {
+        wsSubjectLookup.subjectSourceId = options.subjectSourceId;
+      }
+
+      const requestBody: any = {
+        WsRestGetMembershipsRequest: {
+          wsSubjectLookups: [wsSubjectLookup],
+          wsGroupLookups: [{ groupName: groupName }],
+          wsMembershipFilter: options?.membershipFilter || 'All',
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+        }
+      };
+
+      const response = await this.makeRequest('/memberships', 'POST', requestBody);
+
+      return response.WsGetMembershipsResults || {};
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getMembershipDetails', { subjectId, groupName, options });
+      throw grouperError;
+    }
+  }
+
+  /**
+   * Get all groups that a subject is a direct member of
+   */
+  async getSubjectDirectMemberships(
+    subjectId: string,
+    options?: {
+      subjectSourceId?: string;
+    }
+  ): Promise<any> {
+    try {
+      const wsSubjectLookup: any = {
+        subjectId: subjectId,
+      };
+
+      if (options?.subjectSourceId) {
+        wsSubjectLookup.subjectSourceId = options.subjectSourceId;
+      }
+
+      const requestBody: any = {
+        WsRestGetMembershipsRequest: {
+          wsSubjectLookups: [wsSubjectLookup],
+          wsMembershipFilter: 'Immediate',
+          includeGroupDetail: 'T',
+        }
+      };
+
+      const response = await this.makeRequest('/memberships', 'POST', requestBody);
+
+      return response.WsGetMembershipsResults || {};
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getSubjectDirectMemberships', { subjectId, options });
+      throw grouperError;
+    }
+  }
+
+  /**
+   * Get direct members of a group (both subjects and groups)
+   */
+  async getGroupDirectMembers(groupName: string): Promise<any> {
+    try {
+      const requestBody = {
+        WsRestGetMembersRequest: {
+          groupNames: [groupName],
+          memberFilter: 'Immediate',
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T',
+        }
+      };
+
+      const response = await this.makeRequest('/groups', 'POST', requestBody);
+
+      return response.WsGetMembersResults || {};
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getGroupDirectMembers', { groupName });
+      throw grouperError;
+    }
+  }
 }

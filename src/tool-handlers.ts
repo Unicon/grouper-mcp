@@ -1,7 +1,8 @@
 import { GrouperClient } from './grouper-client.js';
 import { GrouperGroup, GrouperMember } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, formatBatchMemberResults, isReadOnlyMode, isWriteTool } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, formatBatchMemberResults, formatMembershipTrace, isReadOnlyMode, isWriteTool } from './utils.js';
+import { MembershipTracer } from './membership-tracer.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
@@ -833,6 +834,59 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
             {
               type: 'text',
               text: `Error retrieving subject memberships: ${error instanceof Error ? error.message : 'Unknown error'}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_trace_membership': {
+      const {
+        subjectId,
+        groupName,
+        subjectSourceId,
+        maxDepth,
+      } = args as {
+        subjectId: string;
+        groupName: string;
+        subjectSourceId?: string;
+        maxDepth?: number;
+      };
+
+      try {
+        const tracer = new MembershipTracer(client, maxDepth);
+        const result = await tracer.trace(subjectId, groupName, {
+          subjectSourceId,
+        });
+
+        logger.debug('Membership trace completed', {
+          subjectId,
+          groupName,
+          isMember: result.isMember
+        });
+
+        const formattedOutput = formatMembershipTrace(result);
+
+        return {
+          content: [
+            {
+              type: 'text',
+              text: formattedOutput,
+            },
+          ],
+        };
+      } catch (error) {
+        logger.error('Error in grouper_trace_membership tool', {
+          subjectId,
+          groupName,
+          error
+        });
+        return {
+          content: [
+            {
+              type: 'text',
+              text: `Error tracing membership: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
           isError: true,

@@ -1,4 +1,4 @@
-import { GrouperGroup, GrouperStem, BatchMemberResult, GrouperMember } from './types.js';
+import { GrouperGroup, GrouperStem, BatchMemberResult, GrouperMember, MembershipTraceResult, MembershipTraceNode } from './types.js';
 import { config } from './config.js';
 
 /**
@@ -349,4 +349,113 @@ export function formatBatchMemberResults(
   }
 
   return output.trim();
+}
+
+export function formatMembershipTrace(result: MembershipTraceResult): string {
+  let output = '';
+
+  // Subject information
+  output += '=== MEMBERSHIP TRACE ===\n';
+  output += `Subject: ${result.subjectId}`;
+  if (result.subjectName) output += ` (${result.subjectName})`;
+  output += '\n';
+
+  output += `Target Group: ${result.targetGroupName}`;
+  if (result.targetGroupDisplayName) output += ` (${result.targetGroupDisplayName})`;
+  output += '\n';
+
+  output += `Is Member: ${result.isMember ? 'YES' : 'NO'}\n\n`;
+
+  if (!result.isMember) {
+    output += 'Subject is not a member of this group.\n';
+    return output;
+  }
+
+  // Membership paths
+  output += `=== MEMBERSHIP PATHS (${result.paths.length}) ===\n\n`;
+
+  result.paths.forEach((path, index) => {
+    output += formatTraceNode(path, 0);
+    if (index < result.paths.length - 1) {
+      output += '\n';
+    }
+  });
+
+  // Cycles detected
+  if (result.cycles && result.cycles.length > 0) {
+    output += '\n⚠️  CYCLES DETECTED:\n';
+    result.cycles.forEach(cycle => {
+      output += `  - ${cycle}\n`;
+    });
+  }
+
+  // Max depth warnings
+  if (result.maxDepthReached) {
+    output += '\n⚠️  Maximum trace depth reached. Some paths may be incomplete.\n';
+  }
+
+  return output;
+}
+
+function formatTraceNode(node: MembershipTraceNode, level: number): string {
+  const indent = '  '.repeat(level);
+  let output = '';
+
+  // Format based on node type
+  switch (node.type) {
+    case 'immediate':
+      output += `${indent}✓ IMMEDIATE: ${node.groupName}`;
+      if (node.groupDisplayName) output += ` (${node.groupDisplayName})`;
+      output += '\n';
+      if (node.groupDescription) {
+        output += `${indent}  Description: ${node.groupDescription}\n`;
+      }
+      break;
+
+    case 'effective':
+      output += `${indent}→ EFFECTIVE: ${node.groupName}`;
+      if (node.groupDisplayName) output += ` (${node.groupDisplayName})`;
+      output += '\n';
+      if (node.groupDescription) {
+        output += `${indent}  Description: ${node.groupDescription}\n`;
+      }
+      if (node.intermediateGroups && node.intermediateGroups.length > 0) {
+        output += `${indent}  Via intermediate group(s):\n`;
+        node.intermediateGroups.forEach(intNode => {
+          output += formatTraceNode(intNode, level + 2);
+        });
+      }
+      break;
+
+    case 'composite':
+      output += `${indent}⊕ COMPOSITE: ${node.groupName}`;
+      if (node.groupDisplayName) output += ` (${node.groupDisplayName})`;
+      output += '\n';
+      if (node.groupDescription) {
+        output += `${indent}  Description: ${node.groupDescription}\n`;
+      }
+      output += `${indent}  Operation: ${node.compositeType}\n`;
+      output += `${indent}  Left Group: ${node.compositeLeftGroup}\n`;
+      output += `${indent}  Right Group: ${node.compositeRightGroup}\n`;
+      if (node.intermediateGroups && node.intermediateGroups.length > 0) {
+        output += `${indent}  Membership through:\n`;
+        node.intermediateGroups.forEach(intNode => {
+          output += formatTraceNode(intNode, level + 2);
+        });
+      }
+      break;
+
+    case 'cycle_detected':
+      output += `${indent}⚠️  CYCLE DETECTED: ${node.groupName}\n`;
+      break;
+
+    case 'max_depth_reached':
+      output += `${indent}⚠️  MAX DEPTH REACHED: ${node.groupName}\n`;
+      break;
+
+    default:
+      output += `${indent}? UNKNOWN: ${node.groupName} (type: ${node.type})\n`;
+  }
+
+  return output;
 }

@@ -35,12 +35,6 @@ The Grouper web services API offers many additional endpoints that are **not cur
   - Returns: Boolean (true/false) with membership status
   - Optimization for common use case (vs. retrieving full member list)
 
-- **`grouper_trace_membership`** _(medium priority)_ - Show how a subject is connected to a group
-  - Parameters: groupName, subjectId
-  - Display membership path (direct, effective, or composite)
-  - Show intermediate groups in effective membership chains
-  - Useful for debugging complex membership hierarchies
-
 - **`grouper_get_member_count`** _(low priority)_ - Get the count of members in a group
   - Parameters: groupName, memberFilter (All/Immediate/Effective, default: All)
   - Returns: Just the member count without full member details
@@ -175,4 +169,5 @@ _Add additional todo items and planned improvements here._
 - **Read-Only Mode** - Configuration option to enable read-only mode via environment variable (`READ_ONLY=true`) or properties file (`config/grouper-mcp.properties`). When enabled, all write operations are blocked at both registration and runtime. Properties file takes precedence over environment variables, enabling immutable read-only Docker images.
 - **HTTP/HTTPS Protocol Support via MCPO** - HTTP/SSE access is now supported via [MCPO](https://github.com/open-webui/mcpo) proxy. MCPO provides zero-code HTTP/SSE exposure of the stdio MCP server with API key authentication, auto-generated OpenAPI documentation, support for multiple concurrent connections, and compatibility with Open WebUI and other HTTP-based AI agents. See [README.md - MCPO section](../README.md#exposing-via-httpsse-with-mcpo) for usage instructions. For advanced use cases requiring custom authentication or authorization logic, see [HTTP_FEATURE_NOTES.md](HTTP_FEATURE_NOTES.md) for detailed implementation guide.
 - **Open WebUI Configuration Documentation** - Complete configuration documentation for integrating with Open WebUI via MCPO proxy.
-- **Batch Membership Operations** - The `grouper_add_member` and `grouper_remove_member` tools now support batch operations. Pass multiple subjects in a single API call via the `subjects` array parameter instead of making multiple calls. Backward compatible - existing single-subject usage still works. Response includes individual success/failure status for each member. See [TOOLS.md](TOOLS.md#member-management) and [BATCH-MEMBERSHIP-IMPLEMENTATION-PLAN.md](BATCH-MEMBERSHIP-IMPLEMENTATION-PLAN.md) for details.
+- **Batch Membership Operations** - The `grouper_add_member` and `grouper_remove_member` tools now support batch operations. Pass multiple subjects in a single API call via the `subjects` array parameter instead of making multiple calls. Backward compatible - existing single-subject usage still works. Response includes individual success/failure status for each member. See [TOOLS.md](TOOLS.md#member-management) for details.
+- **Membership Tracing** - The `grouper_trace_membership` tool traces how a subject is connected to a group, showing the complete membership path. Identifies whether membership is direct (immediate), through intermediate groups (effective), or through composite group operations (union/intersection/complement). Includes cycle detection, configurable max depth (default 10, max 20), and detailed visualization of membership chains. Essential for debugging complex membership hierarchies and understanding effective permissions. See [TOOLS.md](TOOLS.md#-grouper_trace_membership) for details.
