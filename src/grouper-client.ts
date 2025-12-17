@@ -579,7 +579,7 @@ export class GrouperClient {
     try {
       const requestBody = {
         WsRestGetMembersRequest: {
-          groupNames: [groupName],
+          wsGroupLookups: [{ groupName }],
           memberFilter: 'Immediate',
           includeGroupDetail: 'T',
           includeSubjectDetail: 'T',
