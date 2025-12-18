@@ -393,4 +393,30 @@ export const toolDefinitions = [
       required: ['subjectId'],
     },
   },
+  {
+    name: 'grouper_trace_membership',
+    description: 'Trace how a subject (user) is a member of a group, showing the complete membership path. This tool identifies whether membership is direct (immediate), through intermediate groups (effective), or through composite group operations (union/intersection). Returns a detailed trace showing the chain of memberships from the subject to the target group, including intermediate groups, membership types, and composite operations. Useful for debugging access issues, understanding complex membership hierarchies, and auditing group membership paths. Maximum recursion depth is 10 levels to prevent timeout.',
+    inputSchema: {
+      type: 'object',
+      properties: {
+        subjectId: {
+          type: 'string',
+          description: 'The subject ID of the user to trace membership for',
+        },
+        groupName: {
+          type: 'string',
+          description: 'The full group name to trace membership to (e.g., "app:security:admin")',
+        },
+        subjectSourceId: {
+          type: 'string',
+          description: 'Optional subject source ID (e.g., "ldap", "jdbc"). If not specified, Grouper will search across all sources.',
+        },
+        maxDepth: {
+          type: 'number',
+          description: 'Maximum recursion depth for tracing (1-20). Default: 10. Higher values may timeout for complex hierarchies.',
+        },
+      },
+      required: ['subjectId', 'groupName'],
+    },
+  },
 ];

@@ -109,3 +109,27 @@ export interface GrouperStem {
   displayExtension?: string;
   idIndex?: string;
 }
+
+export interface MembershipTraceNode {
+  type: 'immediate' | 'effective' | 'composite' | 'cycle_detected' | 'max_depth_reached';
+  groupName: string;
+  groupDisplayName?: string;
+  groupDescription?: string;
+  membershipType?: string;
+  compositeType?: string;
+  compositeLeftGroup?: string;
+  compositeRightGroup?: string;
+  intermediateGroups?: MembershipTraceNode[];
+  depth: number;
+}
+
+export interface MembershipTraceResult {
+  subjectId: string;
+  subjectName?: string;
+  targetGroupName: string;
+  targetGroupDisplayName?: string;
+  isMember: boolean;
+  paths: MembershipTraceNode[];
+  cycles?: string[];
+  maxDepthReached?: boolean;
+}
