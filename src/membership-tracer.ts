@@ -56,10 +56,12 @@ export class MembershipTracer {
 
     // Subject is a member - trace the path(s)
     const membership = memberships[0];
+    const groups = membershipDetails.wsGroups || [];
     const paths = await this.traceMembershipRecursive(
       subjectId,
       targetGroupName,
       membership,
+      groups,
       0,
       options
     );
@@ -85,18 +87,22 @@ export class MembershipTracer {
     subjectId: string,
     groupName: string,
     membership: any,
+    groups: any[],
     depth: number,
     options?: {
       subjectSourceId?: string;
     }
   ): Promise<MembershipTraceNode[]> {
+    // Look up the group details from the groups array by matching groupId to uuid
+    const group = groups.find((g: any) => g.uuid === membership.groupId);
+
     // Check depth limit
     if (depth >= this.maxDepth) {
       logger.info('Max depth reached during trace', { groupName, depth });
       return [{
         type: 'max_depth_reached',
         groupName,
-        groupDisplayName: membership.wsGroup?.displayName,
+        groupDisplayName: group?.displayName,
         depth,
       }];
     }
@@ -107,7 +113,7 @@ export class MembershipTracer {
       return [{
         type: 'cycle_detected',
         groupName,
-        groupDisplayName: membership.wsGroup?.displayName,
+        groupDisplayName: group?.displayName,
         depth,
       }];
     }
@@ -115,7 +121,6 @@ export class MembershipTracer {
     this.visitedGroups.add(groupName);
 
     const membershipType = membership.membershipType?.toLowerCase();
-    const group = membership.wsGroup;
 
     // Handle immediate (direct) membership
     if (membershipType === 'immediate') {
@@ -132,14 +137,15 @@ export class MembershipTracer {
     // Handle composite membership
     if (membershipType === 'composite' && group?.detail?.hasComposite === 'T') {
       const detail = group.detail;
-      const compositeType = detail.compositeType;
-      const leftGroup = detail.leftGroup;
-      const rightGroup = detail.rightGroup;
+      const compositeType = detail.compositeType?.toUpperCase();
+      // leftGroup and rightGroup are objects from the API, extract their names
+      const leftGroupName = detail.leftGroup?.name;
+      const rightGroupName = detail.rightGroup?.name;
 
       logger.debug('Processing composite membership', {
         compositeType,
-        leftGroup,
-        rightGroup,
+        leftGroupName,
+        rightGroupName,
       });
 
       const node: MembershipTraceNode = {
@@ -149,32 +155,32 @@ export class MembershipTracer {
         groupDescription: group?.description,
         membershipType: 'composite',
         compositeType,
-        compositeLeftGroup: leftGroup,
-        compositeRightGroup: rightGroup,
+        compositeLeftGroup: leftGroupName,
+        compositeRightGroup: rightGroupName,
         intermediateGroups: [],
         depth,
       };
 
       // Trace through composite branches
-      if (compositeType === 'INTERSECTION') {
+      if (compositeType === 'INTERSECTION' && leftGroupName && rightGroupName) {
         // Must be in both left and right
         const [leftPaths, rightPaths] = await Promise.all([
-          this.traceToGroup(subjectId, leftGroup, depth + 1, options),
-          this.traceToGroup(subjectId, rightGroup, depth + 1, options),
+          this.traceToGroup(subjectId, leftGroupName, depth + 1, options),
+          this.traceToGroup(subjectId, rightGroupName, depth + 1, options),
         ]);
         node.intermediateGroups = [...leftPaths, ...rightPaths];
-      } else if (compositeType === 'UNION') {
+      } else if (compositeType === 'UNION' && leftGroupName) {
         // Can be in left or right (trace left first)
-        const leftPaths = await this.traceToGroup(subjectId, leftGroup, depth + 1, options);
+        const leftPaths = await this.traceToGroup(subjectId, leftGroupName, depth + 1, options);
         if (leftPaths.length > 0) {
           node.intermediateGroups = leftPaths;
-        } else {
-          const rightPaths = await this.traceToGroup(subjectId, rightGroup, depth + 1, options);
+        } else if (rightGroupName) {
+          const rightPaths = await this.traceToGroup(subjectId, rightGroupName, depth + 1, options);
           node.intermediateGroups = rightPaths;
         }
-      } else if (compositeType === 'COMPLEMENT') {
+      } else if (compositeType === 'COMPLEMENT' && leftGroupName) {
         // In left but not in right
-        const leftPaths = await this.traceToGroup(subjectId, leftGroup, depth + 1, options);
+        const leftPaths = await this.traceToGroup(subjectId, leftGroupName, depth + 1, options);
         node.intermediateGroups = leftPaths;
       }
 
@@ -195,12 +201,19 @@ export class MembershipTracer {
       const groupMembers = await this.client.getGroupDirectMembers(groupName);
 
       // Find intermediate groups (intersection)
-      // IMPORTANT: Filter by membershipType === 'immediate' to exclude effective memberships
-      // We need to build a map of UUID -> name for subject's immediate group memberships
+      // We need to build a map of UUID -> name for subject's group memberships
+      // Include immediate, effective, AND composite memberships - all need to be
+      // traced recursively to find the deeper path (e.g., A → B → C → target requires
+      // finding B even though subject only has effective/composite membership in B)
       // Note: The membership object has groupId and groupName directly (not nested in wsGroup)
       const subjectGroupUUIDs = new Map<string, string>();
       (subjectMemberships.wsMemberships || [])
-        .filter((m: any) => m.membershipType?.toLowerCase() === 'immediate')
+        .filter((m: any) => {
+          const type = m.membershipType?.toLowerCase();
+          // Include immediate, effective, and composite memberships
+          // Exclude the target group to avoid self-recursion
+          return (type === 'immediate' || type === 'effective' || type === 'composite') && m.groupName !== groupName;
+        })
         .forEach((m: any) => {
           const uuid = m.groupId;
           const name = m.groupName;
@@ -285,10 +298,13 @@ export class MembershipTracer {
         return [];
       }
 
+      const groups = membershipDetails.wsGroups || [];
+
       return await this.traceMembershipRecursive(
         subjectId,
         groupName,
         memberships[0],
+        groups,
         depth,
         options
       );

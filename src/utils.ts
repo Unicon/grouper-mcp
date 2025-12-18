@@ -351,6 +351,29 @@ export function formatBatchMemberResults(
   return output.trim();
 }
 
+/**
+ * Count the number of distinct leaf paths (immediate memberships) in the trace tree.
+ * This represents the actual number of unique paths from the subject to the target group.
+ */
+function countDistinctPaths(nodes: MembershipTraceNode[]): number {
+  let count = 0;
+
+  for (const node of nodes) {
+    if (node.type === 'immediate') {
+      // Leaf node - this is a distinct path endpoint
+      count += 1;
+    } else if (node.intermediateGroups && node.intermediateGroups.length > 0) {
+      // Recurse into intermediate groups
+      count += countDistinctPaths(node.intermediateGroups);
+    } else {
+      // Effective/composite node with no intermediates - count as 1 path
+      count += 1;
+    }
+  }
+
+  return count;
+}
+
 export function formatMembershipTrace(result: MembershipTraceResult): string {
   let output = '';
 
@@ -371,8 +394,11 @@ export function formatMembershipTrace(result: MembershipTraceResult): string {
     return output;
   }
 
+  // Count distinct paths (leaf nodes) rather than just top-level nodes
+  const pathCount = countDistinctPaths(result.paths);
+
   // Membership paths
-  output += `=== MEMBERSHIP PATHS (${result.paths.length}) ===\n\n`;
+  output += `=== MEMBERSHIP PATHS (${pathCount}) ===\n\n`;
 
   result.paths.forEach((path, index) => {
     output += formatTraceNode(path, 0);
