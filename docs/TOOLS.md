@@ -8,9 +8,9 @@ The Grouper MCP server provides **20 core tools** for essential Grouper operatio
 
 - **[Group Management](#group-management)** (8 tools) - Search, create, retrieve, update, and delete groups
 - **[Stem/Folder Management](#stemfolder-management)** (3 tools) - Search and browse organizational hierarchy
-- **[Member Management](#member-management)** (3 tools) - Add, remove, and list group members
+- **[Member Management](#member-management)** (4 tools) - Add, remove, list group members, and trace membership paths
 - **[Attribute Management](#attribute-management)** (1 tool) - Assign attributes to groups
-- **[Subject Management](#subject-management)** (5 tools) - Search for and retrieve information about subjects, their group memberships, and membership paths
+- **[Subject Management](#subject-management)** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
 ---
 
@@ -288,6 +288,47 @@ Get all members of group "edu:department:engineering:students" including additio
 
 ---
 
+### 🔍 grouper_trace_membership
+
+Trace how a subject (user) is a member of a group, showing the complete membership path. This tool identifies whether membership is direct (immediate), through intermediate groups (effective), or through composite group operations (intersection/complement).
+
+**Parameters:**
+- **`subjectId`** (required, string) - The subject ID of the user to trace membership for
+- **`groupName`** (required, string) - The full group name to trace membership to (e.g., "app:security:admin")
+- **`subjectSourceId`** (optional, string) - Optional subject source ID (e.g., "ldap", "jdbc")
+- **`maxDepth`** (optional, number) - Maximum recursion depth for tracing (1-20). Default: 10. Higher values may timeout for complex hierarchies.
+
+**Returns:** Detailed trace showing:
+- Whether the subject is a member
+- Membership type (immediate, effective, or composite)
+- Complete chain of intermediate groups
+- Composite group operations (intersection/complement)
+- Cycle detection warnings
+- Depth limit warnings
+
+**Membership Types:**
+- **Immediate**: Subject is directly added to the group
+- **Effective**: Subject is member through one or more intermediate groups
+- **Composite**: Subject is member through composite group operations
+
+**Example Usage:**
+```
+Trace membership for user jdoe in group app:security:admin
+Show how subject 12345 is a member of org:staff:faculty
+Trace membership path with maximum depth of 3
+Debug why user has access to a specific group
+Understand complex membership hierarchies
+Visualize composite group relationships
+```
+
+**Use Cases:**
+- Debug why a user has access to a group
+- Understand complex membership hierarchies
+- Visualize composite group relationships
+- Audit membership paths for compliance
+
+---
+
 ## Attribute Management
 
 ### 🏷️ grouper_assign_attribute
@@ -380,47 +421,6 @@ Get all groups for user jdoe
 Get immediate group memberships for subject ID 12345
 Get enabled group memberships for subject identifier jsmith@example.edu
 ```
-
----
-
-### 🔍 grouper_trace_membership
-
-Trace how a subject (user) is a member of a group, showing the complete membership path. This tool identifies whether membership is direct (immediate), through intermediate groups (effective), or through composite group operations (union/intersection).
-
-**Parameters:**
-- **`subjectId`** (required, string) - The subject ID of the user to trace membership for
-- **`groupName`** (required, string) - The full group name to trace membership to (e.g., "app:security:admin")
-- **`subjectSourceId`** (optional, string) - Optional subject source ID (e.g., "ldap", "jdbc")
-- **`maxDepth`** (optional, number) - Maximum recursion depth for tracing (1-20). Default: 10. Higher values may timeout for complex hierarchies.
-
-**Returns:** Detailed trace showing:
-- Whether the subject is a member
-- Membership type (immediate, effective, or composite)
-- Complete chain of intermediate groups
-- Composite group operations (union/intersection/complement)
-- Cycle detection warnings
-- Depth limit warnings
-
-**Membership Types:**
-- **Immediate**: Subject is directly added to the group
-- **Effective**: Subject is member through one or more intermediate groups
-- **Composite**: Subject is member through composite group operations
-
-**Example Usage:**
-```
-Trace membership for user jdoe in group app:security:admin
-Show how subject 12345 is a member of org:staff:faculty
-Trace membership path with maximum depth of 3
-Debug why user has access to a specific group
-Understand complex membership hierarchies
-Visualize composite group relationships
-```
-
-**Use Cases:**
-- Debug why a user has access to a group
-- Understand complex membership hierarchies
-- Visualize composite group relationships
-- Audit membership paths for compliance
 
 ---
 

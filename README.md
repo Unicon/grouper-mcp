@@ -8,9 +8,9 @@ This MCP server provides **20 core tools** for essential Grouper operations, org
 
 - **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups
 - **Stem/Folder Management** (3 tools) - Search and browse organizational hierarchy
-- **Member Management** (3 tools) - Add, remove, and list group members
+- **Member Management** (4 tools) - Add, remove, list group members, and trace membership paths
 - **Attribute Management** (1 tool) - Assign attributes to groups
-- **Subject Management** (5 tools) - Search for and retrieve information about subjects, their group memberships, and membership paths
+- **Subject Management** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
 For detailed documentation of all available tools, parameters, and usage examples, see **[TOOLS.md](docs/TOOLS.md)**.
 
