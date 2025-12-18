@@ -12,12 +12,13 @@ import { logger } from './logger.js';
 import { toolDefinitions } from './tool-definitions.js';
 import { handleTool } from './tool-handlers.js';
 import { isReadOnlyMode, isWriteTool } from './utils.js';
+import packageJson from '../package.json' assert { type: 'json' };
 
 
 const server = new Server(
   {
-    name: 'grouper-mcp',
-    version: '0.1.0',
+    name: packageJson.name,
+    version: packageJson.version,
   },
   {
     capabilities: {

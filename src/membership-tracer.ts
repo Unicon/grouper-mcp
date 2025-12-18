@@ -64,6 +64,9 @@ export class MembershipTracer {
       options
     );
 
+    // Extract actual cycles detected during traversal (nodes with type 'cycle_detected')
+    const detectedCycles = this.extractCyclesFromPaths(paths);
+
     return {
       subjectId,
       subjectName: subject?.name,
@@ -71,9 +74,7 @@ export class MembershipTracer {
       targetGroupDisplayName: group?.displayName,
       isMember: true,
       paths,
-      cycles: Array.from(this.visitedGroups).filter(g =>
-        paths.some(p => this.findCycleInNode(p, g))
-      ),
+      cycles: detectedCycles.length > 0 ? detectedCycles : undefined,
     };
   }
 
@@ -194,17 +195,28 @@ export class MembershipTracer {
       const groupMembers = await this.client.getGroupDirectMembers(groupName);
 
       // Find intermediate groups (intersection)
-      const subjectGroups = new Set(
-        (subjectMemberships.wsMemberships || [])
-          .map((m: any) => m.wsGroup?.name)
-          .filter(Boolean)
-      );
+      // IMPORTANT: Filter by membershipType === 'immediate' to exclude effective memberships
+      // We need to build a map of UUID -> name for subject's immediate group memberships
+      // Note: The membership object has groupId and groupName directly (not nested in wsGroup)
+      const subjectGroupUUIDs = new Map<string, string>();
+      (subjectMemberships.wsMemberships || [])
+        .filter((m: any) => m.membershipType?.toLowerCase() === 'immediate')
+        .forEach((m: any) => {
+          const uuid = m.groupId;
+          const name = m.groupName;
+          if (uuid && name) {
+            subjectGroupUUIDs.set(uuid, name);
+          }
+        });
 
-      const intermediateGroupNames = (groupMembers.wsGroups || [])
-        .flatMap((g: any) => (g.wsSubjects || []))
+      // Extract members from the response structure
+      const targetGroupMembers = groupMembers.results?.[0]?.wsSubjects || [];
+      const intermediateGroupNames = targetGroupMembers
         .filter((s: any) => s.sourceId === 'g:gsa') // Group members only
-        .map((s: any) => s.id)
-        .filter((id: string) => subjectGroups.has(id));
+        .map((s: any) => s.id) // This is the UUID for groups
+        .filter((uuid: string) => subjectGroupUUIDs.has(uuid))
+        .map((uuid: string) => subjectGroupUUIDs.get(uuid))
+        .filter(Boolean) as string[];
 
       if (intermediateGroupNames.length === 0) {
         logger.info('No intermediate groups found for effective membership', {
@@ -287,15 +299,23 @@ export class MembershipTracer {
   }
 
   /**
-   * Helper to find cycles in trace nodes
+   * Extract group names from cycle_detected nodes in the paths
    */
-  private findCycleInNode(node: MembershipTraceNode, groupName: string): boolean {
-    if (node.groupName === groupName) {
-      return true;
-    }
-    if (node.intermediateGroups) {
-      return node.intermediateGroups.some(n => this.findCycleInNode(n, groupName));
-    }
-    return false;
+  private extractCyclesFromPaths(paths: MembershipTraceNode[]): string[] {
+    const cycles: string[] = [];
+
+    const collectCycles = (nodes: MembershipTraceNode[]) => {
+      for (const node of nodes) {
+        if (node.type === 'cycle_detected' && node.groupName) {
+          cycles.push(node.groupName);
+        }
+        if (node.intermediateGroups) {
+          collectCycles(node.intermediateGroups);
+        }
+      }
+    };
+
+    collectCycles(paths);
+    return cycles;
   }
 }
