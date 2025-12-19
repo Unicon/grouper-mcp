@@ -1,7 +1,7 @@
 import { GrouperClient } from './grouper-client.js';
-import { GrouperGroup, GrouperMember } from './types.js';
+import { GrouperGroup, GrouperMember, GrouperSubjectLookup } from './types.js';
 import { logger } from './logger.js';
-import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, formatBatchMemberResults, formatMembershipTrace, isReadOnlyMode, isWriteTool } from './utils.js';
+import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, formatBatchMemberResults, formatMembershipTrace, formatPrivilegeResults, formatBatchPrivilegeResults, validatePrivilegeNames, isReadOnlyMode, isWriteTool } from './utils.js';
 import { MembershipTracer } from './membership-tracer.js';
 
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
@@ -889,6 +889,196 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
               text: `Error tracing membership: ${error instanceof Error ? error.message : 'Unknown error'}`,
             },
           ],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_assign_privilege': {
+      const {
+        groupName,
+        stemName,
+        subjectId,
+        subjectSourceId,
+        subjectIdentifier,
+        subjects,
+        privilegeNames,
+        allowed
+      } = args as {
+        groupName?: string;
+        stemName?: string;
+        subjectId?: string;
+        subjectSourceId?: string;
+        subjectIdentifier?: string;
+        subjects?: GrouperSubjectLookup[];
+        privilegeNames: string[];
+        allowed?: string;
+      };
+
+      try {
+        // Validate that either groupName or stemName is provided (but not both)
+        if (!groupName && !stemName) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Either groupName or stemName is required',
+            }],
+            isError: true,
+          };
+        }
+
+        if (groupName && stemName) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Cannot specify both groupName and stemName. Choose one.',
+            }],
+            isError: true,
+          };
+        }
+
+        // Determine target type and validate privilege names
+        const targetType: 'group' | 'stem' = groupName ? 'group' : 'stem';
+        const privilegeType: 'access' | 'naming' = targetType === 'group' ? 'access' : 'naming';
+
+        const validation = validatePrivilegeNames(privilegeNames, privilegeType);
+        if (!validation.valid) {
+          return {
+            content: [{
+              type: 'text',
+              text: `Error: Invalid privilege names for ${targetType}: ${validation.invalidNames.join(', ')}\n` +
+                    `Valid ${privilegeType} privileges: ${privilegeType === 'access' ?
+                      'read, view, update, admin, optin, optout, groupAttrRead, groupAttrUpdate' :
+                      'stem, create, stemAdmin, stemView, stemAttrRead, stemAttrUpdate'}`,
+            }],
+            isError: true,
+          };
+        }
+
+        // Build subjects array
+        let subjectsList: GrouperSubjectLookup[];
+        if (subjects && Array.isArray(subjects) && subjects.length > 0) {
+          subjectsList = subjects;
+        } else if (subjectId) {
+          subjectsList = [{ subjectId, subjectSourceId, subjectIdentifier }];
+        } else {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Either subjectId or subjects array is required',
+            }],
+            isError: true,
+          };
+        }
+
+        // Call appropriate client method
+        const allowedBool = allowed !== 'F'; // Default to true unless explicitly "F"
+        const operation: 'granted' | 'revoked' = allowedBool ? 'granted' : 'revoked';
+
+        let result;
+        const targetName = (groupName || stemName)!;
+
+        if (targetType === 'group') {
+          result = await client.assignGroupPrivileges(groupName!, subjectsList, privilegeNames, allowedBool);
+        } else {
+          result = await client.assignStemPrivileges(stemName!, subjectsList, privilegeNames, allowedBool);
+        }
+
+        const responseText = formatBatchPrivilegeResults(
+          result,
+          operation,
+          targetType,
+          targetName
+        );
+
+        return {
+          content: [{
+            type: 'text',
+            text: responseText,
+          }],
+          isError: !result.success,
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `Error assigning privilege(s): ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
+          isError: true,
+        };
+      }
+    }
+
+    case 'grouper_get_privileges': {
+      const {
+        groupName,
+        stemName,
+        subjectId,
+        subjectSourceId,
+        subjectIdentifier,
+        privilegeName
+      } = args as {
+        groupName?: string;
+        stemName?: string;
+        subjectId?: string;
+        subjectSourceId?: string;
+        subjectIdentifier?: string;
+        privilegeName?: string;
+      };
+
+      try {
+        // Validate that either groupName or stemName is provided
+        if (!groupName && !stemName) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Either groupName or stemName is required',
+            }],
+            isError: true,
+          };
+        }
+
+        if (groupName && stemName) {
+          return {
+            content: [{
+              type: 'text',
+              text: 'Error: Cannot specify both groupName and stemName. Choose one.',
+            }],
+            isError: true,
+          };
+        }
+
+        const targetType: 'group' | 'stem' = groupName ? 'group' : 'stem';
+        const targetName = (groupName || stemName)!;
+
+        const options = {
+          subjectId,
+          subjectSourceId,
+          subjectIdentifier,
+          privilegeName
+        };
+
+        let results;
+        if (targetType === 'group') {
+          results = await client.getGroupPrivileges(groupName!, options);
+        } else {
+          results = await client.getStemPrivileges(stemName!, options);
+        }
+
+        const responseText = formatPrivilegeResults(results, targetType, targetName);
+
+        return {
+          content: [{
+            type: 'text',
+            text: responseText,
+          }],
+        };
+      } catch (error) {
+        return {
+          content: [{
+            type: 'text',
+            text: `Error getting privileges: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
           isError: true,
         };
       }

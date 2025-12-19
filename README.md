@@ -4,11 +4,12 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 ## Features
 
-This MCP server provides **20 core tools** for essential Grouper operations, organized into five main categories:
+This MCP server provides **22 core tools** for essential Grouper operations, organized into six main categories:
 
 - **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups
 - **Stem/Folder Management** (3 tools) - Search and browse organizational hierarchy
 - **Member Management** (4 tools) - Add, remove, list group members, and trace membership paths
+- **Privilege Management** (2 tools) - Grant, revoke, and query privileges on groups and stems
 - **Attribute Management** (1 tool) - Assign attributes to groups
 - **Subject Management** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
