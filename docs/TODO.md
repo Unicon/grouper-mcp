@@ -8,24 +8,9 @@ The Grouper web services API offers many additional endpoints that are **not cur
 
 ### Stems/Folders Management
 - Create and manage organizational folders/stems
-- Stem privilege management
 - Hierarchical organization operations
 
 ### Advanced Privilege Management
-- **`grouper_assign_privilege`** _(high priority)_ - Assign a privilege to a subject on a group
-  - Support all privilege types: admin, read, update, view, optin, optout
-  - Parameters: groupName, subjectId, privilegeType, allowed (true/false)
-  - Essential for delegation and access control workflows
-
-- **`grouper_get_privileges`** _(high priority)_ - Get all privileges assigned to a group
-  - List all subjects with privileges on a specific group
-  - Include privilege type and subject details
-  - Support pagination for groups with many privilege assignments
-
-- **`grouper_revoke_privilege`** _(high priority)_ - Remove a privilege from a subject on a group
-  - Mirror of assign_privilege for removing access
-  - Support all privilege types
-
 - Privilege inheritance and delegation
 - Access control queries
 
@@ -171,3 +156,7 @@ _Add additional todo items and planned improvements here._
 - **Open WebUI Configuration Documentation** - Complete configuration documentation for integrating with Open WebUI via MCPO proxy.
 - **Batch Membership Operations** - The `grouper_add_member` and `grouper_remove_member` tools now support batch operations. Pass multiple subjects in a single API call via the `subjects` array parameter instead of making multiple calls. Backward compatible - existing single-subject usage still works. Response includes individual success/failure status for each member. See [TOOLS.md](TOOLS.md#member-management) for details.
 - **Membership Tracing** - The `grouper_trace_membership` tool traces how a subject is connected to a group, showing the complete membership path. Identifies whether membership is direct (immediate), through intermediate groups (effective), or through composite group operations (union/intersection/complement). Includes cycle detection, configurable max depth (default 10, max 20), and detailed visualization of membership chains. Essential for debugging complex membership hierarchies and understanding effective permissions. See [TOOLS.md](TOOLS.md#-grouper_trace_membership) for details.
+- **Privilege Management** - Two new tools for managing and querying privileges on groups and stems:
+  - **`grouper_assign_privilege`** - Grant or revoke privileges on groups or stems for one or more subjects. Supports all access privileges (read, view, update, admin, optin, optout, groupAttrRead, groupAttrUpdate) for groups and all naming privileges (stem, create, stemAdmin, stemView, stemAttrRead, stemAttrUpdate) for stems. Supports batch operations for multiple subjects and privileges. Includes validation of privilege names and read-only mode protection. Essential for delegation and access control workflows.
+  - **`grouper_get_privileges`** - Query privileges on groups or stems with optional filtering by subject or privilege name. Returns formatted list showing all privileges with subject information, privilege type, and revokability status. Useful for auditing access control and understanding who has management permissions on groups and stems.
+  - See [TOOLS.md](TOOLS.md#privilege-management) for detailed documentation and examples.
