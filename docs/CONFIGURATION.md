@@ -160,6 +160,7 @@ When read-only mode is enabled:
 - `grouper_get_stem_by_uuid`
 - `grouper_get_members`
 - `grouper_trace_membership`
+- `grouper_get_privileges`
 - `grouper_get_subject_by_id`
 - `grouper_get_subject_by_identifier`
 - `grouper_search_subjects`
@@ -175,6 +176,7 @@ When read-only mode is enabled:
 - `grouper_add_member`
 - `grouper_remove_member`
 - `grouper_assign_attribute`
+- `grouper_assign_privilege`
 
 ## Logging Configuration
 
