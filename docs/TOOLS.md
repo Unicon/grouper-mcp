@@ -339,7 +339,7 @@ Grant or revoke one or more privileges on a group or stem for one or more subjec
 **Parameters:**
 - **`groupName`** (string) - The full name of the group to assign privileges on (use this OR stemName, not both)
 - **`stemName`** (string) - The full name of the stem to assign privileges on (use this OR groupName, not both)
-- **`subjectId`** (string) - Subject ID for single subject operation (use this OR subjects array, not both). For user subjects, use their user ID. For group subjects, use the group UUID.
+- **`subjectId`** (string) - Subject ID for single subject operation (use this OR subjects array, not both). For user subjects, use their Subject ID. For group subjects, use the group UUID.
 - **`subjectSourceId`** (optional, string) - Optional subject source ID for single subject. Not needed when using a group UUID as subjectId.
 - **`subjectIdentifier`** (optional, string) - Optional subject identifier for single subject
 - **`subjects`** (array) - Array of subjects for batch operation (use this OR subjectId, not both). Each subject can be a user or a group. For groups, use the group UUID as subjectId. Each subject object can have: subjectId (required), subjectSourceId (optional, not needed for group UUIDs), subjectIdentifier (optional)
