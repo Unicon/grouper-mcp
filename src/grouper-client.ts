@@ -731,24 +731,33 @@ export class GrouperClient {
     }
   ): Promise<GrouperPrivilegeResult[]> {
     try {
-      const params: any = {
-        groupName,
-        privilegeType: 'access',
-        includeGroupDetail: 'T',
-        includeSubjectDetail: 'T'
+      const requestBody: any = {
+        WsRestGetGrouperPrivilegesLiteRequest: {
+          groupName,
+          privilegeType: 'access',
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
       };
 
-      if (options?.subjectId) params.subjectId = options.subjectId;
-      if (options?.subjectSourceId) params.subjectSourceId = options.subjectSourceId;
-      if (options?.subjectIdentifier) params.subjectIdentifier = options.subjectIdentifier;
-      if (options?.privilegeName) params.privilegeName = options.privilegeName;
-
-      // Build query string for lite endpoint
-      const queryString = new URLSearchParams(params).toString();
+      // Add optional filters if provided
+      if (options?.subjectId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectId = options.subjectId;
+      }
+      if (options?.subjectSourceId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectSourceId = options.subjectSourceId;
+      }
+      if (options?.subjectIdentifier) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectIdentifier = options.subjectIdentifier;
+      }
+      if (options?.privilegeName) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.privilegeName = options.privilegeName;
+      }
 
       const response = await this.makeRequest(
-        `/grouperPrivileges?${queryString}`,
-        'POST'
+        '/grouperPrivileges',
+        'POST',
+        requestBody
       );
 
       const result = response?.WsGetGrouperPrivilegesLiteResult || response;
@@ -773,24 +782,33 @@ export class GrouperClient {
     }
   ): Promise<GrouperPrivilegeResult[]> {
     try {
-      const params: any = {
-        stemName,
-        privilegeType: 'naming',
-        includeStemDetail: 'T',
-        includeSubjectDetail: 'T'
+      const requestBody: any = {
+        WsRestGetGrouperPrivilegesLiteRequest: {
+          stemName,
+          privilegeType: 'naming',
+          includeStemDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
       };
 
-      if (options?.subjectId) params.subjectId = options.subjectId;
-      if (options?.subjectSourceId) params.subjectSourceId = options.subjectSourceId;
-      if (options?.subjectIdentifier) params.subjectIdentifier = options.subjectIdentifier;
-      if (options?.privilegeName) params.privilegeName = options.privilegeName;
-
-      // Build query string for lite endpoint
-      const queryString = new URLSearchParams(params).toString();
+      // Add optional filters if provided
+      if (options?.subjectId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectId = options.subjectId;
+      }
+      if (options?.subjectSourceId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectSourceId = options.subjectSourceId;
+      }
+      if (options?.subjectIdentifier) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectIdentifier = options.subjectIdentifier;
+      }
+      if (options?.privilegeName) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.privilegeName = options.privilegeName;
+      }
 
       const response = await this.makeRequest(
-        `/grouperPrivileges?${queryString}`,
-        'POST'
+        '/grouperPrivileges',
+        'POST',
+        requestBody
       );
 
       const result = response?.WsGetGrouperPrivilegesLiteResult || response;
