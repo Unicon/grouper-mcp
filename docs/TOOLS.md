@@ -339,12 +339,15 @@ Grant or revoke one or more privileges on a group or stem for one or more subjec
 **Parameters:**
 - **`groupName`** (string) - The full name of the group to assign privileges on (use this OR stemName, not both)
 - **`stemName`** (string) - The full name of the stem to assign privileges on (use this OR groupName, not both)
-- **`subjectId`** (string) - Subject ID for single subject operation (use this OR subjects array, not both)
-- **`subjectSourceId`** (optional, string) - Optional subject source ID for single subject
+- **`subjectId`** (string) - Subject ID for single subject operation (use this OR subjects array, not both). For user subjects, use their user ID. For group subjects, use the group UUID.
+- **`subjectSourceId`** (optional, string) - Optional subject source ID for single subject. Not needed when using a group UUID as subjectId.
 - **`subjectIdentifier`** (optional, string) - Optional subject identifier for single subject
-- **`subjects`** (array) - Array of subjects for batch operation (use this OR subjectId, not both). Each subject object can have: subjectId (required), subjectSourceId (optional), subjectIdentifier (optional)
+- **`subjects`** (array) - Array of subjects for batch operation (use this OR subjectId, not both). Each subject can be a user or a group. For groups, use the group UUID as subjectId. Each subject object can have: subjectId (required), subjectSourceId (optional, not needed for group UUIDs), subjectIdentifier (optional)
 - **`privilegeNames`** (required, array of strings) - Array of privilege names to assign
 - **`allowed`** (string) - Set to "T" to grant privileges (default), "F" to revoke privileges
+
+**Important Note on Group Subjects:**
+Subjects can be either users or groups. When assigning privileges to a group as a subject, use the group's UUID as the subjectId (the group name will not work). Grouper will automatically recognize the UUID as a group without needing to specify subjectSourceId.
 
 **Access Privileges (for groups):**
 - `read` - View group membership
@@ -376,6 +379,14 @@ Grant or revoke one or more privileges on a group or stem for one or more subjec
   "allowed": "T"
 }
 
+// Grant admin privilege to a group (using group UUID)
+{
+  "groupName": "app:my-application:data",
+  "subjectId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "privilegeNames": ["admin"],
+  "allowed": "T"
+}
+
 // Revoke read privilege from multiple users
 {
   "groupName": "app:my-application:data",
@@ -390,7 +401,7 @@ Grant or revoke one or more privileges on a group or stem for one or more subjec
 // Grant naming privileges on a stem
 {
   "stemName": "app:my-application",
-  "subjectId": "admin-group",
+  "subjectId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
   "privilegeNames": ["stemAdmin", "create"],
   "allowed": "T"
 }
@@ -418,6 +429,9 @@ Get privileges on a group or stem, optionally filtered by subject or privilege n
 - **`privilegeName`** (optional, string) - Filter to a specific privilege name (e.g., "admin", "read")
 
 **Returns:** Formatted list showing all privileges with subject information, privilege type, and whether they are revokable.
+
+**Important Note on Results:**
+Results may include both user subjects (from sources like 'jdbc2_test' or 'ldap') and group subjects (from source 'g:gsa'). Group subjects are identified by their UUID as the Subject ID and their group name as the Subject Name. This allows you to see when groups themselves have been granted privileges on other groups or stems.
 
 **Example Usage:**
 ```json

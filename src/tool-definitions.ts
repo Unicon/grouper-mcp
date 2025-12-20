@@ -421,7 +421,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_assign_privilege',
-    description: 'Grant or revoke one or more privileges on a group or stem for one or more subjects. For groups, use groupName with access privileges (read, view, update, admin, optin, optout, groupAttrRead, groupAttrUpdate). For stems, use stemName with naming privileges (stem, create, stemAdmin, stemView, stemAttrRead, stemAttrUpdate). Supports batch operations for multiple subjects and multiple privileges. Returns formatted results showing success/failure for each privilege assignment.',
+    description: 'Grant or revoke one or more privileges on a group or stem for one or more subjects. For groups, use groupName with access privileges (read, view, update, admin, optin, optout, groupAttrRead, groupAttrUpdate). For stems, use stemName with naming privileges (stem, create, stemAdmin, stemView, stemAttrRead, stemAttrUpdate). Supports batch operations for multiple subjects and multiple privileges. Subjects can be either users or groups. When assigning privileges to a group as a subject, use the group\'s UUID as the subjectId (the group name will not work). Grouper will automatically recognize the UUID as a group without needing to specify subjectSourceId. Returns formatted results showing success/failure for each privilege assignment.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -435,11 +435,11 @@ export const toolDefinitions = [
         },
         subjectId: {
           type: 'string',
-          description: 'Subject ID for single subject operation (use this OR subjects array, not both)',
+          description: 'Subject ID for single subject operation (use this OR subjects array, not both). For user subjects, use their Subject ID. For group subjects, use the group UUID.',
         },
         subjectSourceId: {
           type: 'string',
-          description: 'Optional subject source ID for single subject',
+          description: 'Optional subject source ID for single subject. Not needed when using a group UUID as subjectId.',
         },
         subjectIdentifier: {
           type: 'string',
@@ -447,13 +447,13 @@ export const toolDefinitions = [
         },
         subjects: {
           type: 'array',
-          description: 'Array of subjects for batch operation (use this OR subjectId, not both)',
+          description: 'Array of subjects for batch operation (use this OR subjectId, not both). Each subject can be a user or a group. For groups, use the group UUID as subjectId.',
           items: {
             type: 'object',
             properties: {
-              subjectId: { type: 'string' },
-              subjectSourceId: { type: 'string' },
-              subjectIdentifier: { type: 'string' },
+              subjectId: { type: 'string', description: 'Subject ID or group UUID' },
+              subjectSourceId: { type: 'string', description: 'Optional. Not needed for group UUIDs.' },
+              subjectIdentifier: { type: 'string', description: 'Optional subject identifier' },
             },
             required: ['subjectId'],
           },
@@ -475,7 +475,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_get_privileges',
-    description: 'Get privileges on a group or stem, optionally filtered by subject or privilege name. Returns formatted list showing all privileges with subject information, privilege type, and whether they are revokable. Use groupName to query group privileges or stemName to query stem privileges.',
+    description: 'Get privileges on a group or stem, optionally filtered by subject or privilege name. Returns formatted list showing all privileges with subject information, privilege type, and whether they are revokable. Use groupName to query group privileges or stemName to query stem privileges. Results may include both user subjects (from sources like \'jdbc2_test\' or \'ldap\') and group subjects (from source \'g:gsa\'). Group subjects are identified by their UUID as the Subject ID and their group name as the Subject Name.',
     inputSchema: {
       type: 'object',
       properties: {
