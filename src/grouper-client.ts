@@ -1,4 +1,4 @@
-import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult, GrouperStem, BatchMemberResult, MemberOperationResult } from './types.js';
+import { GrouperConfig, GrouperGroup, GrouperMember, GrouperAttribute, GrouperSubject, GrouperSubjectLookup, GrouperSubjectSearchResult, GrouperStem, BatchMemberResult, MemberOperationResult, BatchPrivilegeResult, PrivilegeOperationResult, GrouperPrivilegeResult } from './types.js';
 import { GrouperError, handleGrouperError, logError } from './error-handler.js';
 import { logger } from './logger.js';
 
@@ -592,6 +592,230 @@ export class GrouperClient {
     } catch (error) {
       const grouperError = handleGrouperError(error);
       logError(grouperError, 'getGroupDirectMembers', { groupName });
+      throw grouperError;
+    }
+  }
+
+  /**
+   * Assign or revoke privileges on a group for one or more subjects
+   */
+  async assignGroupPrivileges(
+    groupName: string,
+    subjects: GrouperSubjectLookup[],
+    privilegeNames: string[],
+    allowed: boolean = true
+  ): Promise<BatchPrivilegeResult> {
+    try {
+      const response = await this.makeRequest('/grouperPrivileges', 'POST', {
+        WsRestAssignGrouperPrivilegesRequest: {
+          wsGroupLookup: { groupName },
+          wsSubjectLookups: subjects,
+          privilegeType: 'access',
+          privilegeNames: privilegeNames,
+          allowed: allowed ? 'T' : 'F',
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
+      });
+
+      const result = response?.WsAssignGrouperPrivilegesResults || response;
+      const wsGroup = result?.wsGroup;
+
+      // Parse individual results
+      const operationResults: PrivilegeOperationResult[] = (result?.results || []).map((r: any) => {
+        const isSuccess = r.resultMetadata?.success === 'T';
+        return {
+          subject: r.wsSubject || {},
+          privilegeName: r.privilegeName || '',
+          privilegeType: r.privilegeType || 'access',
+          allowed: r.allowed || (allowed ? 'T' : 'F'),
+          success: isSuccess,
+          resultCode: r.resultMetadata?.resultCode,
+          resultMessage: r.resultMetadata?.resultMessage
+        };
+      });
+
+      const successCount = operationResults.filter(r => r.success).length;
+      const failureCount = operationResults.length - successCount;
+
+      return {
+        success: failureCount === 0,
+        group: wsGroup,
+        results: operationResults,
+        successCount,
+        failureCount
+      };
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'assignGroupPrivileges', { groupName, subjectCount: subjects.length, privilegeNames });
+      return {
+        success: false,
+        results: [],
+        successCount: 0,
+        failureCount: subjects.length * privilegeNames.length
+      };
+    }
+  }
+
+  /**
+   * Assign or revoke privileges on a stem for one or more subjects
+   */
+  async assignStemPrivileges(
+    stemName: string,
+    subjects: GrouperSubjectLookup[],
+    privilegeNames: string[],
+    allowed: boolean = true
+  ): Promise<BatchPrivilegeResult> {
+    try {
+      const response = await this.makeRequest('/grouperPrivileges', 'POST', {
+        WsRestAssignGrouperPrivilegesRequest: {
+          wsStemLookup: { stemName },
+          wsSubjectLookups: subjects,
+          privilegeType: 'naming',
+          privilegeNames: privilegeNames,
+          allowed: allowed ? 'T' : 'F',
+          includeStemDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
+      });
+
+      const result = response?.WsAssignGrouperPrivilegesResults || response;
+      const wsStem = result?.wsStem;
+
+      // Parse individual results
+      const operationResults: PrivilegeOperationResult[] = (result?.results || []).map((r: any) => {
+        const isSuccess = r.resultMetadata?.success === 'T';
+        return {
+          subject: r.wsSubject || {},
+          privilegeName: r.privilegeName || '',
+          privilegeType: r.privilegeType || 'naming',
+          allowed: r.allowed || (allowed ? 'T' : 'F'),
+          success: isSuccess,
+          resultCode: r.resultMetadata?.resultCode,
+          resultMessage: r.resultMetadata?.resultMessage
+        };
+      });
+
+      const successCount = operationResults.filter(r => r.success).length;
+      const failureCount = operationResults.length - successCount;
+
+      return {
+        success: failureCount === 0,
+        stem: wsStem,
+        results: operationResults,
+        successCount,
+        failureCount
+      };
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'assignStemPrivileges', { stemName, subjectCount: subjects.length, privilegeNames });
+      return {
+        success: false,
+        results: [],
+        successCount: 0,
+        failureCount: subjects.length * privilegeNames.length
+      };
+    }
+  }
+
+  /**
+   * Get privileges on a group, optionally filtered by subject
+   */
+  async getGroupPrivileges(
+    groupName: string,
+    options?: {
+      subjectId?: string;
+      subjectSourceId?: string;
+      subjectIdentifier?: string;
+      privilegeName?: string;
+    }
+  ): Promise<GrouperPrivilegeResult[]> {
+    try {
+      const requestBody: any = {
+        WsRestGetGrouperPrivilegesLiteRequest: {
+          groupName,
+          privilegeType: 'access',
+          includeGroupDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
+      };
+
+      // Add optional filters if provided
+      if (options?.subjectId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectId = options.subjectId;
+      }
+      if (options?.subjectSourceId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectSourceId = options.subjectSourceId;
+      }
+      if (options?.subjectIdentifier) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectIdentifier = options.subjectIdentifier;
+      }
+      if (options?.privilegeName) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.privilegeName = options.privilegeName;
+      }
+
+      const response = await this.makeRequest(
+        '/grouperPrivileges',
+        'POST',
+        requestBody
+      );
+
+      const result = response?.WsGetGrouperPrivilegesLiteResult || response;
+      return result?.privilegeResults || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getGroupPrivileges', { groupName, options });
+      throw grouperError;
+    }
+  }
+
+  /**
+   * Get privileges on a stem, optionally filtered by subject
+   */
+  async getStemPrivileges(
+    stemName: string,
+    options?: {
+      subjectId?: string;
+      subjectSourceId?: string;
+      subjectIdentifier?: string;
+      privilegeName?: string;
+    }
+  ): Promise<GrouperPrivilegeResult[]> {
+    try {
+      const requestBody: any = {
+        WsRestGetGrouperPrivilegesLiteRequest: {
+          stemName,
+          privilegeType: 'naming',
+          includeStemDetail: 'T',
+          includeSubjectDetail: 'T'
+        }
+      };
+
+      // Add optional filters if provided
+      if (options?.subjectId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectId = options.subjectId;
+      }
+      if (options?.subjectSourceId) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectSourceId = options.subjectSourceId;
+      }
+      if (options?.subjectIdentifier) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.subjectIdentifier = options.subjectIdentifier;
+      }
+      if (options?.privilegeName) {
+        requestBody.WsRestGetGrouperPrivilegesLiteRequest.privilegeName = options.privilegeName;
+      }
+
+      const response = await this.makeRequest(
+        '/grouperPrivileges',
+        'POST',
+        requestBody
+      );
+
+      const result = response?.WsGetGrouperPrivilegesLiteResult || response;
+      return result?.privilegeResults || [];
+    } catch (error) {
+      const grouperError = handleGrouperError(error);
+      logError(grouperError, 'getStemPrivileges', { stemName, options });
       throw grouperError;
     }
   }

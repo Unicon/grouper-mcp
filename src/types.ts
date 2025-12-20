@@ -133,3 +133,33 @@ export interface MembershipTraceResult {
   cycles?: string[];
   maxDepthReached?: boolean;
 }
+
+export interface GrouperPrivilegeResult {
+  wsSubject?: GrouperSubject;
+  wsGroup?: GrouperGroup;
+  wsStem?: GrouperStem;
+  privilegeName: string;
+  privilegeType: string;  // "access" or "naming"
+  allowed: string;        // "T" or "F"
+  revokable?: string;     // "T" or "F"
+  ownerSubject?: GrouperSubject;
+}
+
+export interface PrivilegeOperationResult {
+  subject: GrouperSubject;
+  privilegeName: string;
+  privilegeType: string;
+  allowed: string;
+  success: boolean;
+  resultCode?: string;
+  resultMessage?: string;
+}
+
+export interface BatchPrivilegeResult {
+  success: boolean;
+  group?: GrouperGroup;
+  stem?: GrouperStem;
+  results: PrivilegeOperationResult[];
+  successCount: number;
+  failureCount: number;
+}

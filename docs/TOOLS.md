@@ -4,11 +4,12 @@ This document provides comprehensive documentation for all available tools in th
 
 ## Overview
 
-The Grouper MCP server provides **20 core tools** for essential Grouper operations, organized into five main categories:
+The Grouper MCP server provides **22 core tools** for essential Grouper operations, organized into six main categories:
 
 - **[Group Management](#group-management)** (8 tools) - Search, create, retrieve, update, and delete groups
 - **[Stem/Folder Management](#stemfolder-management)** (3 tools) - Search and browse organizational hierarchy
 - **[Member Management](#member-management)** (4 tools) - Add, remove, list group members, and trace membership paths
+- **[Privilege Management](#privilege-management)** (2 tools) - Grant, revoke, and query privileges on groups and stems
 - **[Attribute Management](#attribute-management)** (1 tool) - Assign attributes to groups
 - **[Subject Management](#subject-management)** (4 tools) - Search for and retrieve information about subjects and their group memberships
 
@@ -326,6 +327,137 @@ Visualize composite group relationships
 - Understand complex membership hierarchies
 - Visualize composite group relationships
 - Audit membership paths for compliance
+
+---
+
+## Privilege Management
+
+### 🔐 grouper_assign_privilege
+
+Grant or revoke one or more privileges on a group or stem for one or more subjects.
+
+**Parameters:**
+- **`groupName`** (string) - The full name of the group to assign privileges on (use this OR stemName, not both)
+- **`stemName`** (string) - The full name of the stem to assign privileges on (use this OR groupName, not both)
+- **`subjectId`** (string) - Subject ID for single subject operation (use this OR subjects array, not both). For user subjects, use their Subject ID. For group subjects, use the group UUID.
+- **`subjectSourceId`** (optional, string) - Optional subject source ID for single subject. Not needed when using a group UUID as subjectId.
+- **`subjectIdentifier`** (optional, string) - Optional subject identifier for single subject
+- **`subjects`** (array) - Array of subjects for batch operation (use this OR subjectId, not both). Each subject can be a user or a group. For groups, use the group UUID as subjectId. Each subject object can have: subjectId (required), subjectSourceId (optional, not needed for group UUIDs), subjectIdentifier (optional)
+- **`privilegeNames`** (required, array of strings) - Array of privilege names to assign
+- **`allowed`** (string) - Set to "T" to grant privileges (default), "F" to revoke privileges
+
+**Important Note on Group Subjects:**
+Subjects can be either users or groups. When assigning privileges to a group as a subject, use the group's UUID as the subjectId (the group name will not work). Grouper will automatically recognize the UUID as a group without needing to specify subjectSourceId.
+
+**Access Privileges (for groups):**
+- `read` - View group membership
+- `view` - View group metadata
+- `update` - Modify group properties
+- `admin` - Full administrative access
+- `optin` - Allow users to opt into the group
+- `optout` - Allow users to opt out of the group
+- `groupAttrRead` - Read group attributes
+- `groupAttrUpdate` - Update group attributes
+
+**Naming Privileges (for stems):**
+- `stem` - Basic stem access
+- `create` - Create groups/stems under this stem
+- `stemAdmin` - Full stem administrative access
+- `stemView` - View stem metadata
+- `stemAttrRead` - Read stem attributes
+- `stemAttrUpdate` - Update stem attributes
+
+**Returns:** Formatted results showing success/failure for each privilege assignment with group/stem details.
+
+**Example Usage:**
+```json
+// Grant admin privilege on a group to a single user
+{
+  "groupName": "app:my-application:admins",
+  "subjectId": "jdoe",
+  "privilegeNames": ["admin"],
+  "allowed": "T"
+}
+
+// Grant admin privilege to a group (using group UUID)
+{
+  "groupName": "app:my-application:data",
+  "subjectId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "privilegeNames": ["admin"],
+  "allowed": "T"
+}
+
+// Revoke read privilege from multiple users
+{
+  "groupName": "app:my-application:data",
+  "subjects": [
+    {"subjectId": "user1"},
+    {"subjectId": "user2"}
+  ],
+  "privilegeNames": ["read"],
+  "allowed": "F"
+}
+
+// Grant naming privileges on a stem
+{
+  "stemName": "app:my-application",
+  "subjectId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "privilegeNames": ["stemAdmin", "create"],
+  "allowed": "T"
+}
+```
+
+**Use Cases:**
+- Grant administrative access to group managers
+- Delegate stem management to departmental administrators
+- Revoke privileges when access is no longer needed
+- Batch assign privileges to multiple users
+- Set up fine-grained access control
+
+---
+
+### 🔍 grouper_get_privileges
+
+Get privileges on a group or stem, optionally filtered by subject or privilege name.
+
+**Parameters:**
+- **`groupName`** (string) - The full name of the group to query privileges on (use this OR stemName, not both)
+- **`stemName`** (string) - The full name of the stem to query privileges on (use this OR groupName, not both)
+- **`subjectId`** (optional, string) - Filter results to a specific subject ID
+- **`subjectSourceId`** (optional, string) - Subject source ID for filtering
+- **`subjectIdentifier`** (optional, string) - Subject identifier for filtering
+- **`privilegeName`** (optional, string) - Filter to a specific privilege name (e.g., "admin", "read")
+
+**Returns:** Formatted list showing all privileges with subject information, privilege type, and whether they are revokable.
+
+**Important Note on Results:**
+Results may include both user subjects (from sources like 'jdbc2_test' or 'ldap') and group subjects (from source 'g:gsa'). Group subjects are identified by their UUID as the Subject ID and their group name as the Subject Name. This allows you to see when groups themselves have been granted privileges on other groups or stems.
+
+**Example Usage:**
+```json
+// Get all privileges on a group
+{
+  "groupName": "app:my-application:admins"
+}
+
+// Get privileges for a specific subject
+{
+  "groupName": "app:my-application:admins",
+  "subjectId": "jdoe"
+}
+
+// Get only admin privileges on a stem
+{
+  "stemName": "app:my-application",
+  "privilegeName": "stemAdmin"
+}
+```
+
+**Use Cases:**
+- Audit who has access to manage a group
+- Check if a specific user has admin privileges
+- Review privilege assignments before making changes
+- Generate access reports for compliance
 
 ---
 

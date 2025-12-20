@@ -1,4 +1,4 @@
-import { GrouperGroup, GrouperStem, BatchMemberResult, GrouperMember, MembershipTraceResult, MembershipTraceNode } from './types.js';
+import { GrouperGroup, GrouperStem, BatchMemberResult, GrouperMember, MembershipTraceResult, MembershipTraceNode, GrouperPrivilegeResult, BatchPrivilegeResult } from './types.js';
 import { config } from './config.js';
 
 /**
@@ -21,6 +21,23 @@ export const WRITE_TOOLS = [
   'grouper_add_member',
   'grouper_remove_member',
   'grouper_assign_attribute',
+  'grouper_assign_privilege',
+] as const;
+
+/**
+ * Valid privilege names for access privileges (groups)
+ */
+export const ACCESS_PRIVILEGES = [
+  'read', 'view', 'update', 'admin',
+  'optin', 'optout', 'groupAttrRead', 'groupAttrUpdate'
+] as const;
+
+/**
+ * Valid privilege names for naming privileges (stems)
+ */
+export const NAMING_PRIVILEGES = [
+  'stem', 'create', 'stemAdmin', 'stemView',
+  'stemAttrRead', 'stemAttrUpdate'
 ] as const;
 
 /**
@@ -484,4 +501,105 @@ function formatTraceNode(node: MembershipTraceNode, level: number): string {
   }
 
   return output;
+}
+
+/**
+ * Validate privilege names for a given type
+ */
+export function validatePrivilegeNames(
+  privilegeNames: string[],
+  privilegeType: 'access' | 'naming'
+): { valid: boolean; invalidNames: string[] } {
+  const validPrivileges: readonly string[] = privilegeType === 'access' ? ACCESS_PRIVILEGES : NAMING_PRIVILEGES;
+  const invalidNames = privilegeNames.filter(name => !validPrivileges.includes(name));
+
+  return {
+    valid: invalidNames.length === 0,
+    invalidNames
+  };
+}
+
+/**
+ * Format privilege results for display
+ */
+export function formatPrivilegeResults(
+  results: GrouperPrivilegeResult[],
+  targetType: 'group' | 'stem',
+  targetName: string
+): string {
+  let output = `=== PRIVILEGES ON ${targetType.toUpperCase()}: ${targetName} ===\n`;
+  output += `Total: ${results.length} privilege${results.length !== 1 ? 's' : ''}\n\n`;
+
+  if (results.length === 0) {
+    return output + 'No privileges found.';
+  }
+
+  results.forEach((result, index) => {
+    output += `${index + 1}. Privilege: ${result.privilegeName}\n`;
+    output += `   Type: ${result.privilegeType}\n`;
+    output += `   Allowed: ${result.allowed === 'T' ? 'Yes' : 'No'}\n`;
+
+    if (result.wsSubject) {
+      output += `   Subject ID: ${result.wsSubject.id || 'N/A'}\n`;
+      if (result.wsSubject.name) {
+        output += `   Subject Name: ${result.wsSubject.name}\n`;
+      }
+      if (result.wsSubject.sourceId) {
+        output += `   Source: ${result.wsSubject.sourceId}\n`;
+      }
+    }
+
+    if (result.revokable) {
+      output += `   Revokable: ${result.revokable === 'T' ? 'Yes' : 'No'}\n`;
+    }
+
+    if (index < results.length - 1) {
+      output += '\n';
+    }
+  });
+
+  return output;
+}
+
+/**
+ * Format batch privilege operation results
+ */
+export function formatBatchPrivilegeResults(
+  result: BatchPrivilegeResult,
+  operation: 'granted' | 'revoked',
+  targetType: 'group' | 'stem',
+  targetName: string
+): string {
+  const totalCount = result.results.length;
+  let output = '';
+
+  // Summary line
+  output = `${operation === 'granted' ? 'Granted' : 'Revoked'} ${result.successCount} of ${totalCount} privilege assignment(s) on ${targetType} "${targetName}"\n\n`;
+
+  // Target details
+  if (result.group) {
+    output += `Group Details:\n${formatSingleGroupDetails(result.group)}\n\n`;
+  } else if (result.stem) {
+    output += `Stem Details:\n${formatSingleStemDetails(result.stem)}\n\n`;
+  }
+
+  // Privilege operation results
+  if (totalCount > 0) {
+    output += `Privilege Results:\n`;
+    result.results.forEach((r) => {
+      const status = r.success ? '✓' : '✗';
+      const subjectId = r.subject?.id || 'Unknown';
+      const displayName = r.subject?.name || '';
+      output += `${status} ${r.privilegeName} for ${subjectId}`;
+      if (displayName) {
+        output += ` (${displayName})`;
+      }
+      if (!r.success && r.resultMessage) {
+        output += ` - ${r.resultMessage}`;
+      }
+      output += '\n';
+    });
+  }
+
+  return output.trim();
 }

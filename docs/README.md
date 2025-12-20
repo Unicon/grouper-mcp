@@ -69,7 +69,7 @@ Complete configuration documentation including:
 #### [🛠️ TOOLS.md](TOOLS.md)
 **Comprehensive API Reference for MCP Tools**
 
-Complete documentation of all 19 available MCP tools including:
+Complete documentation of all 22 available MCP tools including:
 - Detailed parameter specifications and types
 - Usage examples for each tool
 - Response format documentation
