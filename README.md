@@ -224,6 +224,24 @@ Set `GROUPER_DEBUG=true` to enable verbose debug logging for troubleshooting.
 
 For complete logging configuration including custom log directories and Docker log access, see **[Configuration Guide](docs/CONFIGURATION.md#logging-configuration)**.
 
+## Testing
+
+A comprehensive regression test suite is included for validating the MCP server against a Grouper instance:
+
+```bash
+# Build and run all tests
+npm run build
+npx tsx tests/run-tests.ts
+
+# Run specific test or category
+npx tsx tests/run-tests.ts --test group-2.1
+npx tsx tests/run-tests.ts --category members --verbose
+```
+
+The test suite covers 39 tests across all tool categories including groups, stems, members, privileges, and more.
+
+For complete testing documentation including environment setup, test configuration, and CI/CD integration, see **[Testing Guide](tests/TESTING.md)**.
+
 ## Planned Features
 
 Planned features and improvements are tracked in [TODO.md](docs/TODO.md).

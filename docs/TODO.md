@@ -62,20 +62,19 @@ _No known bugs at this time._
 
 ## Testing Infrastructure
 
-### Automated Testing
-- Add unit tests for GrouperClient methods
-- Add integration tests for MCP tool handlers
-- Create test fixtures with mock Grouper API responses
-- Test error handling scenarios with various Grouper API error responses
-- Add tests for formatting functions (formatSingleGroupDetails, formatGroupCollectionDetails)
-- Set up continuous integration to run tests on code changes
-- Create test utilities for mocking Grouper API calls
+### Completed
+- ✅ **Integration test suite** - 39 tests covering all MCP tool handlers (see [Testing Guide](../tests/TESTING.md))
+- ✅ **Test runner** - Automated test execution with dependency management, variable substitution, and verbose output
+- ✅ **CI/CD documentation** - GitHub Actions workflow example in Testing Guide
+- ✅ **Error handling tests** - Validation of error responses
 
-### Test Coverage Goals
-- Client method functionality (create, read, update, delete operations)
-- Error handling and parsing of Grouper API errors
-- Tool parameter validation and response formatting
-- Authentication and configuration handling
+### Remaining Work
+- Add unit tests for GrouperClient methods (isolated from Grouper instance)
+- Create test fixtures with mock Grouper API responses for offline testing
+- Add tests for formatting functions (formatSingleGroupDetails, formatGroupCollectionDetails)
+- Set up actual CI/CD pipeline (workflow documented but not yet configured)
+- Create test utilities for mocking Grouper API calls
+- Add HTTP transport testing (current tests use stdio only)
 
 ## Documentation Improvements
 
