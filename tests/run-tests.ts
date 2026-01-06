@@ -192,11 +192,11 @@ async function runTests() {
   log(`\n${suite.name} v${suite.version}`, "blue");
   log(`${suite.description}\n`, "dim");
 
-  // Debug: show relevant env vars
+  // Debug: show whether required env vars are set (without revealing values)
   log(`\nEnvironment check:`, "dim");
-  log(`  GROUPER_BASE_URL: ${process.env.GROUPER_BASE_URL || "(not set)"}`, "dim");
-  log(`  GROUPER_USERNAME: ${process.env.GROUPER_USERNAME || "(not set)"}`, "dim");
-  log(`  GROUPER_PASSWORD: ${process.env.GROUPER_PASSWORD ? "(set, length=" + process.env.GROUPER_PASSWORD.length + ")" : "(not set)"}`, "dim");
+  log(`  GROUPER_BASE_URL: ${process.env.GROUPER_BASE_URL ? "(set)" : "(not set - will use demo server)"}`, "dim");
+  log(`  GROUPER_USERNAME: ${process.env.GROUPER_USERNAME ? "(set)" : "(not set)"}`, "dim");
+  log(`  GROUPER_PASSWORD: ${process.env.GROUPER_PASSWORD ? "(set)" : "(not set)"}`, "dim");
   log(`  NODE_TLS_REJECT_UNAUTHORIZED: ${process.env.NODE_TLS_REJECT_UNAUTHORIZED || "(not set)"}\n`, "dim");
 
   // Initialize MCP client
