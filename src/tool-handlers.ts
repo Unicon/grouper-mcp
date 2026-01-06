@@ -151,11 +151,12 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
       };
       try {
         const newGroup = await client.createGroup({ name, displayExtension, description });
+        const detailText = formatSingleGroupDetails(newGroup);
         return {
           content: [
             {
               type: 'text',
-              text: `Successfully created group "${name}"${displayExtension ? ` with display extension "${displayExtension}"` : ''}`,
+              text: `Successfully created group:\n\n${detailText}`,
             },
           ],
         };

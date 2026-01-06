@@ -1,0 +1,409 @@
+{
+  "name": "Grouper MCP Regression Test Suite",
+  "version": "1.0.0",
+  "description": "Comprehensive test suite for validating Grouper MCP server functionality",
+  "config": {
+    "testStem": "test:mcp",
+    "testGroupPrefix": "regression-test",
+    "testSubject": "GrouperSystem"
+  },
+  "tests": [
+    {
+      "id": "stem-1.1",
+      "category": "stems",
+      "name": "Find stems by approximate name",
+      "tool": "grouper_find_stems_by_name_approximate",
+      "params": { "query": "test" },
+      "expect": { "type": "contains_results" }
+    },
+    {
+      "id": "stem-1.2",
+      "category": "stems",
+      "name": "Get stem by exact name",
+      "tool": "grouper_get_stem_by_exact_name",
+      "params": { "stemName": "{{testStem}}" },
+      "expect": { "type": "found", "hasFields": ["UUID", "Stem:", "Display Name"] },
+      "saveAs": { "uuid": "testStemUuid" }
+    },
+    {
+      "id": "stem-1.3",
+      "category": "stems",
+      "name": "Get stem by exact name - not found",
+      "tool": "grouper_get_stem_by_exact_name",
+      "params": { "stemName": "nonexistent:stem:path" },
+      "expect": { "type": "not_found" }
+    },
+    {
+      "id": "stem-1.4",
+      "category": "stems",
+      "name": "Get stem by UUID",
+      "tool": "grouper_get_stem_by_uuid",
+      "params": { "stemUuid": "{{testStemUuid}}" },
+      "expect": { "type": "found", "hasFields": ["uuid", "name"] },
+      "dependsOn": ["stem-1.2"]
+    },
+    {
+      "id": "stem-1.5",
+      "category": "stems",
+      "name": "Get stem by UUID - not found",
+      "tool": "grouper_get_stem_by_uuid",
+      "params": { "stemUuid": "00000000-0000-0000-0000-000000000000" },
+      "expect": { "type": "not_found" }
+    },
+    {
+      "id": "group-2.1",
+      "category": "groups",
+      "name": "Create group",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-group",
+        "displayExtension": "Regression Test Group",
+        "description": "Group created for MCP regression testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] },
+      "saveAs": { "uuid": "createdGroupUuid", "idIndex": "createdGroupIdIndex" }
+    },
+    {
+      "id": "group-2.2",
+      "category": "groups",
+      "name": "Get group by exact name",
+      "tool": "grouper_get_group_by_exact_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-group" },
+      "expect": { "type": "found", "hasFields": ["uuid", "name", "description"] }
+    },
+    {
+      "id": "group-2.3",
+      "category": "groups",
+      "name": "Get group by UUID",
+      "tool": "grouper_get_group_by_uuid",
+      "params": { "groupUuid": "{{createdGroupUuid}}" },
+      "expect": { "type": "found" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "group-2.4",
+      "category": "groups",
+      "name": "Find groups by approximate name",
+      "tool": "grouper_find_groups_by_name_approximate",
+      "params": { "query": "{{testGroupPrefix}}" },
+      "expect": { "type": "contains_results" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "group-2.5",
+      "category": "groups",
+      "name": "Update group",
+      "tool": "grouper_update_group",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "displayExtension": "Updated Regression Test Group",
+        "description": "Updated description for testing"
+      },
+      "expect": { "type": "updated" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "group-2.6",
+      "category": "groups",
+      "name": "Get group by exact name - not found",
+      "tool": "grouper_get_group_by_exact_name",
+      "params": { "groupName": "nonexistent:group:path" },
+      "expect": { "type": "not_found" }
+    },
+    {
+      "id": "subject-3.1",
+      "category": "subjects",
+      "name": "Search subjects",
+      "tool": "grouper_search_subjects",
+      "params": { "searchString": "admin" },
+      "expect": { "type": "contains_results" }
+    },
+    {
+      "id": "subject-3.2",
+      "category": "subjects",
+      "name": "Get subject by ID",
+      "tool": "grouper_get_subject_by_id",
+      "params": { "subjectId": "{{testSubject}}" },
+      "expect": { "type": "found" }
+    },
+    {
+      "id": "subject-3.3",
+      "category": "subjects",
+      "name": "Get subject by ID - not found",
+      "tool": "grouper_get_subject_by_id",
+      "params": { "subjectId": "nonexistent-subject-12345" },
+      "expect": { "type": "not_found" }
+    },
+    {
+      "id": "subject-3.4",
+      "category": "subjects",
+      "name": "Get subject by identifier",
+      "tool": "grouper_get_subject_by_identifier",
+      "params": { "subjectIdentifier": "{{testSubject}}" },
+      "expect": { "type": "found" }
+    },
+    {
+      "id": "subject-3.5",
+      "category": "subjects",
+      "name": "Get subject by identifier - not found",
+      "tool": "grouper_get_subject_by_identifier",
+      "params": { "subjectIdentifier": "nonexistent-identifier-12345" },
+      "expect": { "type": "not_found" }
+    },
+    {
+      "id": "member-4.1",
+      "category": "members",
+      "name": "Add single member",
+      "tool": "grouper_add_member",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjectId": "{{testSubject}}"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "member-4.2",
+      "category": "members",
+      "name": "Get members",
+      "tool": "grouper_get_members",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-group" },
+      "expect": { "type": "contains_results" },
+      "dependsOn": ["member-4.1"]
+    },
+    {
+      "id": "member-4.3",
+      "category": "members",
+      "name": "Get members with filter",
+      "tool": "grouper_get_members",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "memberFilter": "Immediate"
+      },
+      "expect": { "type": "contains_results" },
+      "dependsOn": ["member-4.1"]
+    },
+    {
+      "id": "subjectgroups-5.1",
+      "category": "subject-groups",
+      "name": "Get subject group memberships",
+      "tool": "grouper_get_subject_groups",
+      "params": { "subjectId": "{{testSubject}}" },
+      "expect": { "type": "success" }
+    },
+    {
+      "id": "subjectgroups-5.2",
+      "category": "subject-groups",
+      "name": "Get subject group memberships filtered",
+      "tool": "grouper_get_subject_groups",
+      "params": {
+        "subjectId": "{{testSubject}}",
+        "memberFilter": "Immediate",
+        "enabled": "T"
+      },
+      "expect": { "type": "success" }
+    },
+    {
+      "id": "trace-6.1",
+      "category": "trace",
+      "name": "Trace membership",
+      "tool": "grouper_trace_membership",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjectId": "{{testSubject}}"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["member-4.1"]
+    },
+    {
+      "id": "member-4.4",
+      "category": "members",
+      "name": "Remove single member",
+      "tool": "grouper_remove_member",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjectId": "{{testSubject}}"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["member-4.1", "trace-6.1"]
+    },
+    {
+      "id": "member-4.5",
+      "category": "members",
+      "name": "Add batch members",
+      "tool": "grouper_add_member",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjects": [
+          { "subjectId": "{{testSubject}}" }
+        ]
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["group-2.1", "member-4.4"]
+    },
+    {
+      "id": "member-4.6",
+      "category": "members",
+      "name": "Remove batch members",
+      "tool": "grouper_remove_member",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjects": [
+          { "subjectId": "{{testSubject}}" }
+        ]
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["member-4.5"]
+    },
+    {
+      "id": "priv-7.1",
+      "category": "privileges",
+      "name": "Assign single privilege",
+      "tool": "grouper_assign_privilege",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "privilegeNames": ["read"],
+        "subjectId": "{{testSubject}}",
+        "allowed": "T"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "priv-7.2",
+      "category": "privileges",
+      "name": "Assign multiple privileges",
+      "tool": "grouper_assign_privilege",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "privilegeNames": ["read", "view", "update"],
+        "subjectId": "{{testSubject}}",
+        "allowed": "T"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "priv-7.3",
+      "category": "privileges",
+      "name": "Get privileges on group",
+      "tool": "grouper_get_privileges",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-group" },
+      "expect": { "type": "contains_results" },
+      "dependsOn": ["priv-7.1"]
+    },
+    {
+      "id": "priv-7.4",
+      "category": "privileges",
+      "name": "Get privileges filtered by subject",
+      "tool": "grouper_get_privileges",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "subjectId": "{{testSubject}}"
+      },
+      "expect": { "type": "contains_results" },
+      "dependsOn": ["priv-7.1"]
+    },
+    {
+      "id": "priv-7.5",
+      "category": "privileges",
+      "name": "Revoke privilege",
+      "tool": "grouper_assign_privilege",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "privilegeNames": ["read"],
+        "subjectId": "{{testSubject}}",
+        "allowed": "F"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["priv-7.1"]
+    },
+    {
+      "id": "priv-7.6",
+      "category": "privileges",
+      "name": "Assign stem privilege",
+      "tool": "grouper_assign_privilege",
+      "params": {
+        "stemName": "{{testStem}}",
+        "privilegeNames": ["stemView"],
+        "subjectId": "{{testSubject}}",
+        "allowed": "T"
+      },
+      "expect": { "type": "success" }
+    },
+    {
+      "id": "priv-7.7",
+      "category": "privileges",
+      "name": "Get stem privileges",
+      "tool": "grouper_get_privileges",
+      "params": { "stemName": "{{testStem}}" },
+      "expect": { "type": "contains_results" }
+    },
+    {
+      "id": "attr-8.1",
+      "category": "attributes",
+      "name": "Assign marker attribute",
+      "tool": "grouper_assign_attribute",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-group",
+        "attributeName": "etc:attribute:attestation:attestation"
+      },
+      "expect": { "type": "success" },
+      "dependsOn": ["group-2.1"]
+    },
+    {
+      "id": "delete-9.1",
+      "category": "cleanup",
+      "name": "Delete group by name",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-group" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["group-2.1"],
+      "runLast": true
+    },
+    {
+      "id": "delete-9.2a",
+      "category": "cleanup",
+      "name": "Create group for UUID delete test",
+      "tool": "grouper_create_group",
+      "params": { "name": "{{testStem}}:{{testGroupPrefix}}-uuid-delete" },
+      "expect": { "type": "created" },
+      "saveAs": { "uuid": "uuidDeleteTestUuid" }
+    },
+    {
+      "id": "delete-9.2b",
+      "category": "cleanup",
+      "name": "Delete group by UUID",
+      "tool": "grouper_delete_group_by_uuid",
+      "params": { "groupUuid": "{{uuidDeleteTestUuid}}" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["delete-9.2a"]
+    },
+    {
+      "id": "delete-9.3a",
+      "category": "cleanup",
+      "name": "Create group for ID index delete test",
+      "tool": "grouper_create_group",
+      "params": { "name": "{{testStem}}:{{testGroupPrefix}}-idindex-delete" },
+      "expect": { "type": "created" },
+      "saveAs": { "idIndex": "idIndexDeleteTestId" }
+    },
+    {
+      "id": "delete-9.3b",
+      "category": "cleanup",
+      "name": "Delete group by ID index",
+      "tool": "grouper_delete_group_by_id_index",
+      "params": { "idIndex": "{{idIndexDeleteTestId}}" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["delete-9.3a"]
+    },
+    {
+      "id": "error-10.1",
+      "category": "errors",
+      "name": "Delete non-existent group",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "nonexistent:group:path" },
+      "expect": { "type": "error" }
+    }
+  ]
+}
