@@ -13,6 +13,7 @@ Each use case includes:
 | Use Case | Description | Status | Jira |
 |----------|-------------|--------|------|
 | [AI-Assisted Cohort Definition](ai-assisted-cohort-definition.md) | Leverage AI to help users build complex cohorts using set theory on basis groups | Planning | [GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15), [GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16) |
+| [Loader-Based Description Generation](loader-based-description-generation.md) | AI generates human-readable group descriptions from loader configuration | Analysis Needed | - |
 
 ## Contributing Use Cases
 
