@@ -242,6 +242,14 @@ The test suite covers 39 tests across all tool categories including groups, stem
 
 For complete testing documentation including environment setup, test configuration, and CI/CD integration, see **[Testing Guide](tests/TESTING.md)**.
 
+## Use Cases
+
+Real-world use cases and examples are documented in the **[use-cases/](use-cases/)** directory, including:
+
+- **[AI-Assisted Cohort Definition](use-cases/ai-assisted-cohort-definition.md)** - Using AI to help users build complex cohorts with set theory on basis groups
+
+These use cases drive feature development and demonstrate practical applications of the MCP server.
+
 ## Planned Features
 
 Planned features and improvements are tracked in [TODO.md](docs/TODO.md).

@@ -176,5 +176,6 @@ When contributing to documentation:
 ## 🔗 Related Documentation
 
 - **Main README**: [../README.md](../README.md) - Project overview and quick start
+- **Use Cases**: [../use-cases/](../use-cases/) - Real-world use cases and examples
 - **Source Code**: [../src/](../src/) - Implementation details and inline documentation
 - **Configuration**: [../package.json](../package.json) - Dependencies and scripts
