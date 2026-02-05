@@ -72,21 +72,57 @@ export class GrouperClient {
   }
 
 
-  async findGroupsByNameApproximate(query: string): Promise<GrouperGroup[]> {
+  async findGroupsByNameApproximate(
+    query?: string,
+    options?: {
+      stemName?: string;
+      stemScope?: 'ONE_LEVEL' | 'ALL_IN_SUBTREE';
+    }
+  ): Promise<GrouperGroup[]> {
     try {
-      const response = await this.makeRequest('/groups', 'POST', {
-        WsRestFindGroupsRequest: {
-          wsQueryFilter: {
+      let wsQueryFilter: any;
+
+      if (query && options?.stemName) {
+        // Combined search: name within stem
+        wsQueryFilter = {
+          queryFilterType: 'AND',
+          queryFilter0: {
+            queryFilterType: 'FIND_BY_STEM_NAME',
+            stemName: options.stemName,
+            stemNameScope: options.stemScope || 'ALL_IN_SUBTREE'
+          },
+          queryFilter1: {
             queryFilterType: 'FIND_BY_GROUP_NAME_APPROXIMATE',
             groupName: query
-          },
+          }
+        };
+      } else if (options?.stemName) {
+        // Stem-only search
+        wsQueryFilter = {
+          queryFilterType: 'FIND_BY_STEM_NAME',
+          stemName: options.stemName,
+          stemNameScope: options.stemScope || 'ALL_IN_SUBTREE'
+        };
+      } else if (query) {
+        // Query-only search (original behavior)
+        wsQueryFilter = {
+          queryFilterType: 'FIND_BY_GROUP_NAME_APPROXIMATE',
+          groupName: query
+        };
+      } else {
+        throw new Error('At least one of query or stemName must be provided');
+      }
+
+      const response = await this.makeRequest('/groups', 'POST', {
+        WsRestFindGroupsRequest: {
+          wsQueryFilter,
           includeGroupDetail: "T"
         }
       });
       return response.WsFindGroupsResults?.groupResults || [];
     } catch (error) {
       const grouperError = handleGrouperError(error);
-      logError(grouperError, 'findGroupsByNameApproximate', { query });
+      logError(grouperError, 'findGroupsByNameApproximate', { query, options });
       throw grouperError;
     }
   }

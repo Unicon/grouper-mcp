@@ -19,16 +19,38 @@ The Grouper MCP server provides **22 core tools** for essential Grouper operatio
 
 ### 🔍 grouper_find_groups_by_name_approximate
 
-Search for groups by approximate name matching.
+Search for groups by approximate name matching and/or within a specific stem (folder). Supports three search modes:
+
+1. **Name search only** - Provide `query` parameter to search by approximate group name
+2. **Stem browsing only** - Provide `stemName` to list all groups in that stem
+3. **Combined search** - Provide both `query` and `stemName` to search within a specific stem
 
 **Parameters:**
-- **`query`** (required, string) - Search query for approximate group name matching
+- **`query`** (string) - Search query for approximate group name matching (optional if stemName is provided)
+- **`stemName`** (string) - Stem/folder to search within (e.g., "edu:hawaii:basis"). If provided without query, lists all groups in the stem.
+- **`stemScope`** (string) - Scope when searching by stem: "ONE_LEVEL" for direct children only, "ALL_IN_SUBTREE" for recursive search (default). Valid values: `ONE_LEVEL`, `ALL_IN_SUBTREE`
+
+**Note:** At least one of `query` or `stemName` must be provided.
 
 **Returns:** Formatted text with comprehensive group information for each matching group, including count of found groups and detailed metadata.
 
 **Example Usage:**
 ```
+# Search by name (original behavior)
 Find all groups containing "engineering" in their name
+→ Use: { "query": "engineering" }
+
+# List all groups in a stem (recursive)
+List all groups under edu:hawaii:basis
+→ Use: { "stemName": "edu:hawaii:basis" }
+
+# List direct children only (one level)
+List groups directly in edu:hawaii:basis (not in sub-stems)
+→ Use: { "stemName": "edu:hawaii:basis", "stemScope": "ONE_LEVEL" }
+
+# Combined search: name within stem
+Find groups containing "faculty" under edu:hawaii:basis
+→ Use: { "query": "faculty", "stemName": "edu:hawaii:basis" }
 ```
 
 ---

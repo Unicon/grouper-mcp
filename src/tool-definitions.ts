@@ -1,16 +1,25 @@
 export const toolDefinitions = [
   {
     name: 'grouper_find_groups_by_name_approximate',
-    description: 'Search for groups in Grouper by approximate name match. Returns formatted text with comprehensive group information for each matching group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup). Returns count of found groups and formatted details for each match.',
+    description: 'Search for groups in Grouper by approximate name match and/or within a specific stem (folder). Supports three modes: (1) name search only - provide "query" parameter, (2) stem browsing only - provide "stemName" to list all groups in that stem, (3) combined search - provide both "query" and "stemName" to search within a stem. Use "stemScope" to control whether to search one level ("ONE_LEVEL") or recursively ("ALL_IN_SUBTREE", default). Returns formatted text with comprehensive group information for each matching group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup). Returns count of found groups and formatted details for each match.',
     inputSchema: {
       type: 'object',
       properties: {
         query: {
           type: 'string',
-          description: 'Search query for approximate group name matching',
+          description: 'Search query for approximate group name matching (optional if stemName is provided)',
+        },
+        stemName: {
+          type: 'string',
+          description: 'Stem/folder to search within (e.g., "edu:hawaii:basis"). If provided without query, lists all groups in the stem.',
+        },
+        stemScope: {
+          type: 'string',
+          description: 'Scope when searching by stem: "ONE_LEVEL" for direct children only, "ALL_IN_SUBTREE" for recursive search (default)',
+          enum: ['ONE_LEVEL', 'ALL_IN_SUBTREE'],
         },
       },
-      required: ['query'],
+      required: [],
     },
   },
   {

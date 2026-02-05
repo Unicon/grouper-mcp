@@ -25,39 +25,75 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
   switch (toolName) {
 
     case 'grouper_find_groups_by_name_approximate': {
-      const { query } = args as { query: string };
+      const { query, stemName, stemScope } = args as {
+        query?: string;
+        stemName?: string;
+        stemScope?: 'ONE_LEVEL' | 'ALL_IN_SUBTREE';
+      };
+
+      // Validation: at least one search parameter required
+      if (!query && !stemName) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'Error: At least one of "query" or "stemName" must be provided',
+          }],
+          isError: true,
+        };
+      }
+
+      // Validation: stemScope requires stemName
+      if (stemScope && !stemName) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'Error: "stemScope" can only be used when "stemName" is provided',
+          }],
+          isError: true,
+        };
+      }
+
       try {
-        const groups = await client.findGroupsByNameApproximate(query);
-        
+        const groups = await client.findGroupsByNameApproximate(query, {
+          stemName,
+          stemScope
+        });
+
+        // Build appropriate description based on search type
+        let searchDesc: string;
+        if (query && stemName) {
+          const scopeDesc = stemScope === 'ONE_LEVEL' ? ' (one level)' : '';
+          searchDesc = `matching "${query}" in stem "${stemName}"${scopeDesc}`;
+        } else if (stemName) {
+          const scopeDesc = stemScope === 'ONE_LEVEL' ? ' (one level)' : ' (recursive)';
+          searchDesc = `in stem "${stemName}"${scopeDesc}`;
+        } else {
+          searchDesc = `matching "${query}"`;
+        }
+
         if (groups.length === 0) {
           return {
-            content: [
-              {
-                type: 'text',
-                text: `No groups found matching "${query}"`,
-              },
-            ],
+            content: [{
+              type: 'text',
+              text: `No groups found ${searchDesc}`,
+            }],
           };
         }
-        
+
         const formattedGroups = groups.map(formatGroupCollectionDetails).join('\n\n');
-        
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Found ${groups.length} groups matching "${query}":\n\n${formattedGroups}`,
-            },
-          ],
+          content: [{
+            type: 'text',
+            text: `Found ${groups.length} group(s) ${searchDesc}:\n\n${formattedGroups}`,
+          }],
         };
       } catch (error) {
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Error searching groups: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
+          content: [{
+            type: 'text',
+            text: `Error searching groups: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
           isError: true,
         };
       }
