@@ -6,7 +6,7 @@ A Model Context Protocol (MCP) server that provides tools for interacting with I
 
 This MCP server provides **22 core tools** for essential Grouper operations, organized into six main categories:
 
-- **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups
+- **Group Management** (8 tools) - Search, create, retrieve, update, and delete groups (including composite groups with UNION, INTERSECTION, and COMPLEMENT operations)
 - **Stem/Folder Management** (3 tools) - Search and browse organizational hierarchy
 - **Member Management** (4 tools) - Add, remove, list group members, and trace membership paths
 - **Privilege Management** (2 tools) - Grant, revoke, and query privileges on groups and stems
@@ -199,6 +199,11 @@ Find all groups containing "engineering" in their name
 Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 ```
 
+### Create a composite group
+```
+Create a composite UNION group named "edu:department:all-staff" using left group "edu:department:faculty" and right group "edu:department:staff"
+```
+
 ### Assign attributes
 ```
 Assign attribute "classification" with value "academic" to group "edu:department:engineering:students"
@@ -238,7 +243,7 @@ npx tsx tests/run-tests.ts --test group-2.1
 npx tsx tests/run-tests.ts --category members --verbose
 ```
 
-The test suite covers 39 tests across all tool categories including groups, stems, members, privileges, and more.
+The test suite covers 60 tests across all tool categories including groups, stems, members, privileges, composite groups, and more.
 
 For complete testing documentation including environment setup, test configuration, and CI/CD integration, see **[Testing Guide](tests/TESTING.md)**.
 

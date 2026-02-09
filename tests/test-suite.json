@@ -352,6 +352,252 @@
       "dependsOn": ["group-2.1"]
     },
     {
+      "id": "composite-11.1",
+      "category": "composites",
+      "name": "Create left factor group for composite",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-composite-left",
+        "displayExtension": "Composite Left Factor",
+        "description": "Left factor group for composite testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.2",
+      "category": "composites",
+      "name": "Create right factor group for composite",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-composite-right",
+        "displayExtension": "Composite Right Factor",
+        "description": "Right factor group for composite testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.3",
+      "category": "composites",
+      "name": "Create UNION composite group",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-composite-union",
+        "displayExtension": "Composite Union Group",
+        "description": "UNION composite group for testing",
+        "compositeType": "UNION",
+        "leftGroupName": "{{testStem}}:{{testGroupPrefix}}-composite-left",
+        "rightGroupName": "{{testStem}}:{{testGroupPrefix}}-composite-right"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] },
+      "dependsOn": ["composite-11.1", "composite-11.2"]
+    },
+    {
+      "id": "composite-11.4",
+      "category": "composites",
+      "name": "Create left factor group for intersection",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-intersect-left",
+        "displayExtension": "Intersect Left Factor",
+        "description": "Left factor group for intersection testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.5",
+      "category": "composites",
+      "name": "Create right factor group for intersection",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-intersect-right",
+        "displayExtension": "Intersect Right Factor",
+        "description": "Right factor group for intersection testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.6",
+      "category": "composites",
+      "name": "Create INTERSECTION composite group",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-composite-intersection",
+        "displayExtension": "Composite Intersection Group",
+        "description": "INTERSECTION composite group for testing",
+        "compositeType": "INTERSECTION",
+        "leftGroupName": "{{testStem}}:{{testGroupPrefix}}-intersect-left",
+        "rightGroupName": "{{testStem}}:{{testGroupPrefix}}-intersect-right"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] },
+      "dependsOn": ["composite-11.4", "composite-11.5"]
+    },
+    {
+      "id": "composite-11.7",
+      "category": "composites",
+      "name": "Create left factor group for complement",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-complement-left",
+        "displayExtension": "Complement Left Factor",
+        "description": "Left factor group for complement testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.8",
+      "category": "composites",
+      "name": "Create right factor group for complement",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-complement-right",
+        "displayExtension": "Complement Right Factor",
+        "description": "Right factor group for complement testing"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.9",
+      "category": "composites",
+      "name": "Create COMPLEMENT composite group",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-composite-complement",
+        "displayExtension": "Composite Complement Group",
+        "description": "COMPLEMENT composite group for testing",
+        "compositeType": "COMPLEMENT",
+        "leftGroupName": "{{testStem}}:{{testGroupPrefix}}-complement-left",
+        "rightGroupName": "{{testStem}}:{{testGroupPrefix}}-complement-right"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] },
+      "dependsOn": ["composite-11.7", "composite-11.8"]
+    },
+    {
+      "id": "composite-11.10",
+      "category": "composites",
+      "name": "Create group to convert to composite via update",
+      "tool": "grouper_create_group",
+      "params": {
+        "name": "{{testStem}}:{{testGroupPrefix}}-convert-to-composite",
+        "displayExtension": "Convert To Composite",
+        "description": "Group to be converted to composite via update"
+      },
+      "expect": { "type": "created", "hasFields": ["uuid", "name"] }
+    },
+    {
+      "id": "composite-11.11",
+      "category": "composites",
+      "name": "Convert existing group to composite via update",
+      "tool": "grouper_update_group",
+      "params": {
+        "groupName": "{{testStem}}:{{testGroupPrefix}}-convert-to-composite",
+        "compositeType": "UNION",
+        "leftGroupName": "{{testStem}}:{{testGroupPrefix}}-composite-left",
+        "rightGroupName": "{{testStem}}:{{testGroupPrefix}}-composite-right"
+      },
+      "expect": { "type": "updated" },
+      "dependsOn": ["composite-11.1", "composite-11.2", "composite-11.10"]
+    },
+    {
+      "id": "composite-11.12",
+      "category": "composites-cleanup",
+      "name": "Delete UNION composite group",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-composite-union" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.3"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.13",
+      "category": "composites-cleanup",
+      "name": "Delete INTERSECTION composite group",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-composite-intersection" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.6"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.14",
+      "category": "composites-cleanup",
+      "name": "Delete COMPLEMENT composite group",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-composite-complement" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.9"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.15",
+      "category": "composites-cleanup",
+      "name": "Delete converted composite group",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-convert-to-composite" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.11"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.16",
+      "category": "composites-cleanup",
+      "name": "Delete left factor group (union)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-composite-left" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.12", "composite-11.15"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.17",
+      "category": "composites-cleanup",
+      "name": "Delete right factor group (union)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-composite-right" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.12", "composite-11.15"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.18",
+      "category": "composites-cleanup",
+      "name": "Delete left factor group (intersection)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-intersect-left" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.13"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.19",
+      "category": "composites-cleanup",
+      "name": "Delete right factor group (intersection)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-intersect-right" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.13"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.20",
+      "category": "composites-cleanup",
+      "name": "Delete left factor group (complement)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-complement-left" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.14"],
+      "runLast": true
+    },
+    {
+      "id": "composite-11.21",
+      "category": "composites-cleanup",
+      "name": "Delete right factor group (complement)",
+      "tool": "grouper_delete_group_by_name",
+      "params": { "groupName": "{{testStem}}:{{testGroupPrefix}}-complement-right" },
+      "expect": { "type": "deleted" },
+      "dependsOn": ["composite-11.14"],
+      "runLast": true
+    },
+    {
       "id": "delete-9.1",
       "category": "cleanup",
       "name": "Delete group by name",

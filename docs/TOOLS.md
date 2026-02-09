@@ -89,36 +89,57 @@ Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 
 ### ➕ grouper_create_group
 
-Create a new group in Grouper.
+Create a new group in Grouper. Supports creating regular groups and composite groups (UNION, INTERSECTION, COMPLEMENT of two existing groups).
 
 **Parameters:**
 - **`name`** (required, string) - The full name of the group (e.g., "edu:example:mygroup")
 - **`displayExtension`** (optional, string) - Human-readable display name for the group extension (rightmost part after the last colon). For example, if name is "test:groupFolder:groupName", displayExtension would be shown as "groupName"
 - **`description`** (optional, string) - Optional description of the group
+- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together.
+- **`leftGroupName`** (optional, string) - Full name of the left factor group for composite operation
+- **`rightGroupName`** (optional, string) - Full name of the right factor group for composite operation
 
 **Returns:** Detailed information about the created group.
 
 **Example Usage:**
 ```
+# Create a regular group
 Create a group named "edu:department:engineering:students" with displayExtension "Engineering Students" and description "Students in the Engineering Department"
+
+# Create a UNION composite group (members of either group)
+Create a composite group:
+→ Use: { "name": "edu:department:all-staff", "compositeType": "UNION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Create an INTERSECTION composite group (members in both groups)
+→ Use: { "name": "edu:department:faculty-staff", "compositeType": "INTERSECTION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Create a COMPLEMENT composite group (members in left but not right)
+→ Use: { "name": "edu:department:faculty-only", "compositeType": "COMPLEMENT", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
 ```
 
 ---
 
 ### ✏️ grouper_update_group
 
-Update an existing group's properties.
+Update an existing group's properties. Can also convert an existing group into a composite group.
 
 **Parameters:**
 - **`groupName`** (required, string) - The current name of the group to update
 - **`displayExtension`** (optional, string) - New display extension for the group (human-readable name for the rightmost part after the last colon)
 - **`description`** (optional, string) - New description for the group
+- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together.
+- **`leftGroupName`** (optional, string) - Full name of the left factor group for composite operation
+- **`rightGroupName`** (optional, string) - Full name of the right factor group for composite operation
 
 **Returns:** Detailed information about the updated group.
 
 **Example Usage:**
 ```
+# Update group description
 Update group "edu:department:engineering:students" with new description "All students enrolled in Engineering programs"
+
+# Convert existing group to a composite group
+→ Use: { "groupName": "edu:department:all-staff", "compositeType": "UNION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
 ```
 
 ---

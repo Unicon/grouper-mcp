@@ -48,8 +48,8 @@ export interface GrouperGroup {
   disabledTime?: string;
   detail?: {
     hasComposite?: string;
-    leftGroup?: string;
-    rightGroup?: string;
+    leftGroup?: { name: string } | string;
+    rightGroup?: { name: string } | string;
     typeNames?: string[];
     attributeNames?: string[];
     attributeValues?: string[];
