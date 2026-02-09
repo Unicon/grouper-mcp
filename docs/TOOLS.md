@@ -121,15 +121,16 @@ Create a composite group:
 
 ### ✏️ grouper_update_group
 
-Update an existing group's properties. Can also convert an existing group into a composite group.
+Update an existing group's properties. Can also convert an existing group into a composite group, or remove an existing composite definition to convert it back to a regular group.
 
 **Parameters:**
 - **`groupName`** (required, string) - The current name of the group to update
 - **`displayExtension`** (optional, string) - New display extension for the group (human-readable name for the rightmost part after the last colon)
 - **`description`** (optional, string) - New description for the group
-- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together.
+- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together. Cannot be used with `removeComposite`.
 - **`leftGroupName`** (optional, string) - Full name of the left factor group for composite operation
 - **`rightGroupName`** (optional, string) - Full name of the right factor group for composite operation
+- **`removeComposite`** (optional, boolean) - Set to `true` to remove the composite definition from a group, converting it back to a regular group. Cannot be used with `compositeType`/`leftGroupName`/`rightGroupName`.
 
 **Returns:** Detailed information about the updated group.
 
@@ -140,6 +141,9 @@ Update group "edu:department:engineering:students" with new description "All stu
 
 # Convert existing group to a composite group
 → Use: { "groupName": "edu:department:all-staff", "compositeType": "UNION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Remove composite definition (convert back to regular group)
+→ Use: { "groupName": "edu:department:all-staff", "removeComposite": true }
 ```
 
 ---

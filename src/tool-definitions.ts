@@ -87,7 +87,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_update_group',
-    description: 'Update an existing group\'s properties. Can also convert an existing group into a composite group by providing compositeType, leftGroupName, and rightGroupName together. Returns detailed information about the updated group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
+    description: 'Update an existing group\'s properties. Can also convert an existing group into a composite group by providing compositeType, leftGroupName, and rightGroupName together, or remove an existing composite definition by setting removeComposite to true. Returns detailed information about the updated group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup).',
     inputSchema: {
       type: 'object',
       properties: {
@@ -105,7 +105,7 @@ export const toolDefinitions = [
         },
         compositeType: {
           type: 'string',
-          description: 'Type of composite operation. All three composite parameters (compositeType, leftGroupName, rightGroupName) must be provided together.',
+          description: 'Type of composite operation. All three composite parameters (compositeType, leftGroupName, rightGroupName) must be provided together. Cannot be used with removeComposite.',
           enum: ['UNION', 'INTERSECTION', 'COMPLEMENT'],
         },
         leftGroupName: {
@@ -115,6 +115,10 @@ export const toolDefinitions = [
         rightGroupName: {
           type: 'string',
           description: 'Full name of the right factor group for composite operation (e.g., "edu:example:groupB")',
+        },
+        removeComposite: {
+          type: 'boolean',
+          description: 'Set to true to remove the composite definition from a group, converting it back to a regular group. Cannot be used with compositeType/leftGroupName/rightGroupName.',
         },
       },
       required: ['groupName'],

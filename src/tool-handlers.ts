@@ -250,22 +250,33 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_update_group': {
-      const { groupName, displayExtension, description, compositeType, leftGroupName, rightGroupName } = args as {
+      const { groupName, displayExtension, description, compositeType, leftGroupName, rightGroupName, removeComposite } = args as {
         groupName: string;
         displayExtension?: string;
         description?: string;
         compositeType?: string;
         leftGroupName?: string;
         rightGroupName?: string;
+        removeComposite?: boolean;
       };
       try {
         const updates: Partial<GrouperGroup> = {};
         if (displayExtension !== undefined) updates.displayExtension = displayExtension;
         if (description !== undefined) updates.description = description;
 
-        const compositeDetail = buildCompositeDetail(compositeType, leftGroupName, rightGroupName);
-        if (compositeDetail) {
-          updates.detail = compositeDetail;
+        // Validate that removeComposite and composite creation params are not used together
+        const hasCompositeParams = compositeType !== undefined || leftGroupName !== undefined || rightGroupName !== undefined;
+        if (removeComposite && hasCompositeParams) {
+          throw new Error('Cannot use removeComposite together with compositeType/leftGroupName/rightGroupName');
+        }
+
+        if (removeComposite) {
+          updates.detail = { hasComposite: 'F' };
+        } else {
+          const compositeDetail = buildCompositeDetail(compositeType, leftGroupName, rightGroupName);
+          if (compositeDetail) {
+            updates.detail = compositeDetail;
+          }
         }
 
         const updatedGroup = await client.updateGroup(groupName, updates);
