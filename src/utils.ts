@@ -89,23 +89,9 @@ export function formatSingleGroupDetails(group: GrouperGroup): string {
 }
 
 export function formatGroupCollectionDetails(group: any): string {
-  let detailText = `• ${group.name}${group.displayName ? ` (${group.displayName})` : ''}`;
+  let detailText = `• ${group.name}`;
   if (group.description) detailText += `\n  Description: ${group.description}`;
-  if (group.uuid) detailText += `\n  UUID: ${group.uuid}`;
-  if (group.extension) detailText += `\n  Extension: ${group.extension}`;
-  if (group.typeOfGroup) detailText += `\n  Type: ${group.typeOfGroup}`;
-  if (group.enabled) detailText += `\n  Enabled: ${group.enabled}`;
-  
-  if (group.detail) {
-    if (group.detail.createTime) detailText += `\n  Created: ${group.detail.createTime}`;
-    if (group.detail.createSubjectId) detailText += `\n  Created By: ${group.detail.createSubjectId}`;
-    if (group.detail.modifyTime) detailText += `\n  Modified: ${group.detail.modifyTime}`;
-    if (group.detail.hasComposite && group.detail.hasComposite === 'T') {
-      detailText += `\n  Composite: ${group.detail.compositeType || 'Yes'}`;
-      if (group.detail.leftGroup) detailText += ` (${getGroupName(group.detail.leftGroup)}`;
-      if (group.detail.rightGroup) detailText += ` ${group.detail.compositeType?.toLowerCase() || 'with'} ${getGroupName(group.detail.rightGroup)})`;
-    }
-  }
+  if (group.typeOfGroup && group.typeOfGroup !== 'group') detailText += `\n  Type: ${group.typeOfGroup}`;
   return detailText;
 }
 
@@ -212,12 +198,8 @@ export function formatSingleStemDetails(stem: GrouperStem): string {
 }
 
 export function formatStemCollectionDetails(stem: GrouperStem): string {
-  let detailText = `• ${stem.name}${stem.displayName ? ` (${stem.displayName})` : ''}`;
+  let detailText = `• ${stem.name}`;
   if (stem.description) detailText += `\n  Description: ${stem.description}`;
-  if (stem.uuid) detailText += `\n  UUID: ${stem.uuid}`;
-  if (stem.extension) detailText += `\n  Extension: ${stem.extension}`;
-  if (stem.idIndex) detailText += `\n  ID Index: ${stem.idIndex}`;
-
   return detailText;
 }
 

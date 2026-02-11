@@ -1,7 +1,7 @@
 export const toolDefinitions = [
   {
     name: 'grouper_find_groups_by_name_approximate',
-    description: 'Search for groups in Grouper by approximate name match and/or within a specific stem (folder). Supports three modes: (1) name search only - provide "query" parameter, (2) stem browsing only - provide "stemName" to list all groups in that stem, (3) combined search - provide both "query" and "stemName" to search within a stem. Use "stemScope" to control whether to search one level ("ONE_LEVEL") or recursively ("ALL_IN_SUBTREE", default). Returns formatted text with comprehensive group information for each matching group including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, and detailed metadata including: hasComposite, createTime, modifyTime, createSubjectId, modifySubjectId, compositeType, typeNames, attributeNames, attributeValues, and composite group information (leftGroup, rightGroup). Returns count of found groups and formatted details for each match.',
+    description: 'Search for groups in Grouper by approximate name match and/or within a specific stem (folder). Supports three modes: (1) name search only - provide "query" parameter, (2) stem browsing only - provide "stemName" to list all groups in that stem, (3) combined search - provide both "query" and "stemName" to search within a stem. Use "stemScope" to control whether to search one level ("ONE_LEVEL") or recursively ("ALL_IN_SUBTREE", default). Returns a compact list with each group\'s name, description, and type (if not a standard group). Use grouper_get_group_by_exact_name to get full details on a specific group.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -362,7 +362,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_find_stems_by_name_approximate',
-    description: 'Search for stems/folders in Grouper by approximate name match. Stems are organizational folders that contain groups and other stems, forming a hierarchical structure. Returns formatted text with comprehensive stem information for each matching stem including: name (full stem path), displayName (human-readable display name), description (stem purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), and idIndex (numeric ID). Returns count of found stems and formatted details for each match.',
+    description: 'Search for stems/folders in Grouper by approximate name match. Stems are organizational folders that contain groups and other stems, forming a hierarchical structure. Returns a compact list with each stem\'s name and description. Use grouper_get_stem_by_exact_name to get full details on a specific stem.',
     inputSchema: {
       type: 'object',
       properties: {
@@ -404,7 +404,7 @@ export const toolDefinitions = [
   },
   {
     name: 'grouper_get_subject_groups',
-    description: 'Get all group memberships for a specific subject/user. Returns formatted text with comprehensive information about each group the subject is a member of, including: name (full group name), displayName (human-readable display name), description (group purpose), uuid (unique identifier), extension (short name), displayExtension (short display name), typeOfGroup (group|role|entity), idIndex (numeric ID), enabled status, membership type (immediate/effective), and detailed metadata when available. Returns "No group memberships found" if the subject is not a member of any groups.',
+    description: 'Get all group memberships for a specific subject/user. Returns a compact list with each group\'s name, description, type (if not a standard group), and membership type (immediate/effective). Use grouper_get_group_by_exact_name to get full details on a specific group. Returns "No group memberships found" if the subject is not a member of any groups.',
     inputSchema: {
       type: 'object',
       properties: {

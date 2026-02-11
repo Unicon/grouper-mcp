@@ -32,7 +32,7 @@ Search for groups by approximate name matching and/or within a specific stem (fo
 
 **Note:** At least one of `query` or `stemName` must be provided.
 
-**Returns:** Formatted text with comprehensive group information for each matching group, including count of found groups and detailed metadata.
+**Returns:** A compact list with each group's name, description, and type (if not a standard group), along with a count of found groups. Use `grouper_get_group_by_exact_name` to get full details on a specific group.
 
 **Example Usage:**
 ```
@@ -207,7 +207,7 @@ Search for stems/folders by approximate name matching.
 **Parameters:**
 - **`query`** (required, string) - Search query for approximate stem name matching
 
-**Returns:** Formatted text with comprehensive stem information for each matching stem, including count of found stems and detailed information.
+**Returns:** A compact list with each stem's name and description, along with a count of found stems. Use `grouper_get_stem_by_exact_name` to get full details on a specific stem.
 
 **Example Usage:**
 ```
@@ -592,7 +592,7 @@ Get all group memberships for a specific subject/user.
 - **`memberFilter`** (optional, string) - Filter for membership type: "All", "Effective", "Immediate", "Composite", "NonImmediate" (default: "All")
 - **`enabled`** (optional, string) - Filter for enabled groups: "T" for enabled only, "F" for disabled only, or omit for all (default: all)
 
-**Returns:** Formatted text with comprehensive information about each group the subject is a member of, including group details, membership type (immediate/effective), and enabled status. Returns "No group memberships found" if the subject is not a member of any groups.
+**Returns:** A compact list with each group's name, description, type (if not a standard group), and membership type (immediate/effective). Use `grouper_get_group_by_exact_name` to get full details on a specific group. Returns "No group memberships found" if the subject is not a member of any groups.
 
 **Example Usage:**
 ```
