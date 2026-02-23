@@ -47,6 +47,15 @@ export function isWriteTool(toolName: string): boolean {
   return WRITE_TOOLS.includes(toolName as any);
 }
 
+/**
+ * Extract the group name from a leftGroup/rightGroup value,
+ * which may be a string or a { name: string } object from the API.
+ */
+function getGroupName(group: { name: string } | string | undefined): string | undefined {
+  if (group === undefined) return undefined;
+  return typeof group === 'object' ? group.name : group;
+}
+
 export function formatSingleGroupDetails(group: GrouperGroup): string {
   let detailText = `Group: ${group.name}\nDisplay Name: ${group.displayName || 'N/A'}\nDescription: ${group.description || 'N/A'}\nUUID: ${group.uuid || 'N/A'}\nExtension: ${group.extension || 'N/A'}\nDisplay Extension: ${group.displayExtension || 'N/A'}\nType of Group: ${group.typeOfGroup || 'N/A'}\nID Index: ${group.idIndex || 'N/A'}\nEnabled: ${group.enabled || 'N/A'}`;
   
@@ -62,8 +71,8 @@ export function formatSingleGroupDetails(group: GrouperGroup): string {
     if (group.detail.modifySubjectId) detailText += `\nModified By: ${group.detail.modifySubjectId}`;
     if (group.detail.hasComposite) detailText += `\nHas Composite: ${group.detail.hasComposite}`;
     if (group.detail.compositeType) detailText += `\nComposite Type: ${group.detail.compositeType}`;
-    if (group.detail.leftGroup) detailText += `\nLeft Group: ${group.detail.leftGroup}`;
-    if (group.detail.rightGroup) detailText += `\nRight Group: ${group.detail.rightGroup}`;
+    if (group.detail.leftGroup) detailText += `\nLeft Group: ${getGroupName(group.detail.leftGroup)}`;
+    if (group.detail.rightGroup) detailText += `\nRight Group: ${getGroupName(group.detail.rightGroup)}`;
     if (group.detail.isCompositeFactor) detailText += `\nIs Composite Factor: ${group.detail.isCompositeFactor}`;
     if (group.detail.typeNames && group.detail.typeNames.length > 0) {
       detailText += `\nType Names: ${group.detail.typeNames.join(', ')}`;
@@ -80,23 +89,9 @@ export function formatSingleGroupDetails(group: GrouperGroup): string {
 }
 
 export function formatGroupCollectionDetails(group: any): string {
-  let detailText = `• ${group.name}${group.displayName ? ` (${group.displayName})` : ''}`;
+  let detailText = `• ${group.name}`;
   if (group.description) detailText += `\n  Description: ${group.description}`;
-  if (group.uuid) detailText += `\n  UUID: ${group.uuid}`;
-  if (group.extension) detailText += `\n  Extension: ${group.extension}`;
-  if (group.typeOfGroup) detailText += `\n  Type: ${group.typeOfGroup}`;
-  if (group.enabled) detailText += `\n  Enabled: ${group.enabled}`;
-  
-  if (group.detail) {
-    if (group.detail.createTime) detailText += `\n  Created: ${group.detail.createTime}`;
-    if (group.detail.createSubjectId) detailText += `\n  Created By: ${group.detail.createSubjectId}`;
-    if (group.detail.modifyTime) detailText += `\n  Modified: ${group.detail.modifyTime}`;
-    if (group.detail.hasComposite && group.detail.hasComposite === 'T') {
-      detailText += `\n  Composite: ${group.detail.compositeType || 'Yes'}`;
-      if (group.detail.leftGroup) detailText += ` (${group.detail.leftGroup}`;
-      if (group.detail.rightGroup) detailText += ` ${group.detail.compositeType?.toLowerCase() || 'with'} ${group.detail.rightGroup})`;
-    }
-  }
+  if (group.typeOfGroup && group.typeOfGroup !== 'group') detailText += `\n  Type: ${group.typeOfGroup}`;
   return detailText;
 }
 
@@ -203,12 +198,8 @@ export function formatSingleStemDetails(stem: GrouperStem): string {
 }
 
 export function formatStemCollectionDetails(stem: GrouperStem): string {
-  let detailText = `• ${stem.name}${stem.displayName ? ` (${stem.displayName})` : ''}`;
+  let detailText = `• ${stem.name}`;
   if (stem.description) detailText += `\n  Description: ${stem.description}`;
-  if (stem.uuid) detailText += `\n  UUID: ${stem.uuid}`;
-  if (stem.extension) detailText += `\n  Extension: ${stem.extension}`;
-  if (stem.idIndex) detailText += `\n  ID Index: ${stem.idIndex}`;
-
   return detailText;
 }
 

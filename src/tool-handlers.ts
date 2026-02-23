@@ -4,6 +4,37 @@ import { logger } from './logger.js';
 import { formatSingleGroupDetails, formatGroupCollectionDetails, formatMemberResults, formatSingleStemDetails, formatStemCollectionDetails, formatSubjectMemberships, formatBatchMemberResults, formatMembershipTrace, formatPrivilegeResults, formatBatchPrivilegeResults, validatePrivilegeNames, isReadOnlyMode, isWriteTool } from './utils.js';
 import { MembershipTracer } from './membership-tracer.js';
 
+const VALID_COMPOSITE_TYPES = ['UNION', 'INTERSECTION', 'COMPLEMENT'] as const;
+
+/**
+ * Build composite detail object from composite parameters.
+ * Returns the detail object if composite params are provided, or undefined if none are provided.
+ * Throws an error if params are partially provided or invalid.
+ */
+function buildCompositeDetail(
+  compositeType?: string,
+  leftGroupName?: string,
+  rightGroupName?: string
+): { compositeType: string; hasComposite: string; leftGroup: { name: string }; rightGroup: { name: string } } | undefined {
+  const hasAny = compositeType !== undefined || leftGroupName !== undefined || rightGroupName !== undefined;
+  if (!hasAny) return undefined;
+
+  if (!compositeType || !leftGroupName || !rightGroupName) {
+    throw new Error('All three composite parameters (compositeType, leftGroupName, rightGroupName) must be provided together');
+  }
+
+  if (!VALID_COMPOSITE_TYPES.includes(compositeType as any)) {
+    throw new Error(`Invalid compositeType "${compositeType}". Must be one of: ${VALID_COMPOSITE_TYPES.join(', ')}`);
+  }
+
+  return {
+    compositeType,
+    hasComposite: 'T',
+    leftGroup: { name: leftGroupName },
+    rightGroup: { name: rightGroupName },
+  };
+}
+
 export async function handleTool(request: any, client: GrouperClient): Promise<any> {
   const args = request.params.arguments || {};
   const toolName = request.params.name;
@@ -25,39 +56,75 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
   switch (toolName) {
 
     case 'grouper_find_groups_by_name_approximate': {
-      const { query } = args as { query: string };
+      const { query, stemName, stemScope } = args as {
+        query?: string;
+        stemName?: string;
+        stemScope?: 'ONE_LEVEL' | 'ALL_IN_SUBTREE';
+      };
+
+      // Validation: at least one search parameter required
+      if (!query && !stemName) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'Error: At least one of "query" or "stemName" must be provided',
+          }],
+          isError: true,
+        };
+      }
+
+      // Validation: stemScope requires stemName
+      if (stemScope && !stemName) {
+        return {
+          content: [{
+            type: 'text',
+            text: 'Error: "stemScope" can only be used when "stemName" is provided',
+          }],
+          isError: true,
+        };
+      }
+
       try {
-        const groups = await client.findGroupsByNameApproximate(query);
-        
+        const groups = await client.findGroupsByNameApproximate(query, {
+          stemName,
+          stemScope
+        });
+
+        // Build appropriate description based on search type
+        let searchDesc: string;
+        if (query && stemName) {
+          const scopeDesc = stemScope === 'ONE_LEVEL' ? ' (one level)' : '';
+          searchDesc = `matching "${query}" in stem "${stemName}"${scopeDesc}`;
+        } else if (stemName) {
+          const scopeDesc = stemScope === 'ONE_LEVEL' ? ' (one level)' : ' (recursive)';
+          searchDesc = `in stem "${stemName}"${scopeDesc}`;
+        } else {
+          searchDesc = `matching "${query}"`;
+        }
+
         if (groups.length === 0) {
           return {
-            content: [
-              {
-                type: 'text',
-                text: `No groups found matching "${query}"`,
-              },
-            ],
+            content: [{
+              type: 'text',
+              text: `No groups found ${searchDesc}`,
+            }],
           };
         }
-        
+
         const formattedGroups = groups.map(formatGroupCollectionDetails).join('\n\n');
-        
+
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Found ${groups.length} groups matching "${query}":\n\n${formattedGroups}`,
-            },
-          ],
+          content: [{
+            type: 'text',
+            text: `Found ${groups.length} group(s) ${searchDesc}:\n\n${formattedGroups}`,
+          }],
         };
       } catch (error) {
         return {
-          content: [
-            {
-              type: 'text',
-              text: `Error searching groups: ${error instanceof Error ? error.message : 'Unknown error'}`,
-            },
-          ],
+          content: [{
+            type: 'text',
+            text: `Error searching groups: ${error instanceof Error ? error.message : 'Unknown error'}`,
+          }],
           isError: true,
         };
       }
@@ -144,13 +211,22 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_create_group': {
-      const { name, displayExtension, description } = args as {
+      const { name, displayExtension, description, compositeType, leftGroupName, rightGroupName } = args as {
         name: string;
         displayExtension?: string;
         description?: string;
+        compositeType?: string;
+        leftGroupName?: string;
+        rightGroupName?: string;
       };
       try {
-        const newGroup = await client.createGroup({ name, displayExtension, description });
+        const groupData: any = { name, displayExtension, description };
+        const compositeDetail = buildCompositeDetail(compositeType, leftGroupName, rightGroupName);
+        if (compositeDetail) {
+          groupData.detail = compositeDetail;
+        }
+
+        const newGroup = await client.createGroup(groupData);
         const detailText = formatSingleGroupDetails(newGroup);
         return {
           content: [
@@ -174,20 +250,39 @@ export async function handleTool(request: any, client: GrouperClient): Promise<a
     }
 
     case 'grouper_update_group': {
-      const { groupName, displayExtension, description } = args as {
+      const { groupName, displayExtension, description, compositeType, leftGroupName, rightGroupName, removeComposite } = args as {
         groupName: string;
         displayExtension?: string;
         description?: string;
+        compositeType?: string;
+        leftGroupName?: string;
+        rightGroupName?: string;
+        removeComposite?: boolean;
       };
       try {
         const updates: Partial<GrouperGroup> = {};
         if (displayExtension !== undefined) updates.displayExtension = displayExtension;
         if (description !== undefined) updates.description = description;
 
+        // Validate that removeComposite and composite creation params are not used together
+        const hasCompositeParams = compositeType !== undefined || leftGroupName !== undefined || rightGroupName !== undefined;
+        if (removeComposite && hasCompositeParams) {
+          throw new Error('Cannot use removeComposite together with compositeType/leftGroupName/rightGroupName');
+        }
+
+        if (removeComposite) {
+          updates.detail = { hasComposite: 'F' };
+        } else {
+          const compositeDetail = buildCompositeDetail(compositeType, leftGroupName, rightGroupName);
+          if (compositeDetail) {
+            updates.detail = compositeDetail;
+          }
+        }
+
         const updatedGroup = await client.updateGroup(groupName, updates);
-        
+
         const detailText = formatSingleGroupDetails(updatedGroup);
-        
+
         return {
           content: [
             {

@@ -1,7 +1,7 @@
 # Use Case: AI-Assisted Cohort Definition Using Set Theory
 
 **Source:** Michael Hodges (University of Hawaii) - Slack conversation, 2026-02-02
-**Status:** Planning
+**Status:** Implemented (GMCP-15, GMCP-16)
 **Jira Tickets:** [GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15), [GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16)
 
 ### Problem Statement
@@ -51,46 +51,52 @@ From Slack posts:
 
 | Capability | Tool(s) | Notes |
 |-----------|---------|-------|
-| Search/browse available basis groups | `grouper_find_groups_by_name_approximate`, `grouper_find_stems_by_name_approximate` | Can search by approximate name match |
+| Search/browse available basis groups | `grouper_find_groups_by_name_approximate`, `grouper_find_stems_by_name_approximate` | Can search by approximate name match; supports `stemName`/`stemScope` for hierarchical browsing |
 | Get group details & metadata | `grouper_get_group_by_exact_name`, `grouper_get_group_by_uuid` | Returns comprehensive group info including composite details |
 | View group membership | `grouper_get_members` | Lists all members with filtering options |
 | Trace membership paths | `grouper_trace_membership` | Shows how a user is a member (direct, effective, composite) |
 | See a user's group memberships | `grouper_get_subject_groups` | Lists all groups a subject belongs to |
 | Create/update/delete groups | `grouper_create_group`, `grouper_update_group`, `grouper_delete_group_*` | Standard group lifecycle operations |
+| Create/manage composite groups | `grouper_create_group`, `grouper_update_group` | UNION, INTERSECTION, COMPLEMENT operations via `compositeType`, `leftGroupName`, `rightGroupName` |
+| Remove composite definition | `grouper_update_group` | Convert composite back to regular group via `removeComposite: true` |
+| Browse groups within a stem | `grouper_find_groups_by_name_approximate` | List all groups in a stem with `stemName` param; supports `ONE_LEVEL` or `ALL_IN_SUBTREE` scope |
 
-#### Gaps Identified ❌
+#### Previously Identified Gaps — Now Resolved ✅
 
-**1. Composite Group Creation/Management** (CRITICAL)
+**1. Composite Group Creation/Management** — IMPLEMENTED ([GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15))
 
-This is the core requirement for the use case. The MCP currently cannot:
-- Create composite groups (union, intersection, complement)
+The `grouper_create_group` and `grouper_update_group` tools now support composite group operations via `compositeType`, `leftGroupName`, and `rightGroupName` parameters. Additionally, `grouper_update_group` supports `removeComposite` to convert a composite group back to a regular group.
+
+Supported operations:
+- Create composite groups (UNION, INTERSECTION, COMPLEMENT)
 - Define left and right factor groups for composites
-- Modify existing composite group definitions
+- Convert an existing group to a composite via update
+- Change factor groups or composite type on an existing composite
+- Remove composite configuration (convert back to regular group)
 
-The existing tools *return* composite information (`hasComposite`, `compositeType`, `leftGroup`, `rightGroup`) when querying groups, but there's no tool to **create or manage** composite groups.
+**2. Stem Children Listing** — IMPLEMENTED ([GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16))
 
-**2. Stem Children Listing** (MODERATE)
+The `grouper_find_groups_by_name_approximate` tool now accepts `stemName` and `stemScope` parameters, enabling hierarchical browsing:
+- `{ "stemName": "edu:college:basis" }` — list all groups recursively under a stem
+- `{ "stemName": "edu:college:basis", "stemScope": "ONE_LEVEL" }` — list direct children only
+- `{ "query": "faculty", "stemName": "edu:college:basis" }` — search within a stem
 
-No way to list all groups/sub-stems within a stem/folder. Users can search by name, but can't browse hierarchically. For example:
-- "Show me all basis groups in `edu:college:basis`"
-- "What groups exist under `app:myapp`"
+#### Remaining Gaps
 
 **3. Membership Preview/Simulation** (NICE TO HAVE)
 
-No way to preview what members would result from a proposed set operation before actually creating the composite group. This would help users validate their cohort definition before committing.
+No way to preview what members would result from a proposed set operation before actually creating the composite group. This can be handled at the AI agent level using existing tools (see Recommendations below).
 
 #### Recommendations
 
-To fully support this use case:
+The core capabilities for this use case are now implemented. Remaining recommendation:
 
-1. **Add composite group support** - Either extend existing tools or add new capability to create/manage composite groups with union, intersection, and complement operations
-   - **Jira:** [GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15)
+1. ~~**Add composite group support**~~ — **DONE** ([GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15))
 
-2. **Add stem children listing** - Enable browsing the group hierarchy by listing contents of a stem
-   - **Jira:** [GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16)
+2. ~~**Add stem children listing**~~ — **DONE** ([GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16))
 
 3. **(Optional) Add membership preview** - Allow simulating set operations to preview resulting membership
-   - Can be handled at AI agent level using existing `grouper_get_members` tool
+   - Can be handled at AI agent level using existing `grouper_get_members` tool to fetch members of both factor groups and compute the set operation in memory
 
 #### API Endpoint Investigation
 
@@ -100,43 +106,20 @@ The Grouper Web Services API (v4) was analyzed to determine what operations are 
 
 ---
 
-##### 1. Composite Group Creation - **API SUPPORTS THIS** ✅
+##### 1. Composite Group Creation - **IMPLEMENTED** ✅
 
-**Finding:** The existing **Group Save** (`/groups` POST with `WsRestGroupSaveRequest`) endpoint already supports creating composite groups. Composite configuration is passed via the `WsGroup.detail` object.
+**Finding:** The existing **Group Save** (`/groups` POST with `WsRestGroupSaveRequest`) endpoint supports creating and managing composite groups. Composite configuration is passed via the `WsGroup.detail` object. Composite removal is supported by setting `hasComposite` to `"F"`.
 
-**API Structure:**
-```json
-{
-  "WsRestGroupSaveRequest": {
-    "wsGroupToSaves": [{
-      "wsGroupLookup": { "groupName": "stem:path:newCompositeGroup" },
-      "wsGroup": {
-        "name": "stem:path:newCompositeGroup",
-        "description": "Intersection of group1 and group2",
-        "detail": {
-          "hasComposite": "T",
-          "compositeType": "INTERSECTION",
-          "leftGroup": { "name": "stem:path:group1" },
-          "rightGroup": { "name": "stem:path:group2" }
-        }
-      }
-    }],
-    "includeGroupDetail": "T"
-  }
-}
-```
+**Implementation:** The `grouper_create_group` and `grouper_update_group` tools were extended with optional parameters:
+- `compositeType` (string): "UNION", "INTERSECTION", or "COMPLEMENT"
+- `leftGroupName` (string): Name of the left factor group
+- `rightGroupName` (string): Name of the right factor group
+- `removeComposite` (boolean, update only): Set to `true` to remove composite definition
 
 **Composite Types Supported:**
 - `UNION` - All members from both groups (A ∪ B)
 - `INTERSECTION` - Members in both groups (A ∩ B)
 - `COMPLEMENT` - Members in left but not in right (A - B)
-
-**Implementation Approach:** Extend the existing `grouper_create_group` tool to accept optional parameters:
-- `compositeType` (string): "UNION", "INTERSECTION", or "COMPLEMENT"
-- `leftGroupName` (string): Name of the left factor group
-- `rightGroupName` (string): Name of the right factor group
-
-When these parameters are provided, the tool would construct the `detail` object with composite configuration.
 
 **Constraints:**
 - The composite group must be empty of members when created (composite groups cannot have direct members)
@@ -149,35 +132,15 @@ When these parameters are provided, the tool would construct the `detail` object
 
 ---
 
-##### 2. Stem Children Listing - **API SUPPORTS THIS** ✅
+##### 2. Stem Children Listing - **IMPLEMENTED** ✅
 
 **Finding:** The existing **Find Groups** (`/groups` POST with `WsRestFindGroupsRequest`) endpoint supports querying groups within a stem using the `FIND_BY_STEM_NAME` query filter type.
 
-**API Structure:**
-```json
-{
-  "WsRestFindGroupsRequest": {
-    "wsQueryFilter": {
-      "queryFilterType": "FIND_BY_STEM_NAME",
-      "stemName": "edu:hawaii:basis",
-      "stemNameScope": "ONE_LEVEL"
-    },
-    "includeGroupDetail": "T"
-  }
-}
-```
-
-**Scope Options:**
-- `ONE_LEVEL` - Only groups directly in the specified stem
-- `ALL_IN_SUBTREE` - Groups in the stem and all sub-stems (recursive)
-
-**Implementation Approach:** Extend the existing `grouper_find_groups_by_name_approximate` tool to accept optional parameters:
+**Implementation:** The `grouper_find_groups_by_name_approximate` tool was extended with optional parameters:
 - `stemName` (string): Stem to search within
 - `stemScope` (string): "ONE_LEVEL" or "ALL_IN_SUBTREE" (default: "ALL_IN_SUBTREE")
 
-When `stemName` is provided, the tool would use `queryFilterType: "FIND_BY_STEM_NAME"` instead of `FIND_BY_GROUP_NAME_APPROXIMATE`.
-
-**Alternative:** The `findStems` endpoint also supports `parentStemName` and `parentStemNameScope` for listing sub-stems within a stem.
+Supports three modes: stem browsing only, name search only, or combined (search within a stem).
 
 ---
 
@@ -200,16 +163,16 @@ When `stemName` is provided, the tool would use `queryFilterType: "FIND_BY_STEM_
 
 #### Implementation Summary
 
-| Gap | API Support | Recommended Approach | Jira |
-|-----|-------------|---------------------|------|
-| Composite group creation | ✅ Fully supported | **Extend `grouper_create_group`** and **`grouper_update_group`** to accept `compositeType`, `leftGroupName`, `rightGroupName` | [GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15) |
-| Stem children listing | ✅ Fully supported | **Extend `grouper_find_groups_by_name_approximate`** to accept `stemName`, `stemScope` parameters | [GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16) |
-| Membership preview | ❌ Not supported | Handle at AI agent level using existing `grouper_get_members` tool | N/A |
+| Gap | Status | Implementation | Jira |
+|-----|--------|---------------|------|
+| Composite group creation | ✅ **Implemented** | Extended `grouper_create_group` and `grouper_update_group` with `compositeType`, `leftGroupName`, `rightGroupName` params. Added `removeComposite` to `grouper_update_group`. | [GMCP-15](https://uniconinc.atlassian.net/browse/GMCP-15) |
+| Stem children listing | ✅ **Implemented** | Extended `grouper_find_groups_by_name_approximate` with `stemName`, `stemScope` parameters | [GMCP-16](https://uniconinc.atlassian.net/browse/GMCP-16) |
+| Membership preview | ⏳ Not yet implemented | Can be handled at AI agent level using existing `grouper_get_members` tool | N/A |
 
-**Key Principle:** Prefer extending existing tools over creating new ones to keep the tool count manageable and the API surface intuitive.
+**Key Principle:** Existing tools were extended rather than creating new ones, keeping the tool count manageable and the API surface intuitive.
 
-**Note:** The `grouper_update_group` tool must also be extended to support composite operations, enabling:
+The `grouper_update_group` tool supports the full composite lifecycle:
 - Converting an existing group to a composite
 - Changing factor groups of an existing composite
 - Changing composite type (e.g., INTERSECTION → COMPLEMENT)
-- Removing composite configuration (convert back to regular group)
+- Removing composite configuration via `removeComposite: true` (convert back to regular group)

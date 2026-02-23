@@ -19,16 +19,38 @@ The Grouper MCP server provides **22 core tools** for essential Grouper operatio
 
 ### 🔍 grouper_find_groups_by_name_approximate
 
-Search for groups by approximate name matching.
+Search for groups by approximate name matching and/or within a specific stem (folder). Supports three search modes:
+
+1. **Name search only** - Provide `query` parameter to search by approximate group name
+2. **Stem browsing only** - Provide `stemName` to list all groups in that stem
+3. **Combined search** - Provide both `query` and `stemName` to search within a specific stem
 
 **Parameters:**
-- **`query`** (required, string) - Search query for approximate group name matching
+- **`query`** (string) - Search query for approximate group name matching (optional if stemName is provided)
+- **`stemName`** (string) - Stem/folder to search within (e.g., "edu:hawaii:basis"). If provided without query, lists all groups in the stem.
+- **`stemScope`** (string) - Scope when searching by stem: "ONE_LEVEL" for direct children only, "ALL_IN_SUBTREE" for recursive search (default). Valid values: `ONE_LEVEL`, `ALL_IN_SUBTREE`
 
-**Returns:** Formatted text with comprehensive group information for each matching group, including count of found groups and detailed metadata.
+**Note:** At least one of `query` or `stemName` must be provided.
+
+**Returns:** A compact list with each group's name, description, and type (if not a standard group), along with a count of found groups. Use `grouper_get_group_by_exact_name` to get full details on a specific group.
 
 **Example Usage:**
 ```
+# Search by name (original behavior)
 Find all groups containing "engineering" in their name
+→ Use: { "query": "engineering" }
+
+# List all groups in a stem (recursive)
+List all groups under edu:hawaii:basis
+→ Use: { "stemName": "edu:hawaii:basis" }
+
+# List direct children only (one level)
+List groups directly in edu:hawaii:basis (not in sub-stems)
+→ Use: { "stemName": "edu:hawaii:basis", "stemScope": "ONE_LEVEL" }
+
+# Combined search: name within stem
+Find groups containing "faculty" under edu:hawaii:basis
+→ Use: { "query": "faculty", "stemName": "edu:hawaii:basis" }
 ```
 
 ---
@@ -67,36 +89,61 @@ Get details for group with UUID "12345678-1234-1234-1234-123456789abc"
 
 ### ➕ grouper_create_group
 
-Create a new group in Grouper.
+Create a new group in Grouper. Supports creating regular groups and composite groups (UNION, INTERSECTION, COMPLEMENT of two existing groups).
 
 **Parameters:**
 - **`name`** (required, string) - The full name of the group (e.g., "edu:example:mygroup")
 - **`displayExtension`** (optional, string) - Human-readable display name for the group extension (rightmost part after the last colon). For example, if name is "test:groupFolder:groupName", displayExtension would be shown as "groupName"
 - **`description`** (optional, string) - Optional description of the group
+- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together.
+- **`leftGroupName`** (optional, string) - Full name of the left factor group for composite operation
+- **`rightGroupName`** (optional, string) - Full name of the right factor group for composite operation
 
 **Returns:** Detailed information about the created group.
 
 **Example Usage:**
 ```
+# Create a regular group
 Create a group named "edu:department:engineering:students" with displayExtension "Engineering Students" and description "Students in the Engineering Department"
+
+# Create a UNION composite group (members of either group)
+Create a composite group:
+→ Use: { "name": "edu:department:all-staff", "compositeType": "UNION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Create an INTERSECTION composite group (members in both groups)
+→ Use: { "name": "edu:department:faculty-staff", "compositeType": "INTERSECTION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Create a COMPLEMENT composite group (members in left but not right)
+→ Use: { "name": "edu:department:faculty-only", "compositeType": "COMPLEMENT", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
 ```
 
 ---
 
 ### ✏️ grouper_update_group
 
-Update an existing group's properties.
+Update an existing group's properties. Can also convert an existing group into a composite group, or remove an existing composite definition to convert it back to a regular group.
 
 **Parameters:**
 - **`groupName`** (required, string) - The current name of the group to update
 - **`displayExtension`** (optional, string) - New display extension for the group (human-readable name for the rightmost part after the last colon)
 - **`description`** (optional, string) - New description for the group
+- **`compositeType`** (optional, string) - Type of composite operation: `UNION`, `INTERSECTION`, or `COMPLEMENT`. All three composite parameters must be provided together. Cannot be used with `removeComposite`.
+- **`leftGroupName`** (optional, string) - Full name of the left factor group for composite operation
+- **`rightGroupName`** (optional, string) - Full name of the right factor group for composite operation
+- **`removeComposite`** (optional, boolean) - Set to `true` to remove the composite definition from a group, converting it back to a regular group. Cannot be used with `compositeType`/`leftGroupName`/`rightGroupName`.
 
 **Returns:** Detailed information about the updated group.
 
 **Example Usage:**
 ```
+# Update group description
 Update group "edu:department:engineering:students" with new description "All students enrolled in Engineering programs"
+
+# Convert existing group to a composite group
+→ Use: { "groupName": "edu:department:all-staff", "compositeType": "UNION", "leftGroupName": "edu:department:faculty", "rightGroupName": "edu:department:staff" }
+
+# Remove composite definition (convert back to regular group)
+→ Use: { "groupName": "edu:department:all-staff", "removeComposite": true }
 ```
 
 ---
@@ -160,7 +207,7 @@ Search for stems/folders by approximate name matching.
 **Parameters:**
 - **`query`** (required, string) - Search query for approximate stem name matching
 
-**Returns:** Formatted text with comprehensive stem information for each matching stem, including count of found stems and detailed information.
+**Returns:** A compact list with each stem's name and description, along with a count of found stems. Use `grouper_get_stem_by_exact_name` to get full details on a specific stem.
 
 **Example Usage:**
 ```
@@ -545,7 +592,7 @@ Get all group memberships for a specific subject/user.
 - **`memberFilter`** (optional, string) - Filter for membership type: "All", "Effective", "Immediate", "Composite", "NonImmediate" (default: "All")
 - **`enabled`** (optional, string) - Filter for enabled groups: "T" for enabled only, "F" for disabled only, or omit for all (default: all)
 
-**Returns:** Formatted text with comprehensive information about each group the subject is a member of, including group details, membership type (immediate/effective), and enabled status. Returns "No group memberships found" if the subject is not a member of any groups.
+**Returns:** A compact list with each group's name, description, type (if not a standard group), and membership type (immediate/effective). Use `grouper_get_group_by_exact_name` to get full details on a specific group. Returns "No group memberships found" if the subject is not a member of any groups.
 
 **Example Usage:**
 ```
